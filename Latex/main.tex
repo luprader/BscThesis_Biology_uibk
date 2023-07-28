@@ -1,0 +1,20 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[abbreviate=true,doi=true,style=numeric-comp,giveninits=true,sorting=none, backend = biber]{biblatex}
+\AtBeginBibliography{\small}
+\addbibresource{MyBibliography.bib}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\title{Thesis}
+\author{Lukas Prader}
+\date{\today}
+\maketitle
+
+
+\newpage
+\printbibliography[]
+\input{appendix}
+
+\end{document}

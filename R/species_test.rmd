@@ -1,0 +1,71 @@
+This file was used to conduct some prior analysis of potential species for the project, in the end *Harmonia axyridis* was chosen due to already existing extensive research for comparison.
+```{r, message = FALSE}
+# here is a list of packages you need for this exercise
+library(rgbif)
+library(maptools)
+library(sf)
+library(CoordinateCleaner)
+library(ggplot2)
+library(fasterize)
+library(raster)
+```
+
+```{r species}
+# selection of invasive alien species of EU concern with occurences in austria from EASIN (+ others from other research)
+spec <- c("Harmonia axyridis", "Fallopia japonica", "Myocastor coypus", "Ondatra zibethicus", "Tamias sibiricus", "Vespa velutina") # velutina nigrithorax
+spec_eng <- c("Asian lady beetle", "Japanese knotweed", "Nutria", "Muskrat", "Siberian chipmunk", "Asian hornet")
+# AS     AS        SA      N       AS      AS
+Latspec <- c("0,72", "0,72", "-55,12", "7,85", "0,72", "0,72")
+Longspec <- c("60,180", "60,180", "-81,-35", "-179, 120", "60,180", "60,180")
+
+for (s in seq(length(spec))) {
+    print(spec[s]) # species name
+    tkey <- name_suggest(q = spec[s], rank = "species")
+
+    # total gbif occurences in europe and in native range for the species per taxon key
+    totaloccs_eu <- 0
+    totaloccs_nat <- 0
+    for (k in tkey$data$key) {
+        totaloccs_eu <- totaloccs_eu + occ_search(taxonKey = k, decimalLatitude = "35,72", decimalLongitude = "-25,65")$meta$count
+        totaloccs_nat <- totaloccs_nat + occ_search(taxonKey = k, decimalLatitude = Latspec[s], decimalLongitude = Longspec[s])$meta$count
+    }
+    cat(totaloccs_eu, totaloccs_nat, "\n")
+}
+```
+```{r time distribution}
+# par(mfrow = c(2, 3))
+for (s in seq(length(spec))) {
+    tkey <- name_suggest(q = spec[s], rank = "species")
+
+    # find occurences in europe per year from 1950 to 2023
+    years <- seq(2000, 2023)
+    occsperyear <- replicate(length(years), 0)
+    for (t in years) {
+        for (k in tkey$data$key) {
+            occsperyear[t - 1999] <- occsperyear[t - 1999] + occ_search(taxonKey = k, year = t, decimalLatitude = "35,72", decimalLongitude = "-25,65")$meta$count
+        }
+    }
+    # plot distribution as a barplot
+    barplot(height = occsperyear, names = years, legend.text = c(spec[s], spec_eng[s]))
+}
+```
+
+```{r}
+# check why multiple name suggests
+name_suggest(q = "Fallopia japonica", rank = "species")
+```
+
+```{r}
+library(mvtnorm)
+library(rgl)
+set.seed(123)
+x <- rmvnorm(100, c(0, 0), matrix(c(1, -0.8, -0.8, 1), ncol = 2))
+
+y <- x[, 1] * 0.5 + x[, 2] * 0.2 + rnorm(100, 0, 0.2)
+
+summary(lm(y ~ x[, 1] + x[, 2]))
+plot(x[, 2], y)
+plot(x[, 1], y)
+plot(x[, 1], x[, 2])
+plot3d(x[, 1], x[, 2], y)
+```
