@@ -1,0 +1,89 @@
+Random Plots for visualisation during the coding process
+
+```{r}
+# used packages
+library(ggplot2)
+library(ggpubr)
+library(rnaturalearth)
+library(sf)
+library(sp)
+library(terra)
+library(ncdf4)
+```
+
+```{r}
+## plot cleaned occurence data with native extent and extent of interest
+sf_use_s2(FALSE) # to get rectangular intersect boxes instead of a projection
+
+occs_global <- readRDS("F:/BscBio_LP23_data/occurence/axyridis_clean.rds")
+occs_global_sf <- st_as_sf(occs_global, coords = c(
+  "decimalLongitude",
+  "decimalLatitude"
+), crs = 4326)
+countries <- ne_countries(scale = "medium", returnclass = "sf")
+countries <- st_transform(countries, crs = 4326)
+
+# create boundary boxes for europe and asia (native range)
+# extent of europe
+eu_box <- c(xmin = -25, ymin = 35, xmax = 65, ymax = 72)
+class(eu_box) <- "bbox"
+eu_box <- st_as_sfc(eu_box)
+eu_box <- st_as_sf(eu_box, crs = 4326)
+in_eu <- st_intersects(eu_box, occs_global_sf, sparse = FALSE)
+occs_eu <- occs_global[as.vector(in_eu), ]
+
+# extent of native range (Orlova-Bienkowskaja, Ukrainsky & Brown, 2015)
+as_box <- c(xmin = 70, ymin = 20, xmax = 150, ymax = 65)
+class(as_box) <- "bbox"
+as_box <- st_as_sfc(as_box)
+as_box <- st_as_sf(as_box, crs = 4326)
+in_as <- st_intersects(as_box, occs_global_sf, sparse = FALSE)
+occs_as <- occs_global[as.vector(in_as), ]
+```
+
+```{r}
+# plot points in extents
+map <- ggplot(countries) +
+  geom_sf(data = countries, colour = "black", fill = "white") +
+  xlim(-25, 65) +
+  ylim(35, 72) +
+  geom_point(
+    data = occs_global, aes(x = decimalLongitude, y = decimalLatitude),
+    colour = "cyan", alpha = 0.8
+  ) +
+  geom_point(
+    data = occs_eu, aes(x = decimalLongitude, y = decimalLatitude),
+    colour = "blue", alpha = 0.8
+  )
+map
+```
+
+```{r}
+# plot points in extents
+map <- ggplot(countries) +
+  geom_sf(data = countries, colour = "black", fill = "white") +
+  xlim(70, 150) +
+  ylim(20, 65) +
+  geom_point(
+    data = occs_global, aes(x = decimalLongitude, y = decimalLatitude),
+    colour = "cyan", alpha = 0.8
+  ) +
+  geom_point(
+    data = occs_as, aes(x = decimalLongitude, y = decimalLatitude),
+    colour = "blue", alpha = 0.8
+  )
+plot(map)
+```
+
+```{r}
+max(occs_global$coordinateUncertaintyInMeters)
+hist(occs_global$coordinateUncertaintyInMeters)
+hist(occs_global$year)
+```
+
+```{r}
+lc_16 <- rast("data/cropped_rasters/Cop_LC_2016_eu.grd")
+plot(lc_16)
+```
+
+
