@@ -1,9 +1,9 @@
-PWD /mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/Latex
+PWD /mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/Latex/mainthesis
 INPUT /etc/texmf/web2c/texmf.cnf
 INPUT /usr/share/texmf/web2c/texmf.cnf
 INPUT /usr/share/texlive/texmf-dist/web2c/texmf.cnf
 INPUT /var/lib/texmf/web2c/pdftex/pdflatex.fmt
-INPUT /mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/Latex/main.tex
+INPUT /mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/Latex/mainthesis/main.tex
 OUTPUT main.log
 INPUT /usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 INPUT /usr/share/texlive/texmf-dist/tex/latex/base/article.cls
