@@ -43,8 +43,10 @@ For each year, the following Models were computed: General Linear (GLM), General
 (Model choices subject to change)
 Each model used either only datapoints from europe (eu) or from europe and the native range in asia (eu+as). 
 A model for a specific year allways included all points from past years as well.
+For all used occurence points prior to 1992 and after 2020, the land cover data of 1992 or 2020 was used as a substitute.
+(necessary for after 2020 if only for verification?)
 
-To select the variables used, bioclim variables were chosen on \dots 
+To select the variables used, bioclim variables were chosen using varianec inflation values. 
 For the land cover data, a PCA was computed and added to the chosen bioclim variables.
 
 \subsection{Analysis}

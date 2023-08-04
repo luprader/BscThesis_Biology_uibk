@@ -9,16 +9,17 @@ library(sf)
 library(sp)
 library(terra)
 library(ncdf4)
+library(dplyr)
 ```
 
-```{r}
+```{r, bboxes}
 ## plot cleaned occurence data with native extent and extent of interest
 sf_use_s2(FALSE) # to get rectangular intersect boxes instead of a projection
 
 occs_global <- readRDS("F:/BscBio_LP23_data/occurence/axyridis_clean.rds")
 occs_global_sf <- st_as_sf(occs_global, coords = c(
-  "decimalLongitude",
-  "decimalLatitude"
+    "decimalLongitude",
+    "decimalLatitude"
 ), crs = 4326)
 countries <- ne_countries(scale = "medium", returnclass = "sf")
 countries <- st_transform(countries, crs = 4326)
@@ -44,34 +45,34 @@ occs_as <- occs_global[as.vector(in_as), ]
 ```{r}
 # plot points in extents
 map <- ggplot(countries) +
-  geom_sf(data = countries, colour = "black", fill = "white") +
-  xlim(-25, 65) +
-  ylim(35, 72) +
-  geom_point(
-    data = occs_global, aes(x = decimalLongitude, y = decimalLatitude),
-    colour = "cyan", alpha = 0.8
-  ) +
-  geom_point(
-    data = occs_eu, aes(x = decimalLongitude, y = decimalLatitude),
-    colour = "blue", alpha = 0.8
-  )
+    geom_sf(data = countries, colour = "black", fill = "white") +
+    xlim(-25, 65) +
+    ylim(35, 72) +
+    geom_point(
+        data = occs_global, aes(x = decimalLongitude, y = decimalLatitude),
+        colour = "cyan", alpha = 0.8
+    ) +
+    geom_point(
+        data = occs_eu, aes(x = decimalLongitude, y = decimalLatitude),
+        colour = "blue", alpha = 0.8
+    )
 map
 ```
 
 ```{r}
 # plot points in extents
 map <- ggplot(countries) +
-  geom_sf(data = countries, colour = "black", fill = "white") +
-  xlim(70, 150) +
-  ylim(20, 65) +
-  geom_point(
-    data = occs_global, aes(x = decimalLongitude, y = decimalLatitude),
-    colour = "cyan", alpha = 0.8
-  ) +
-  geom_point(
-    data = occs_as, aes(x = decimalLongitude, y = decimalLatitude),
-    colour = "blue", alpha = 0.8
-  )
+    geom_sf(data = countries, colour = "black", fill = "white") +
+    xlim(70, 150) +
+    ylim(20, 65) +
+    geom_point(
+        data = occs_global, aes(x = decimalLongitude, y = decimalLatitude),
+        colour = "cyan", alpha = 0.8
+    ) +
+    geom_point(
+        data = occs_as, aes(x = decimalLongitude, y = decimalLatitude),
+        colour = "blue", alpha = 0.8
+    )
 plot(map)
 ```
 
@@ -81,9 +82,65 @@ hist(occs_global$coordinateUncertaintyInMeters)
 hist(occs_global$year)
 ```
 
-```{r}
+```{r, plot lc val test}
 lc_16 <- rast("data/cropped_rasters/Cop_LC_2016_eu.grd")
-plot(lc_16)
+lc_16_v <- lc_16 == 200
+plot(lc_16_v)
 ```
 
+```{r, plot glob eu and as raw gbif}
+# load raw gbif raster
+axyridis_raw <- read.csv("R/data/occurence_data/Harmonia-axyridis_gbif_raw.csv",
+    header = TRUE,
+    sep = "\t"
+)
+axyridis_clean = readRDS('R/data/occurence_data/axyridis_clean.rds')
 
+## plot global on countries map
+countries <- ne_countries(scale = "medium", returnclass = "sf")
+countries <- st_transform(countries, crs = 4326)
+m_glob <- ggplot(countries) +
+    geom_sf(data = countries, colour = "black", fill = "white") +
+    geom_point(
+        data = axyridis_raw, aes(x = decimalLongitude, y = decimalLatitude),
+        colour = "darkgreen", alpha = 0.7
+    ) +
+    geom_point(
+        data = axyridis_clean, aes(x = Lon, y = Lat),
+        colour = "blue", alpha = 0.7
+    ) 
+ggsave(m_glob, filename = "R/data/plotting/gbif_raw_vs_clean_global.png")
+```
+
+```{r, plot lc with map}
+countries <- ne_countries(scale = "medium", type = "countries", returnclass = "sf")
+countries <- st_transform(countries, crs = crs(lc_16_eu))
+m_lc <- ggplot(countries) +
+    geom_raster(lc_16_eu, aes(fill = lccs_class, alpha = 0.5))
+ggsave(m_lc, filename = "R/data/plotting/lc_glob_extents.pdf")
+```
+
+```{r, plot yearly occ frequency}
+occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
+occs_eu <- subset(occs, Area == "EU")
+occs_as <- subset(occs, Area == "AS")
+
+# get occurences per year as df
+tot_freq <- as.data.frame(table(occs$Year))
+eu_freq <- as.data.frame(table(occs_eu$Year))
+as_freq <- as.data.frame(table(occs_as$Year))
+
+# merge values
+tot_freq$label <- "Total"
+eu_freq$label <- "Europe"
+as_freq$label <- "Native range"
+frequencies <- rbind(tot_freq, eu_freq, as_freq)
+names(frequencies)[1] <- "Year"
+
+yearbreaks <- c(1981, 1992, 2000, 2005, 2010, 2015, 2022)
+plot <- ggplot(frequencies, aes(x = Year, y = Freq)) +
+    geom_point(alpha = 0.5, aes(colour = label)) +
+    scale_y_continuous(trans = "log10") + scale_x_discrete( breaks = yearbreaks)
+plot
+ggsave(plot, filename = "R/data/plotting/occurence_yearlyfreq_tot_eu_as.png")
+```
