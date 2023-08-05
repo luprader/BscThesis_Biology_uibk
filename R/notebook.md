@@ -22,3 +22,7 @@ Using the 'urban' test resulted in very large amounts of flags, which makes sens
 To keep some of that information and still correct for some bias, 'urban' was not used as a test, but the 'capitals' test with a rather large radius of 10 km.
 The subsetting before cleaning targets NAs in coordinates, year, uncertainty and also removes all points after 2022, before 1991 in europe (first invasive occurence) and with an uncertainty larger than 1 km.
 
+### 05/08/2023
+Some analysis was conducted to visualize the amount of occurrences per year for each spatial extent. 
+It was noticed, that the amount of European occurrences prior to 2000 was greatly underestimated. 
+The timeframe will probably only be 2002-2022 instead of 1992-2022 because of that, but a more detailed analysis will be done tomorrow.

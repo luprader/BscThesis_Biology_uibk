@@ -1,6 +1,6 @@
 Random Plots for visualisation during the coding process
 
-```{r}
+```{r, libraries}
 # used packages
 library(ggplot2)
 library(ggpubr)
@@ -122,14 +122,17 @@ ggsave(m_lc, filename = "R/data/plotting/lc_glob_extents.pdf")
 
 ```{r, plot yearly occ frequency}
 occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
-occs_eu <- subset(occs, Area == "EU")
-occs_as <- subset(occs, Area == "AS")
+occs_eu <- subset(occs, Area == "EU" & Year > 1991)
+occs_as <- subset(occs, Area == "AS" & Year > 1991)
 
 # get occurences per year as df
-tot_freq <- as.data.frame(table(occs$Year))
-eu_freq <- as.data.frame(table(occs_eu$Year))
-as_freq <- as.data.frame(table(occs_as$Year))
-
+freq_eu = count(occs_eu, Year)
+freq_as = count(occs_as, Year)
+freqs = expand.grid(
+    Year = 1992:2022, 
+    n_eu = unique(freq_eu$n), 
+    stringsAsFactors = FALSE
+)
 # merge values
 tot_freq$label <- "Total"
 eu_freq$label <- "Europe"
@@ -140,7 +143,9 @@ names(frequencies)[1] <- "Year"
 yearbreaks <- c(1981, 1992, 2000, 2005, 2010, 2015, 2022)
 plot <- ggplot(frequencies, aes(x = Year, y = Freq)) +
     geom_point(alpha = 0.5, aes(colour = label)) +
-    scale_y_continuous(trans = "log10") + scale_x_discrete( breaks = yearbreaks)
+    scale_x_discrete( breaks = yearbreaks)
 plot
 ggsave(plot, filename = "R/data/plotting/occurence_yearlyfreq_tot_eu_as.png")
+logplot = plot + scale_y_continuous(trans = "log10")
+ggsave(plot, filename = "R/data/plotting/occurence_yearlyfreq_tot_eu_as_log.png")
 ```
