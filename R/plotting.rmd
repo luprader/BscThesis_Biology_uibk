@@ -94,7 +94,7 @@ axyridis_raw <- read.csv("R/data/occurence_data/Harmonia-axyridis_gbif_raw.csv",
     header = TRUE,
     sep = "\t"
 )
-axyridis_clean = readRDS('R/data/occurence_data/axyridis_clean.rds')
+axyridis_clean <- readRDS("R/data/occurence_data/axyridis_clean.rds")
 
 ## plot global on countries map
 countries <- ne_countries(scale = "medium", returnclass = "sf")
@@ -108,7 +108,7 @@ m_glob <- ggplot(countries) +
     geom_point(
         data = axyridis_clean, aes(x = Lon, y = Lat),
         colour = "blue", alpha = 0.7
-    ) 
+    )
 ggsave(m_glob, filename = "R/data/plotting/gbif_raw_vs_clean_global.png")
 ```
 
@@ -120,32 +120,69 @@ m_lc <- ggplot(countries) +
 ggsave(m_lc, filename = "R/data/plotting/lc_glob_extents.pdf")
 ```
 
-```{r, plot yearly occ frequency}
+```{r, how many raw occs before 2002 eu and as}
+#create uncleaned eu and as subsets (modified copy of occ_clean)
+# load raw gbif data
+axyridis_raw <- read.csv("R/data/occurence_data/Harmonia-axyridis_gbif_raw.csv",
+    header = TRUE,
+    sep = "\t"
+)
+
+# only take relevant columns
+axyridis_raw <- axyridis_raw[c("decimalLatitude", "decimalLongitude", "year", "coordinateUncertaintyInMeters")]
+names(axyridis_raw) <- c("Lat", "Lon", "Year", "CoordUncert")
+
+# remove relevant NAs in data
+# remove occurences after 2022
+axyridis_sub <- subset(axyridis_raw, !is.na(Lat & Lon & Year & CoordUncert))
+
+# subset data into eu and as spatial extent 
+# land cover layers vor reference (xmin, xmax, ymin, ymax)
+eu <- ext(rast("R/data/cropped_rasters/Cop_LC_2016_eu.grd"))
+as <- ext(rast("R/data/cropped_rasters/Cop_LC_2016_as.grd"))
+# some issue with crop and SpatVector with terra, so ugly subset
+axyridis_eu <- subset(axyridis_sub, Lon > eu[1] & Lon < eu[2] & Lat > eu[3] & Lat < eu[4])
+axyridis_as <- subset(axyridis_sub, Lon > as[1] & Lon < as[2] & Lat > as[3] & Lat < as[4])
+
+eu_bef2k = count(subset(axyridis_eu, Year < 2002))[[1]]
+as_bef2k = count(subset(axyridis_as, Year < 2002))[[1]]
+print(paste('Raw EU < 2002:', eu_bef2k, "Raw Native < 2002:", as_bef2k))
+```
+
+```{r, plot yearly occ frequency 2002-2022 with cleaned occs}
 occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
-occs_eu <- subset(occs, Area == "EU" & Year > 1991)
-occs_as <- subset(occs, Area == "AS" & Year > 1991)
+occs_eu <- subset(occs, Area == "EU" & Year >= 2002)
+occs_as <- subset(occs, Area == "AS" & Year >= 2002)
 
 # get occurences per year as df
-freq_eu = count(occs_eu, Year)
-freq_as = count(occs_as, Year)
-freqs = expand.grid(
-    Year = 1992:2022, 
-    n_eu = unique(freq_eu$n), 
-    stringsAsFactors = FALSE
+freq_eu <- count(occs_eu, Year) # frequency of yearly occs eu
+freq_as <- count(occs_as, Year) # frequency of yearly occs as
+freqs <- data.frame(Year = 2002:2022, n = 0)
+freqs[match(freq_eu$Year, freqs$Year), ] <- freq_eu # add missing years
+freqs_tot <- data.frame(Year = freqs$Year, n_eu = freqs$n)
+freqs <- data.frame(Year = 2002:2022, n = 0)
+freqs[match(freq_as$Year, freqs$Year), ] <- freq_as # add missing years
+freqs_tot$n_as <- freqs$n
+freqs_tot$n_tot <- freqs_tot$n_eu + freqs_tot$n_as
+#reformat df to long format for ggplot
+l = length(freqs$Year)
+frequencies <- data.frame(
+    Year = c(freqs_tot$Year, freqs_tot$Year, freqs_tot$Year),
+    n = c(freqs_tot$n_as, freqs_tot$n_eu, freqs_tot$n_tot),
+    label = c(rep("Native", l), rep("EU", l), rep("Total", l))
 )
-# merge values
-tot_freq$label <- "Total"
-eu_freq$label <- "Europe"
-as_freq$label <- "Native range"
-frequencies <- rbind(tot_freq, eu_freq, as_freq)
-names(frequencies)[1] <- "Year"
 
-yearbreaks <- c(1981, 1992, 2000, 2005, 2010, 2015, 2022)
-plot <- ggplot(frequencies, aes(x = Year, y = Freq)) +
+# find out how many occurences are before 2000
+eu_bef2k = count(subset(occs, Area == "EU" & Year < 2002))[[1]]
+as_bef2k = count(subset(occs, Area == "AS" & Year < 2002))[[1]]
+cap = paste('Cleaned EU < 2002:', eu_bef2k, "Cleaned Native < 2002:", as_bef2k)
+plot <- ggplot(frequencies, aes(x = Year, y = n)) +
     geom_point(alpha = 0.5, aes(colour = label)) +
-    scale_x_discrete( breaks = yearbreaks)
+    labs(title = 'cleaned yearly occurrences', caption = cap)
 plot
-ggsave(plot, filename = "R/data/plotting/occurence_yearlyfreq_tot_eu_as.png")
-logplot = plot + scale_y_continuous(trans = "log10")
-ggsave(plot, filename = "R/data/plotting/occurence_yearlyfreq_tot_eu_as_log.png")
+ggsave(plot, filename = "R/plots/clean_occ_yearly_tot_eu_as.png")
+logplot <- plot + scale_y_continuous(trans = "log10")
+logplot
+ggsave(logplot, filename = "R/plots/clean_occ_yearly_tot_eu_as_log.png")
+print(cap)
 ```

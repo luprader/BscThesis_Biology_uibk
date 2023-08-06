@@ -1,0 +1,1 @@
+{"rule":"AFFORD_VBG","sentence":"^\\QTo select the variables used, bioclim variables were chosen using variance inflation values.\\E$"}
