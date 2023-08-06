@@ -88,7 +88,7 @@ lc_16_v <- lc_16 == 200
 plot(lc_16_v)
 ```
 
-```{r, plot glob eu and as raw gbif}
+```{r, plot glob raw vs clean gbif}
 # load raw gbif raster
 axyridis_raw <- read.csv("R/data/occurence_data/Harmonia-axyridis_gbif_raw.csv",
     header = TRUE,
@@ -109,7 +109,7 @@ m_glob <- ggplot(countries) +
         data = axyridis_clean, aes(x = Lon, y = Lat),
         colour = "blue", alpha = 0.7
     )
-ggsave(m_glob, filename = "R/data/plotting/gbif_raw_vs_clean_global.png")
+ggsave(m_glob, filename = "R/plots/gbif_raw_vs_clean_global.png")
 ```
 
 ```{r, plot lc with map}
@@ -185,4 +185,17 @@ logplot <- plot + scale_y_continuous(trans = "log10")
 logplot
 ggsave(logplot, filename = "R/plots/clean_occ_yearly_tot_eu_as_log.png")
 print(cap)
+```
+
+```{r, test absence distance flagging}
+test = buffer(vect(rbind(c(0,0), c(1,1)), crs = '+proj=longlat'), 10000)[1]
+set.seed(54)
+t_pres = spatSample(circs, 5)
+gen = spatSample(test, 100)
+set.seed(168)
+flag = gen[apply(distance(gen, t_pres),1, function(x) any(x < 2000)), ]
+plot(circs)
+points(t_pres, col = 'green')
+points(gen, col = 'grey')
+points(flag, col = 'red')
 ```

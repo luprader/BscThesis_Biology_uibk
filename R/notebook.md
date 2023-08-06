@@ -39,3 +39,6 @@ The thought has come to mind, that it might be worthwhile to not use a general d
 Having the exact same coordinates in several years would indicate lazy sampling though and might not be desirable because of that.
 
 The outline intro was refined more and the methods adapted to include the new temporal extent.
+
+The generation of pseudo-absence/background points was started, generating 5 points in a 10 km radius around a presence point and checking for water or a distance closer than 0.5km to any other presence point. 
+The presence points will be subset per year and area to be able to give them the corresponding labels.
