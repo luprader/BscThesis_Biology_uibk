@@ -45,6 +45,6 @@ The presence points will be subset per year and area to be able to give them the
 
 ### 08/08/2023
 The generation of background points was finished.
-For each year, 5 points are generated in a 10 km radius and with a minimum distance of 0.5 km from any presence point. 
+Subsetting was not necessary, since the generated points were automatically assigned by the 'buffer' and 'spatSample' functions from 'terra'.
 The script currently takes a lot of time due to the minimum distance check as it is implemented right now.
-There might be better options of doing this, for example with intersected polygons instead of a normal distance calculation.
+There might be better options of doing this, for example with intersected buffer polygons instead of a normal distance calculation.
