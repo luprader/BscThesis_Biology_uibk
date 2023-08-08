@@ -42,3 +42,9 @@ The outline intro was refined more and the methods adapted to include the new te
 
 The generation of pseudo-absence/background points was started, generating 5 points in a 10 km radius around a presence point and checking for water or a distance closer than 0.5km to any other presence point. 
 The presence points will be subset per year and area to be able to give them the corresponding labels.
+
+### 08/08/2023
+The generation of background points was finished.
+For each year, 5 points are generated in a 10 km radius and with a minimum distance of 0.5 km from any presence point. 
+The script currently takes a lot of time due to the minimum distance check as it is implemented right now.
+There might be better options of doing this, for example with intersected polygons instead of a normal distance calculation.
