@@ -15,7 +15,7 @@ names(axyridis_raw) <- c("Lat", "Lon", "Year", "CoordUncert")
 
 # remove relevant NAs in data
 # remove occurences after 2022 and with larger uncertainty than 1 km
-axyridis_sub <- subset(axyridis_raw, !is.na(Lat & Lon & Year & CoordUncert) &
+axyridis_sub <- subset(axyridis_raw, complete.cases(axyridis_raw) &
     Year < 2023 & CoordUncert <= 1000)
 cat(length(axyridis_raw$Year) - length(axyridis_sub$Year), "points removed with subset", "\n")
 
