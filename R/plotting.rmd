@@ -121,7 +121,7 @@ ggsave(m_lc, filename = "R/data/plotting/lc_glob_extents.pdf")
 ```
 
 ```{r, how many raw occs before 2002 eu and as}
-#create uncleaned eu and as subsets (modified copy of occ_clean)
+# create uncleaned eu and as subsets (modified copy of occ_clean)
 # load raw gbif data
 axyridis_raw <- read.csv("R/data/occurence_data/Harmonia-axyridis_gbif_raw.csv",
     header = TRUE,
@@ -136,7 +136,7 @@ names(axyridis_raw) <- c("Lat", "Lon", "Year", "CoordUncert")
 # remove occurences after 2022
 axyridis_sub <- subset(axyridis_raw, !is.na(Lat & Lon & Year & CoordUncert))
 
-# subset data into eu and as spatial extent 
+# subset data into eu and as spatial extent
 # land cover layers vor reference (xmin, xmax, ymin, ymax)
 eu <- ext(rast("R/data/cropped_rasters/Cop_LC_2016_eu.grd"))
 as <- ext(rast("R/data/cropped_rasters/Cop_LC_2016_as.grd"))
@@ -144,9 +144,9 @@ as <- ext(rast("R/data/cropped_rasters/Cop_LC_2016_as.grd"))
 axyridis_eu <- subset(axyridis_sub, Lon > eu[1] & Lon < eu[2] & Lat > eu[3] & Lat < eu[4])
 axyridis_as <- subset(axyridis_sub, Lon > as[1] & Lon < as[2] & Lat > as[3] & Lat < as[4])
 
-eu_bef2k = count(subset(axyridis_eu, Year < 2002))[[1]]
-as_bef2k = count(subset(axyridis_as, Year < 2002))[[1]]
-print(paste('Raw EU < 2002:', eu_bef2k, "Raw Native < 2002:", as_bef2k))
+eu_bef2k <- count(subset(axyridis_eu, Year < 2002))[[1]]
+as_bef2k <- count(subset(axyridis_as, Year < 2002))[[1]]
+print(paste("Raw EU < 2002:", eu_bef2k, "Raw Native < 2002:", as_bef2k))
 ```
 
 ```{r, plot yearly occ frequency 2002-2022 with cleaned occs}
@@ -164,8 +164,8 @@ freqs <- data.frame(Year = 2002:2022, n = 0)
 freqs[match(freq_as$Year, freqs$Year), ] <- freq_as # add missing years
 freqs_tot$n_as <- freqs$n
 freqs_tot$n_tot <- freqs_tot$n_eu + freqs_tot$n_as
-#reformat df to long format for ggplot
-l = length(freqs$Year)
+# reformat df to long format for ggplot
+l <- length(freqs$Year)
 frequencies <- data.frame(
     Year = c(freqs_tot$Year, freqs_tot$Year, freqs_tot$Year),
     n = c(freqs_tot$n_as, freqs_tot$n_eu, freqs_tot$n_tot),
@@ -173,12 +173,12 @@ frequencies <- data.frame(
 )
 
 # find out how many occurences are before 2000
-eu_bef2k = count(subset(occs, Area == "EU" & Year < 2002))[[1]]
-as_bef2k = count(subset(occs, Area == "AS" & Year < 2002))[[1]]
-cap = paste('Cleaned EU < 2002:', eu_bef2k, "Cleaned Native < 2002:", as_bef2k)
+eu_bef2k <- count(subset(occs, Area == "EU" & Year < 2002))[[1]]
+as_bef2k <- count(subset(occs, Area == "AS" & Year < 2002))[[1]]
+cap <- paste("Cleaned EU < 2002:", eu_bef2k, "Cleaned Native < 2002:", as_bef2k)
 plot <- ggplot(frequencies, aes(x = Year, y = n)) +
     geom_point(alpha = 0.5, aes(colour = label)) +
-    labs(title = 'cleaned yearly occurrences', caption = cap)
+    labs(title = "cleaned yearly occurrences", caption = cap)
 plot
 ggsave(plot, filename = "R/plots/clean_occ_yearly_tot_eu_as.png")
 logplot <- plot + scale_y_continuous(trans = "log10")
@@ -188,14 +188,68 @@ print(cap)
 ```
 
 ```{r, test absence distance flagging}
-test = buffer(vect(rbind(c(0,0), c(1,1)), crs = '+proj=longlat'), 10000)[1]
+test <- buffer(vect(rbind(c(0, 0), c(1, 1)), crs = "+proj=longlat"), 10000)[1]
 set.seed(54)
-t_pres = spatSample(circs, 5)
-gen = spatSample(test, 100)
-set.seed(168)
-flag = gen[apply(distance(gen, t_pres),1, function(x) any(x < 2000)), ]
-plot(circs)
-points(t_pres, col = 'green')
-points(gen, col = 'grey')
-points(flag, col = 'red')
+t_pres <- spatSample(test, 5)
+gen <- spatSample(test, 100)
+flag <- gen[apply(distance(gen, t_pres), 1, function(x) any(x < 1500)), ]
+plot(test)
+points(t_pres, col = "green")
+points(gen, col = "grey")
+points(flag, col = "red")
+```
+
+```{r, test distance with 2 buffer circles}
+s <- Sys.time()
+set.seed(54)
+n <- 20 # number of test presence points
+t_area <- vect(ext(c(0, 1, 0, 1)), crs = "+proj=longlat")
+t_pts <- spatSample(t_area, n)
+t_pts$Year <- sample(c(2010:2015), n, replace = TRUE)
+t_pts$Area <- sample(c("EU", "AS"), n, replace = TRUE)
+
+r_circs <- buffer(t_pts, 10000)
+d_circs <- buffer(t_pts, 2000)
+d_circs <- d_circs[, -(1:ncol(d_circs))] # remove value cols for merging
+# so that erase only iterates once
+d_comb <- combineGeoms(d_circs[1:2], d_circs[-2])
+d_comb
+d_comb <- combineGeoms(d_comb[1], d_comb[2])
+d_comb
+t_rd <- erase(r_circs, d_comb)
+all_gen <- t_pts[1]
+for (i in seq_along(t_rd)) {
+    c <- t_rd[i]
+    gen <- spatSample(c, 10)
+    all_gen <- rbind(all_gen, gen)
+}
+all_gen <- all_gen[-1, ]
+nrow(all_gen)
+print(Sys.time() - s)
+
+plot(all_gen, "Year", col = rainbow(5), alpha = 0.6)
+points(t_pts)
+lines(t_rd)
+```
+
+```{r, test plot pa from gen}
+pa <- readRDS("R/data/occurence_data/axyridis_pa.rds")
+pa_as <- subset(pa, Area == "AS")
+pa_as_v <- vect(pa_as, geom = c("Lon", "Lat"), crs = "epsg:4326")
+v_crop <- crop(pa_as_v, ext(87.85, 88.35, 53.4, 53.85))
+
+crop_df <- as.data.frame(v_crop, geom = "XY")
+pres_v <- vect(subset(crop_df, Presence == "present"), geom = c("x", "y"), crs = "epsg:4326")
+
+r_crop <- buffer(pres_v, 10000)
+d_crop <- buffer(pres_v, 1000)
+
+plot(v_crop,
+    "Presence",
+    col = c("grey", "green"),
+    xlim = c(87.85, 88.35),
+    ylim = c(53.55, 53.85)
+)
+lines(r_crop)
+lines(d_crop)
 ```

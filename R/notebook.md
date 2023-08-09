@@ -48,3 +48,10 @@ The generation of background points was finished.
 Subsetting was not necessary, since the generated points were automatically assigned by the 'buffer' and 'spatSample' functions from 'terra'.
 The script currently takes a lot of time due to the minimum distance check as it is implemented right now.
 There might be better options of doing this, for example with intersected buffer polygons instead of a normal distance calculation.
+
+### 09/08/2023
+The generation of absence/background points was improved to have a feasible runtime of <3h.
+(the past script was never executed to completion, took way too long)
+The point distance approach was removed and replaced with removing distance buffer circles from the range circles and generating points in these new polygons.
+The distance circles are also merged into one polygon to prevent unnecessary iterations when erasing.
+The current amount of absences per presence is 5, with a range of 10 km and a minimum distance of 1 km to other presences.
