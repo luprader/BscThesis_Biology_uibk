@@ -1,8 +1,12 @@
 \documentclass[12pt]{article}
 \usepackage{times}
-\usepackage[lmargin = 3cm, rmargin = 2cm, tmargin = 2.5cm, bmargin = 2.5cm]{geometry}
+% increasing margins somewhat to make room for notes
+\usepackage[lmargin = 4cm, rmargin = 4cm, tmargin = 2.5cm, bmargin = 2.5cm]{geometry}
+\setlength{\marginparwidth}{3.5cm} % make todonotes wider
 \usepackage[UKenglish]{babel}
 \setlength{\parindent}{0cm}
+\usepackage[textsize=tiny]{todonotes}
+\newcommand{\todoleft}[1]{{\reversemarginpar \todo{#1}}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
@@ -15,20 +19,31 @@
 \section{Introduction}
 (citations missing)
 
+%% I compiled this using git-latexdiff (https://gitlab.com/git-latexdiff/git-latexdiff) just to show you how you can get a view of document changes in the rendered PDF.
+%% compilation commands:
+%% git latexdiff --latexmk --main outline.tex HEAD -- # to compile the current working directory against the last commit
+%% git latexdiff --latexmk --main outline.tex HEAD~1 HEAD # to compile the latest commit against the one before
+%% you can also refer to specific commit sha hashes
+
 The topic of invasive species has become more and more important, even more so with recent changes in climate and habitats due to human influence.
 In order to deal with invasive species and the impact they can have on existing ecosystems, species distribution models (SDMs) have been used to predict the potential habitat and with that the threat of an emerging invasive species.
+\todo{This jumps quite quickly to a pretty technical topic, it will need more explanation}
 Especially time-partitioned models can provide more insight into the process of invasion. 
 Ensemble models are often used in applications where models are projected, since aspects of different modelling approaches can be combined to hopefully gain a more complete model of the species distribution. 
 
 There are certain challenges when using SDMs in invasive research though. 
 For example, the invading species is usually not currently in equilibrium with its environment, leading to underestimations of the final niche occupied. 
-This also comes into play when trying to model the invaded range with data from a species native range since the native niche can be quite different from the realized invaded niche.
+\todo{Mostly I have made a suggestion here to show you how you can use git-latexdiff to get tracked changes}
+A similar difficulty is modelling the invaded range with data from a species native range since the native niche can be quite different from the realized invaded niche.
 
+\todoleft{I think, that since your thesis has two goals (understanding H axyridis, but also building a cool model), you can go into more detail on the modelling appraoch, why it is good, etc in the introduction. The specifics you will still save for methods}
 Nonetheless, SDMs are frequently used in trying to predict the spread of invasive species, which is why it is important to gain a better understanding of invasion processes and an SDM's ability to accurately represent it.
 
+\todo{Good start here. Of course eventually your thesis will need quite a bit of background info on the invasion especially}
 \textit{Harmonia axyridis}, also known as the harlequin or Asian lady beetle, is an invasive species already established in non-native habitats all around the world.
 The invasion process has already been studied extensively and there have been SDMs modelling the invaded range in Europe as well, though mostly on a national scale. 
 
+\todoleft{Good, but I think this needs to be expanded. In particular, the choice of modelling approach needs to be justified in the objectives. What is it that you want to accomplish with this iterative approach? What can we learn from it that we couldn't from a normal ensemble model?}
 This thesis aims to analyse the spread of \textit{Harmonia axyridis} in detail, as well as creating new insight into the progression of an ensemble SDM iterating over each year of sampling. 
 
 \newpage
@@ -55,12 +70,16 @@ For each year, the following Models were computed: General Linear (GLM), General
 Each model used either only data points from Europe (eu) or from Europe and the native range in Asia (eu+as). 
 A model for a specific year always included all points from past years as well.
 For all used occurrence points prior to 1992 and after 2020, the land cover data of 1992 or 2020 was used as a substitute.
+\todo{Hmm, yes, that's a challenge, especially if land use is changing quickly. I guess for the most part it is not, but maybe for asia?}
 (necessary for after 2020 if only for verification?)
 
+\todo{This will also need more detail}
 To select the variables used, bioclim variables were chosen using variance inflation values. 
 For the land cover data, a PCA was computed and added to the chosen bioclim variables.
 
 \subsection{Analysis}
+\todo{Following year is clear enough, but what's the justification for testing the models against 2022? This would seem like it should automatically prefer SDMs build on current data, because there has been more time for change since 1992?}
+\todo{Explain occupied niche and how you computed it; a figure might also be helpful}
 All SDM models of each year were tested for their accuracy on predicting the occurrences of the following year and the final year of 2022. 
 For each year, the occupied niche was also computed, though only using data points from the year in question (Broennimann et al. 2011). 
 These niches were again compared to the following year and 2022.
