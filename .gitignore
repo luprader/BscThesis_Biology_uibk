@@ -3,3 +3,8 @@
 .RData
 .Ruserdata
 /R/data/*
+
+# latex files
+*.gz
+*.aux
+*.log
