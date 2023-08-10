@@ -203,6 +203,7 @@ points(flag, col = "red")
 s <- Sys.time()
 set.seed(54)
 n <- 20 # number of test presence points
+n_ab <- 20 # number of generated points
 t_area <- vect(ext(c(0, 1, 0, 1)), crs = "+proj=longlat")
 t_pts <- spatSample(t_area, n)
 t_pts$Year <- sample(c(2010:2015), n, replace = TRUE)
@@ -210,26 +211,97 @@ t_pts$Area <- sample(c("EU", "AS"), n, replace = TRUE)
 
 r_circs <- buffer(t_pts, 10000)
 d_circs <- buffer(t_pts, 2000)
-d_circs <- d_circs[, -(1:ncol(d_circs))] # remove value cols for merging
+d_circs <- d_circs[, -(1:ncol(d_circs))] # remove value cols from d_circs
 # so that erase only iterates once
-d_comb <- combineGeoms(d_circs[1:2], d_circs[-2])
-d_comb
-d_comb <- combineGeoms(d_comb[1], d_comb[2])
-d_comb
-t_rd <- erase(r_circs, d_comb)
+# d_comb <- combineGeoms(d_circs[1:2], d_circs[-2])
+# d_comb <- combineGeoms(d_comb[1], d_comb[2])
+t_rd <- erase(r_circs, d_circs)
 all_gen <- t_pts[1]
 for (i in seq_along(t_rd)) {
     c <- t_rd[i]
-    gen <- spatSample(c, 10)
+    gen <- spatSample(c, n_ab)
     all_gen <- rbind(all_gen, gen)
 }
 all_gen <- all_gen[-1, ]
 nrow(all_gen)
 print(Sys.time() - s)
 
-plot(all_gen, "Year", col = rainbow(5), alpha = 0.6)
+plot(all_gen, "Year", col = rainbow(5), alpha = 0.6) # , xlim=c(0,0.1), ylim=c(0,0.1))
 points(t_pts)
 lines(t_rd)
+```
+
+```{r, test improve erase}
+set.seed(54)
+n <- c(100, 1000, 10000) # number of test presence points
+n_ab <- 5 # number of generated points
+t_area <- vect(ext(c(0, 20, 0, 20)), crs = "+proj=longlat")
+t_pts <- spatSample(t_area, n)
+t_pts$Year <- sample(c(2010:2015), n, replace = TRUE)
+t_pts$Area <- sample(c("EU", "AS"), n, replace = TRUE)
+
+btime <- Sys.time()
+r_circs <- buffer(t_pts, 10000)
+d_circs <- buffer(t_pts, 2000)
+d_circs <- d_circs[, -(1:ncol(d_circs))] # remove value cols from d_circs
+# so that erase only iterates once
+d_comb <- combineGeoms(d_circs[1:2], d_circs[-2])
+d_comb <- combineGeoms(d_comb[1], d_comb[2])
+t_rd <- erase(r_circs, d_circs)
+gentime <- Sys.time()
+all_gen <- t_pts[1]
+for (i in seq_along(t_rd)) {
+    c <- t_rd[i]
+    gen <- spatSample(c, n_ab)
+    all_gen <- rbind(all_gen, gen)
+}
+all_gen <- all_gen[-1, ]
+fintime <- Sys.time()
+
+
+plot(all_gen, "Year", col = rainbow(5), alpha = 0.6) # , xlim=c(0,0.1), ylim=c(0,0.1))
+points(t_pts)
+lines(t_rd)
+```
+```{r, test erase 10k no split}
+t_area <- vect(ext(c(0, 20, 0, 20)), crs = "+proj=longlat")
+n_ab <- 5 # number of generated points
+n <- 10000
+pres <- readRDS("R/data/occurence_data/axyridis_clean.rds")
+pres <- subset(pres, Year == 2019)
+
+btime <- Sys.time()
+t_pts <- vect(pres, geom = c("Lon", "Lat"), crs = "epsg:4326")
+r_circs <- buffer(t_pts, 10000)
+d_circs <- buffer(t_pts, 1000)
+d_circs <- d_circs[, -(1:ncol(d_circs))] # remove value cols from d_circs
+t_rd <- erase(r_circs, d_circs)
+
+cat("no splits: ", n, " pts: ")
+print(Sys.time() - btime)
+```
+
+```{r, test generate subextents}
+source('R/0.0-functions.r', encoding = "UTF-8")
+init_ext <- c(0, 10, 0, 10)
+t_area <- vect(ext(init_ext), crs = "epsg:4326")
+set.seed(23)
+points <- spatSample(t_area, 1000)
+
+subsets = lp_subdiv_pts(points, end_ptcount = 100, init_ext)
+
+plot(t_area)
+points(points)
+for(s in seq_len(nrow(subsets))) {
+    ext_s = vect(ext(subsets[s, ]), crs = 'epsg:4326')
+    lines(ext_s)
+}
+```
+
+```{r}
+starting_time = Sys.time()
+Sys.sleep(10)
+difftime(Sys.time(), starting_time, units = "secs")[[1]]
 ```
 
 ```{r, test plot pa from gen}

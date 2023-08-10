@@ -4,87 +4,42 @@
 # used libraries
 library(terra)
 library(dplyr)
+source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 
-n_tot <- 5 # amount of background points per occurrence point
-ao_range <- 10000 # range for absence generation in m
-pdist <- 1000 # minimum distance of absences to a presence point in m
-
+tot_time <- Sys.time()
 # load cleaned occurences
-pres <- readRDS("R/data/occurence_data/axyridis_clean.rds")
-# pres = subset(pres, Year == 2002)
+occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
+occs <- subset(occs, Year == 2019)
 # load reference lc layers
 lc_eu <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.grd")
 lc_as <- rast("R/data/cropped_rasters/Cop_LC_2002_as.grd")
 lc_ref <- merge(lc_eu, lc_as)
+# ext(lc_ref) returns:
+# SpatExtent : -25, 150, 19.9916666666667, 72 (xmin, xmax, ymin, ymax)
+# lc_ref extent as vector for subdiv function
+ref_ext_v <- c(-25, 150, 19.9916666666667, 72)
 
-# initialize df for absences
-names <- c("Lat", "Lon", "Year", "CoordUncert", "Area", "Presence")
-abs <- data.frame(matrix(nrow = 0, ncol = length(names)))
-colnames(abs) <- names
 # create SpatVector object of presence points
-pres_v <- vect(pres, geom = c("Lon", "Lat"), crs = crs(lc_ref))
-# create circles around each point
-circs_r <- buffer(pres_v, ao_range)
-circs_d <- buffer(pres_v, pdist)
-circs_d <- circs_d[, -(1:ncol(circs_d))] # remove value cols for merging
-ctime <- Sys.time()
-# merge distance requirements to not have unnecessary iterations
-circs_d_c <- combineGeoms(circs_d[1:2], circs_d[-2]) 
-circs_d_c <- combineGeoms(circs_d_c[1], circs_d_c[2])
-circs_rd <- erase(circs_r, circs_d_c) # actually allowed space for absences
-cat("buffer gen:")
-print(Sys.time() - ctime)
+occs_v <- vect(occs, geom = c("Lon", "Lat"), crs = crs(lc_ref))
 
-set.seed(4326) # have consistent randomness
-# progress bar in terminal
-pb <- txtProgressBar(
-    min = 0,
-    max = nrow(pres),
-    initial = 0,
-    style = 3,
-    width = 50
-)
-prog <- 0
-gtime <- Sys.time()
-## generate n_tot absence points per circle
-whilecount <- 0 # how often replacements had to be generated
-for (i in seq_along(circs_rd)) {
-    c <- circs_rd[i]
-    pts <- spatSample(c, n_tot) # generate random points inside
-    # extract lc values
-    pts <- cbind(pts, extract(lc_ref, pts, method = "simple", ID = FALSE))
-    # test for lc = water or NA (out of cropped area)
-    pts <- pts["lccs_class" != 210 & !is.na("lccs_class"), ]
-    pts$lccs_class <- NULL # remove lc column
-
-    # generate replacements if needed
-    while (nrow(pts) < n_tot) {
-        whilecount <- whilecount + 1
-        n <- n_tot - nrow(pts)
-        pts_n <- spatSample(c, n)
-        pts_n <- cbind(pts_n, extract(lc_ref$lccs_class, pts_n))
-        pts_n <- pts_n["lccs_class" != 210 & !is.na("lccs_class"), ]
-        pts$lccs_class <- NULL # remove lc column
-        pts <- rbind(pts, pts_n)
-    }
-    pts_df <- as.data.frame(pts, geom = "XY") # turn SpatVector back to df
-    pts_df <- rename(pts_df, c("Lon" = "x", "Lat" = "y"))
-    # add generated points to total dataframe
-    abs <- rbind(abs, pts_df)
-    # map progress
-    prog <- prog + 1
-    setTxtProgressBar(pb, prog)
+# generate subdividing extents to improve computation time
+subexts <- lp_subdiv_pts(occs_v, end_ptcount = 2000, ref_ext_v)
+# generate absences for each sub extent and merge
+pa <- data.frame() # initialize pa df
+count = 0
+for (e in seq_len(nrow(subexts))) {
+    cat("\r", "|", count, "|")
+    count = count + 1
+    ext_e <- vect(ext(subexts[e, ]), crs = crs(lc_ref))
+    # subset occurences inside the extent in question
+    occs_c <- crop(occs_v, ext(ext_e))
+    # generate absences inside the extent
+    pa_e <- lp_gen_abs(occs_c, n_abs = 5, min_d = 1000, max_d = 10000, lc_ref)
+    # merge with already computed points
+    pa <- rbind(pa, pa_e)
 }
-close(pb)
 
-cat("presences:", nrow(pres), "absences:", nrow(abs), "\n")
-cat("tot whilecount:", whilecount, "|absence gen:")
-print(Sys.time() - gtime)
-
-pres$Presence <- "present"
-abs$Presence <- "absent"
-pa <- rbind(pres, abs)
-# save po, ao and pa data separately
-saveRDS(pres, file = "R/data/occurence_data/axyridis_po.rds")
-saveRDS(abs, file = "R/data/occurence_data/axyridis_ao.rds")
+# save complete pa data separately
 saveRDS(pa, file = "R/data/occurence_data/axyridis_pa.rds")
+td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
+cat("\n", "absence generation completed ", td, "secs", "\n")

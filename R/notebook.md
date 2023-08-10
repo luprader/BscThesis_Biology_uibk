@@ -31,7 +31,7 @@ The timeframe will probably only be 2002-2022 instead of 1992-2022 because of th
 The amounts of occurrences per year were computed in more detail.
 This resulted in two plots (R/plots/clean_occ_yearly_*.png) and the following values:
 "Raw EU < 2002: 32 Raw Native < 2002: 35"  
-"Cleaned EU < 2002: 2 Cleaned Native < 2002: 12"  
+"Cleaned EU < 2002: 0 Cleaned Native < 2002: 5"  
 Because of this, even though the first occurrence according to EASIN was 1991 in Belgium, the temporal extent will not include years prior to 2002 anymore.
 There might be value in creating an initial model with the 2 and 12 cleaned points prior to 2002, so for now they are not excluded in the cleaning process.
 Only the land cover layers that were not needed anymore were removed from the used data folder.
@@ -50,8 +50,16 @@ The script currently takes a lot of time due to the minimum distance check as it
 There might be better options of doing this, for example with intersected buffer polygons instead of a normal distance calculation.
 
 ### 09/08/2023
-The generation of absence/background points was improved to have a feasible runtime of <3h.
+The generation of absence/background points was improved to have an estimated runtime of 3h.
 (the past script was never executed to completion, took way too long)
 The point distance approach was removed and replaced with removing distance buffer circles from the range circles and generating points in these new polygons.
 The distance circles are also merged into one polygon to prevent unnecessary iterations when erasing.
 The current amount of absences per presence is 5, with a range of 10 km and a minimum distance of 1 km to other presences.
+
+### 10/08/2023
+Merging all minimum distance circles (1 km), failed since the combined polygon was too large to compute. 
+Combining seems to not improve the runtime at all after further investigation.
+The new approach now is to geographically subset all points and compute the absences for each subset.
+The total extent is now split into extents until the desired density per extent is reached. (function lp_subdiv_pts())
+Afterwards, all occurrences are cropped to those extents and then separately used for absence generation. (function lp_gen_abs())
+The functions for these steps are defined in a separate function.r script.
