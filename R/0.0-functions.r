@@ -9,14 +9,26 @@ library(terra)
 library(dplyr)
 
 ################################################################################
-## function subdividing point extents until desired pointcount is reached
-# 'end_ptcount' has to be an integer value smaller than the length of 'points'
-# it specifies the desired pointcount per extent
-# 'points' has to be a SpatVector object (terra) with extent <= init_ext
-# 'init_ext' has to be a vector in the form of c(xmin, xmax, ymin, ymax)
+# function subdividing point extents until desired pointcount is reached
+
+# end_ptcount -> the desired point count per extent
+# has to be a number
+# points -> points to subset to the desired point count 
+# has to be a SpatVector object (terra) with extent <= init_ext
+# init_ext -> the initial extent to start off of
+# has to be a vector in the form of c(xmin, xmax, ymin, ymax)
+
 # returns a vector containing the needed extents in the form of init_ext
 
 lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
+    # check if points can be subdivided (goal smaller than given)
+    ext_v_init <- vect(ext(init_ext), crs = "epsg:4326")
+    ptcount_init <- nrow(crop(points, ext(ext_v_init)))
+    if(ptcount_init <= end_ptcount) {
+        cat("Error(lp_subdiv_pts): points \u2265 end_ptcount", "\n")
+        return(init_ext) # subsetting will not help, init_ext is "the best"
+    }
+
     cat("starting subdivision")
     Sys.sleep(1)
     starting_time <- Sys.time()
@@ -61,12 +73,9 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
         ptcount_n_ext <- nrow(crop(points, ext(n_ext_v)))
         # check if desired pointcount is reached
         if (ptcount_n_ext <= end_ptcount) {
-            if (ptcount_n_ext == 0) {
-                # ext is bad if no points are inside, dont add
-                Sys.sleep(0.0001) 
-            } else {
-                # move extent from bad to good
-                good_exts <- rbind(good_exts, n_ext)
+            if (ptcount_n_ext != 0) {
+                # if not empty, move extent from bad to good
+                good_exts <- rbind(good_exts, n_ext) 
             }
         } else {
             # too many points, split extent again
@@ -110,8 +119,10 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
 ################################################################################
 # function generating pseudoabsence/background points with a minimum and maximum
 # distance away from other presences.
-# 'pres' -> presences for which to compute absence points
-# has to be a SpatVector object (terra)
+
+# pres -> presences for which to compute absence points
+# has to be a dataframe with the following columns:
+# (Lon, Lat, Year, CoordUncert, Area)
 # n_abs -> number of absences to compute per presence in m
 # has to be an integer
 # min_d -> minimum distance of absences to presences in m
@@ -119,13 +130,11 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
 # max_d -> maximum distance of absences to presences
 # has to be a number
 # lc_ref -> land cover raster to test for water/NA
-# has to be ...
+# has to be a SpatRaster object (terra) with numerical values, water = 210
 
-# returns a dataframe in the form of 'pres' with the presence and computed
-# absence points
-#######################
+# returns a dataframe with the following columns:
+# (Lon, Lat, Year, CoordUncert, Area, Presence)
 
-#################
 lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
     set.seed(4326) # have consistent randomness
     # check if pres is empty
