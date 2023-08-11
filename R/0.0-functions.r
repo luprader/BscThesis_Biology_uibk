@@ -170,7 +170,7 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
 
         # generate replacements if needed
         while (nrow(pts) < n_abs) {
-            whilecount <- whilecount + 1
+            wc <- wc  + 1
             n <- n_abs - nrow(pts)
             pts_n <- spatSample(c, n)
             pts_n <- cbind(pts_n, extract(lc_ref$lccs_class, pts_n))

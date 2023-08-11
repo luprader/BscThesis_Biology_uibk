@@ -9,7 +9,6 @@ source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 tot_time <- Sys.time()
 # load cleaned occurences
 occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
-occs <- subset(occs, Year == 2019)
 # load reference lc layers
 lc_eu <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.grd")
 lc_as <- rast("R/data/cropped_rasters/Cop_LC_2002_as.grd")
@@ -23,13 +22,13 @@ ref_ext_v <- c(-25, 150, 19.9916666666667, 72)
 occs_v <- vect(occs, geom = c("Lon", "Lat"), crs = crs(lc_ref))
 
 # generate subdividing extents to improve computation time
-subexts <- lp_subdiv_pts(occs_v, end_ptcount = 2000, ref_ext_v)
+subexts <- lp_subdiv_pts(occs_v, end_ptcount = 10000, ref_ext_v)
 # generate absences for each sub extent and merge
 pa <- data.frame() # initialize pa df
-count = 0
+prog = 0
 for (e in seq_len(nrow(subexts))) {
-    cat("\r", "|", count, "|")
-    count = count + 1
+    cat("\r", "|", prog, "|")
+    prog = prog + 1
     ext_e <- vect(ext(subexts[e, ]), crs = crs(lc_ref))
     # subset occurences inside the extent in question
     occs_c <- crop(occs_v, ext(ext_e))
@@ -41,5 +40,6 @@ for (e in seq_len(nrow(subexts))) {
 
 # save complete pa data separately
 saveRDS(pa, file = "R/data/occurence_data/axyridis_pa.rds")
+saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("\n", "absence generation completed ", td, "secs", "\n")

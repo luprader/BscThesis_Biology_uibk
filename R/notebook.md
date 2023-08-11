@@ -63,3 +63,11 @@ The new approach now is to geographically subset all points and compute the abse
 The total extent is now split into extents until the desired density per extent is reached. (function lp_subdiv_pts())
 Afterwards, all occurrences are cropped to those extents and then separately used for absence generation. (function lp_gen_abs())
 The functions for these steps are defined in a separate function.r script.
+
+### 11/08/2023
+A benchmark of the absence generation regarding different desired point densities (end_ptcount) then computing sub extents was attempted.
+After creating a dummy land cover layer with some NA space to include absence flagging, different subset amounts relative to the tested total point count were tested: none, 1/2, 1/10 and 1/100. 
+This means that for 1000 presence points, a subset to 100, 10 and 500 was tested for computation speed.
+This process was repeated for 5000 and 10000 dummy presences, resulting in the plot 'abs_gen_subdiv_bench.png'.
+From this, the decision was made to run absence generation with a desired density of <10000 presences, meaning a division of ~1/12.6 for ~126000 total presences.
+This results in a runtime of X  mins.
