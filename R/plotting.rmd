@@ -281,27 +281,114 @@ cat("no splits: ", n, " pts: ")
 print(Sys.time() - btime)
 ```
 
-```{r, test generate subextents}
-source('R/0.0-functions.r', encoding = "UTF-8")
-init_ext <- c(0, 10, 0, 10)
-t_area <- vect(ext(init_ext), crs = "epsg:4326")
-set.seed(23)
-points <- spatSample(t_area, 1000)
+```{r, benchmark absence gen (runtime 38 mins) }
+rtime <- Sys.time()
+set.seed(4326)
+source("R/0.0-functions.r", encoding = "UTF-8")
+# use lc_eu as ref
+lc_eu <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.grd")
+# presence points per test
+counts <- c(1000, 5000, 10000)
+# extents for each element of pts
+exts <- rbind(
+    c(2, 3, 41, 42),
+    c(0, 5, 40, 45),
+    c(-5, 5, 35, 45)
+)
 
-subsets = lp_subdiv_pts(points, end_ptcount = 100, init_ext)
+results <- c(0, 0, 0)
+all_subexts <- c(0, 0, 0, 0)
 
-plot(t_area)
-points(points)
-for(s in seq_len(nrow(subsets))) {
-    ext_s = vect(ext(subsets[s, ]), crs = 'epsg:4326')
-    lines(ext_s)
+for (i in seq_len(nrow(exts))) {
+    print(i)
+    pcnt <- counts[i]
+    t_ext <- exts[i, ]
+    # create dummy lc_ref
+    mat <- matrix(c(rep(50, 10), NA, rep(50, 5)), nrow = 4, ncol = 4)
+    t_ref <- rast(mat, crs = "epsg:4326")
+    ext(t_ref) <- ext(t_ext)
+    names(t_ref) <- "lccs_class"
+    t_ref <- disagg(t_ref, fact = pcnt / 100)
+    # generate dummy presences
+    bias <- 0.6 # percent of presences that should be biased
+    init_pts <- spatSample(t_ref, pcnt * (1 - bias), xy = TRUE, na.rm = TRUE)
+    init_v <- vect(init_pts, geom = c("x", "y"), crs = crs(t_ref))
+    biased_v <- init_v[1:(pcnt * bias / 10), ]
+    biased_c <- buffer(biased_v, pcnt)
+    t_pres <- rbind(init_v, spatSample(biased_c, pcnt * bias))
+    # cat(length(init_v), length(biased_v) * 10, "\n")
+    # plot(t_ref)
+    # points(t_pres, pch = 16)
+
+    # benchmark without subsets
+    tot_time <- Sys.time()
+    e_cnt <- pcnt
+    pa <- data.frame() # initialize pa df
+    ext_e <- vect(ext(t_ext), crs = crs(t_ref))
+    # subset occurences inside the extent in question
+    pres_c <- crop(t_pres, ext(ext_e))
+    # generate absences inside the extent
+    pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, t_ref)
+    # merge with already computed points
+    pa <- rbind(pa, pa_e)
+
+    td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
+    cat("\n", "TIME:", td, "s", "|pcnt", pcnt, "|e_cnt", e_cnt, "\n")
+    results <- rbind(results, c(td, pcnt, e_cnt))
+
+    # start benchmarking subextents
+    t_endcounts <- c(pcnt / 10, pcnt / 2, pcnt / 100)
+    for (j in seq_along(t_endcounts)) {
+        tot_time <- Sys.time()
+        e_cnt <- t_endcounts[j]
+        subexts <- lp_subdiv_pts(t_pres, e_cnt, t_ext)
+        all_subexts <- rbind(all_subexts, subexts)
+        pa <- data.frame() # initialize pa df
+        prog <- 0
+        for (e in seq_len(nrow(subexts))) {
+            cat("\r", "|", prog, "|")
+            prog <- prog + 1
+            ext_e <- vect(ext(subexts[e, ]), crs = crs(t_ref))
+            # subset occurences inside the extent in question
+            pres_c <- crop(t_pres, ext(ext_e))
+            # generate absences inside the extent
+            pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, t_ref)
+            # merge with already computed points
+            pa <- rbind(pa, pa_e)
+        }
+        td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
+        cat("\n", "TIME:", td, "s", "|pcnt", pcnt, "|e_cnt", e_cnt, "\n")
+        results <- rbind(results, c(td, pcnt, e_cnt))
+    }
 }
+saveRDS(results, file = "gen_benchmarkresults.rds")
+print(Sys.time() - rtime) # total runtime of cell
 ```
 
-```{r}
-starting_time = Sys.time()
-Sys.sleep(10)
-difftime(Sys.time(), starting_time, units = "secs")[[1]]
+```{r, barplot with benchmark results}
+results <- readRDS("R/data/plotting/gen_benchmarkresults.rds")
+res <- as.data.frame(results[-1, ])
+names(res) <- c("runtime", "pcnt", "e_cnt")
+res$runtime <- res$runtime / 60 # runtime in mins
+mat <- matrix(nrow = 3, ncol = 4)
+rownames(mat) <- unique(res$pcnt)
+colnames(mat) <- c("1", "1/10", "1/2", "1/100")
+mat[1, ] <- res$runtime[1:4]
+mat[2, ] <- res$runtime[5:8]
+mat[3, ] <- res$runtime[9:12]
+mat[, 2:3] = mat[, 3:2]
+colnames(mat) <- c("1", "1/2", "1/10", "1/100")
+
+png(width = 600, height = 600, file = "R/plots/abs_gen_subdiv_bench.png")
+barplot(mat,
+    col = rainbow(3), beside = TRUE,
+    main = "Runtime comparison of different subset resolutions (min)"
+)
+legend("topleft", legend = rownames(mat), fill = rainbow(3))
+dev.off()
+# mat <- t(mat)  transpose for different orientation
+# barplot(mat, col = rainbow(4), beside = TRUE)
+# legend("topleft", legend = rownames(mat), fill = rainbow(3))
 ```
 
 ```{r, test plot pa from gen}
