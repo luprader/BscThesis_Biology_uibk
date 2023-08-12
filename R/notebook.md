@@ -64,10 +64,31 @@ The total extent is now split into extents until the desired density per extent 
 Afterwards, all occurrences are cropped to those extents and then separately used for absence generation. (function lp_gen_abs())
 The functions for these steps are defined in a separate function.r script.
 
+
 ### 11/08/2023
 A benchmark of the absence generation regarding different desired point densities (end_ptcount) then computing sub extents was attempted.
 After creating a dummy land cover layer with some NA space to include absence flagging, different subset amounts relative to the tested total point count were tested: none, 1/2, 1/10 and 1/100. 
 This means that for 1000 presence points, a subset to 100, 10 and 500 was tested for computation speed.
 This process was repeated for 5000 and 10000 dummy presences, resulting in the plot 'abs_gen_subdiv_bench.png'.
 From this, the decision was made to run absence generation with a desired density of <10000 presences, meaning a division of ~1/12.6 for ~126000 total presences.
-This results in a runtime of X  mins.
+
+### 12/08/2023
+An error in the absence replacement generation was fixed and absence generation was run for the first time for all presences.
+The runtime was 43 minutes.
+
+I want to take the time here to explain the subsetting in more detail, also touching on drawbacks:
+Starting from the merged extent of Europe and Asia, the extent is split along its longer side.
+The resulting two extents are added to a list of extents to check.
+When the loop selects an extent, it calculates the amount of points inside it.
+If the amount is larger than the specified cutoff (end_ptcount), the extent is split again.
+Otherwise, if the count is smaller or equal, the extent is moved to a list of "good" extents.
+A count of 0 results in the extent being removed from all lists.
+
+This approach is pretty fast and computation efficient, but it comes with a drawback.
+When generating absences, the main goal is to not generate absences too close to presences.
+A presence point could be very close to an extent border though.
+This introduces the possibility of absences being generated on the other side of the border, which should normally have been excluded for being too close.  
+One could improve the subsetting process to take a minimum distance to the border into account, but this would probably result in way longer computation times, possibly not improving the total time anymore.
+At this point in time, this drawback is accepted as part of the absence generation, not only because the current amount of extents (29), does not introduce too many borders.  
+One has to also acknowledge that the chance for this error will be severely higher in regions with more point density, which have to also be split more often to reach the max point count.
+In those areas, the error will not have a severe impact though, since the presence density is already so high.

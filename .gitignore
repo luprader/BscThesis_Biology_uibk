@@ -2,9 +2,12 @@
 .Rhistory
 .RData
 .Ruserdata
+# data files
 /R/data/*
 
 # latex files
 *.gz
 *.aux
 *.log
+
+test.r

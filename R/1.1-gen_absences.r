@@ -16,24 +16,25 @@ lc_ref <- merge(lc_eu, lc_as)
 # ext(lc_ref) returns:
 # SpatExtent : -25, 150, 19.9916666666667, 72 (xmin, xmax, ymin, ymax)
 # lc_ref extent as vector for subdiv function
-ref_ext_v <- c(-25, 150, 19.9916666666667, 72)
+ref_ext <- c(-25, 150, 19.9916666666667, 72)
 
 # create SpatVector object of presence points
 occs_v <- vect(occs, geom = c("Lon", "Lat"), crs = crs(lc_ref))
 
 # generate subdividing extents to improve computation time
-subexts <- lp_subdiv_pts(occs_v, end_ptcount = 10000, ref_ext_v)
-# generate absences for each sub extent and merge
+subexts <- lp_subdiv_pts(occs_v, end_ptcount = 10000, ref_ext)
 pa <- data.frame() # initialize pa df
-prog = 0
+# generate absences for each sub extent and merge
+prog <- 0
 for (e in seq_len(nrow(subexts))) {
     cat("\r", "|", prog, "|")
-    prog = prog + 1
+    prog <- prog + 1
     ext_e <- vect(ext(subexts[e, ]), crs = crs(lc_ref))
-    # subset occurences inside the extent in question
+    # subset occurences and land cover to the extent in question
     occs_c <- crop(occs_v, ext(ext_e))
+    lc_ref_c <- crop(lc_ref, ext(ext_e))
     # generate absences inside the extent
-    pa_e <- lp_gen_abs(occs_c, n_abs = 5, min_d = 1000, max_d = 10000, lc_ref)
+    pa_e <- lp_gen_abs(occs_c, n_abs = 5, min_d = 1000, max_d = 10000, lc_ref_c)
     # merge with already computed points
     pa <- rbind(pa, pa_e)
 }

@@ -263,6 +263,7 @@ plot(all_gen, "Year", col = rainbow(5), alpha = 0.6) # , xlim=c(0,0.1), ylim=c(0
 points(t_pts)
 lines(t_rd)
 ```
+
 ```{r, test erase 10k no split}
 t_area <- vect(ext(c(0, 20, 0, 20)), crs = "+proj=longlat")
 n_ab <- 5 # number of generated points
@@ -337,12 +338,11 @@ for (i in seq_len(nrow(exts))) {
     results <- rbind(results, c(td, pcnt, e_cnt))
 
     # start benchmarking subextents
-    t_endcounts <- c(pcnt / 10, pcnt / 2, pcnt / 100)
+    t_endcounts <- ceiling(c(pcnt / 10, pcnt / 2, pcnt / 100))
     for (j in seq_along(t_endcounts)) {
         tot_time <- Sys.time()
         e_cnt <- t_endcounts[j]
         subexts <- lp_subdiv_pts(t_pres, e_cnt, t_ext)
-        all_subexts <- rbind(all_subexts, subexts)
         pa <- data.frame() # initialize pa df
         prog <- 0
         for (e in seq_len(nrow(subexts))) {
@@ -352,7 +352,7 @@ for (i in seq_len(nrow(exts))) {
             # subset occurences inside the extent in question
             pres_c <- crop(t_pres, ext(ext_e))
             # generate absences inside the extent
-            pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, t_ref)
+            pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, lc_ref)
             # merge with already computed points
             pa <- rbind(pa, pa_e)
         }
@@ -361,12 +361,12 @@ for (i in seq_len(nrow(exts))) {
         results <- rbind(results, c(td, pcnt, e_cnt))
     }
 }
-saveRDS(results, file = "gen_benchmarkresults.rds")
+saveRDS(results, file = "R/data/plotting/gen_benchmarkresults_dummy.rds")
 print(Sys.time() - rtime) # total runtime of cell
 ```
 
-```{r, barplot with benchmark results}
-results <- readRDS("R/data/plotting/gen_benchmarkresults.rds")
+```{r, barplot with dummy benchmark results}
+results <- readRDS("R/data/plotting/gen_benchmarkresults_dummy.rds")
 res <- as.data.frame(results[-1, ])
 names(res) <- c("runtime", "pcnt", "e_cnt")
 res$runtime <- res$runtime / 60 # runtime in mins
@@ -379,16 +379,113 @@ mat[3, ] <- res$runtime[9:12]
 mat[, 2:3] = mat[, 3:2]
 colnames(mat) <- c("1", "1/2", "1/10", "1/100")
 
-png(width = 600, height = 600, file = "R/plots/abs_gen_subdiv_bench.png")
+png(width = 600, height = 600, file = "R/plots/abs_gen_subdiv_bench_dummy.png")
 barplot(mat,
     col = rainbow(3), beside = TRUE,
-    main = "Runtime comparison of different subset resolutions (min)"
+    main = "Runtime comparison of different subset resolutions (min) with dummy data"
 )
 legend("topleft", legend = rownames(mat), fill = rainbow(3))
 dev.off()
 # mat <- t(mat)  transpose for different orientation
 # barplot(mat, col = rainbow(4), beside = TRUE)
 # legend("topleft", legend = rownames(mat), fill = rainbow(3))
+```
+
+```{r, benchmark abs_gen with cleaned data (runtime 42 mins)}
+rtime <- Sys.time()
+set.seed(4326)
+source("R/0.0-functions.r", encoding = "UTF-8")
+# load cleaned occurences
+occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
+# load reference lc layers
+lc_eu <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.grd")
+lc_as <- rast("R/data/cropped_rasters/Cop_LC_2002_as.grd")
+t_ref <- merge(lc_eu, lc_as)
+# ext(lc_ref) returns:
+# SpatExtent : -25, 150, 19.9916666666667, 72 (xmin, xmax, ymin, ymax)
+# lc_ref extent as vector for subdiv function
+t_ext <- c(-25, 150, 19.9916666666667, 72)
+
+results <- c(0, 0, 0) # initialize results
+
+for (i in 1:3) {
+    if(i == 1) {
+        t_occs = rbind(subset(occs, Year == 2005), subset(occs, Year == 2002))
+    } else{
+        if (i == 2) {
+            t_occs = subset(occs, Year == 2014)
+        } else {
+            t_occs = subset(occs, Year == 2019)
+        }
+    }
+    print(i)
+    t_pres <-  vect(t_occs, geom = c("Lon", "Lat"), crs = crs(t_ref))
+    pcnt <- nrow(t_pres)
+    # benchmark without subsets
+    tot_time <- Sys.time()
+    e_cnt <- pcnt
+    pa <- data.frame() # initialize pa df
+    ext_e <- vect(ext(t_ext), crs = crs(t_ref))
+    # subset occurences inside the extent in question
+    pres_c <- crop(t_pres, ext(ext_e))
+    # generate absences inside the extent
+    pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, t_ref)
+    # merge with already computed points
+    pa <- rbind(pa, pa_e)
+
+    td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
+    cat("\n", "TIME:", td, "s", "|pcnt", pcnt, "|e_cnt", e_cnt, "\n")
+    results <- rbind(results, c(td, pcnt, e_cnt))
+
+    # start benchmarking subextents
+    t_endcounts <- ceiling(c(pcnt / 10, pcnt / 2, pcnt / 100))
+    for (j in seq_along(t_endcounts)) {
+        tot_time <- Sys.time()
+        e_cnt <- t_endcounts[j]
+        subexts <- lp_subdiv_pts(t_pres, e_cnt, t_ext)
+        pa <- data.frame() # initialize pa df
+        prog <- 0
+        for (e in seq_len(nrow(subexts))) {
+            cat("\r", "|", prog, "|")
+            prog <- prog + 1
+            ext_e <- vect(ext(subexts[e, ]), crs = crs(t_ref))
+            # subset occurences inside the extent in question
+            pres_c <- crop(t_pres, ext(ext_e))
+            # generate absences inside the extent
+            pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, lc_ref)
+            # merge with already computed points
+            pa <- rbind(pa, pa_e)
+        }
+        td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
+        cat("\n", "TIME:", td, "s", "|pcnt", pcnt, "|e_cnt", e_cnt, "\n")
+        results <- rbind(results, c(td, pcnt, e_cnt))
+    }
+}
+saveRDS(results, file = "R/data/plotting/gen_benchmarkresults_axyridis.rds")
+print(Sys.time() - rtime) # total runtime of cell
+```
+
+```{r, barplot with occurence benchmark results}
+results <- readRDS("R/data/plotting/gen_benchmarkresults_axyridis.rds")
+res <- as.data.frame(results[-1, ])
+names(res) <- c("runtime", "pcnt", "e_cnt")
+res$runtime <- res$runtime / 60 # runtime in mins
+mat <- matrix(nrow = 3, ncol = 4)
+rownames(mat) <- unique(res$pcnt)
+colnames(mat) <- c("1", "1/10", "1/2", "1/100")
+mat[1, ] <- res$runtime[1:4]
+mat[2, ] <- res$runtime[5:8]
+mat[3, ] <- res$runtime[9:12]
+mat[, 2:3] = mat[, 3:2]
+colnames(mat) <- c("1", "1/2", "1/10", "1/100")
+
+png(width = 600, height = 600, file = "R/plots/abs_gen_subdiv_bench_axyridis.png")
+barplot(mat,
+    col = rainbow(3), beside = TRUE,
+    main = "Runtime comparison of different subset resolutions (min) with occurrence subsets"
+)
+legend("topleft", legend = rownames(mat), fill = rainbow(3))
+dev.off()
 ```
 
 ```{r, test plot pa from gen}
