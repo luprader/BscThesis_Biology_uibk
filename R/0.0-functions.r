@@ -9,9 +9,10 @@ library(terra)
 library(dplyr)
 
 ################################################################################
-# function subdividing point extents until desired pointcount is reached
+# function subdividing point extents until all extents have no more than the
+# desired pointcount
 
-# end_ptcount -> the desired point count per extent
+# end_ptcount -> the desired maximal point count per extent
 # has to be a number
 # points -> points to subset to the desired point count 
 # has to be a SpatVector object (terra) with extent <= init_ext
@@ -29,8 +30,7 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
         return(init_ext) # subsetting will not help, init_ext is "the best"
     }
 
-    cat("starting subdivision")
-    Sys.sleep(1)
+    print("starting subdivision")
     starting_time <- Sys.time()
     # initialize result lists
     good_exts <- c()
@@ -121,8 +121,7 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
 # distance away from other presences.
 
 # pres -> presences for which to compute absence points
-# has to be a dataframe with the following columns:
-# (Lon, Lat, Year, CoordUncert, Area)
+# has to be a SpatVector object (terra)
 # n_abs -> number of absences to compute per presence in m
 # has to be an integer
 # min_d -> minimum distance of absences to presences in m
@@ -153,7 +152,6 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
     # create circles around each point
     circs_r <- buffer(pres, max_d) # maximum distance to presences
     circs_d <- buffer(pres, min_d) # minimum distance to presences
-    # circs_d <- circs_d[, -(seq_len(ncol(circs_d)))]  remove values
     # remove min_d circles from all max_d circles
     circs_rd <- erase(circs_r, circs_d)
 
@@ -163,7 +161,7 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
         c <- circs_rd[i]
         pts <- spatSample(c, n_abs) # generate random points inside
         # extract lc values
-        pts <- cbind(pts, extract(lc_ref, pts, method = "simple", ID = FALSE))
+        pts <- cbind(pts, extract(lc_ref, pts, ID = FALSE))
         # test for lc = water or NA (out of cropped area)
         pts <- pts["lccs_class" != 210 & !is.na("lccs_class"), ]
         pts$lccs_class <- NULL # remove lc column
@@ -173,15 +171,15 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
             wc <- wc  + 1
             n <- n_abs - nrow(pts)
             pts_n <- spatSample(c, n)
-            pts_n <- cbind(pts_n, extract(lc_ref$lccs_class, pts_n))
+            pts_n <- cbind(pts_n, extract(lc_ref, pts_n, ID = FALSE))
             pts_n <- pts_n["lccs_class" != 210 & !is.na("lccs_class"), ]
-            pts$lccs_class <- NULL # remove lc column
+            pts_n$lccs_class <- NULL # remove lc column
             pts <- rbind(pts, pts_n)
         }
-        pts_df <- as.data.frame(pts, geom = "XY") # turn SpatVector to df
-        pts_df <- rename(pts_df, c("Lon" = "x", "Lat" = "y"))
+         pts_df <- as.data.frame(pts, geom = "XY") # turn SpatVector to df
+         pts_df <- rename(pts_df, c("Lon" = "x", "Lat" = "y"))
         # add generated points to total dataframe
-        pa <- rbind(pa, pts_df)
+         pa <- rbind(pa, pts_df)
     }
 
     # turn presence SpatVector into dataframe
@@ -206,3 +204,4 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
 # function computing the occupied niche of given points with environmental data
 # using (Broennimann et al. 2011)
 # use ecospat?
+################################################################################
