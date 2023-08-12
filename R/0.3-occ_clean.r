@@ -32,8 +32,8 @@ croplength = length(axyridis_eu$Year) + length(axyridis_as$Year)
 cat(length(axyridis_sub$Year) - croplength, "points removed with crop", "\n")
 # clean coordinates using CoordinateCleaner
 # create species columns because clean_coordinates asks for that for some reason
-axyridis_eu$species <- "EU"
-axyridis_as$species <- "AS"
+axyridis_eu$species <- "eu"
+axyridis_as$species <- "as"
 
 tests_used <- c("capitals", "centroids", "duplicates", "equal", "institutions", "outliers", "seas", "zeros")
 
