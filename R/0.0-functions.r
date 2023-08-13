@@ -157,7 +157,9 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
 
     ## generate n_abs absence points per circle
     wc <- 0 # how often replacements had to be generated
+    cat("|gen|") # print gen progress
     for (i in seq_along(circs_rd)) {
+        cat("\r", "|", i, "|") # print gen progress
         c <- circs_rd[i]
         pts <- spatSample(c, n_abs) # generate random points inside
         # extract lc values
@@ -176,10 +178,10 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
             pts_n$lccs_class <- NULL # remove lc column
             pts <- rbind(pts, pts_n)
         }
-         pts_df <- as.data.frame(pts, geom = "XY") # turn SpatVector to df
-         pts_df <- rename(pts_df, c("Lon" = "x", "Lat" = "y"))
+        pts_df <- as.data.frame(pts, geom = "XY") # turn SpatVector to df
+        pts_df <- rename(pts_df, c("Lon" = "x", "Lat" = "y"))
         # add generated points to total dataframe
-         pa <- rbind(pa, pts_df)
+        pa <- rbind(pa, pts_df)
     }
 
     # turn presence SpatVector into dataframe
