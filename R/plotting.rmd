@@ -376,7 +376,7 @@ colnames(mat) <- c("1", "1/10", "1/2", "1/100")
 mat[1, ] <- res$runtime[1:4]
 mat[2, ] <- res$runtime[5:8]
 mat[3, ] <- res$runtime[9:12]
-mat[, 2:3] = mat[, 3:2]
+mat[, 2:3] <- mat[, 3:2]
 colnames(mat) <- c("1", "1/2", "1/10", "1/100")
 
 png(width = 600, height = 600, file = "R/plots/abs_gen_subdiv_bench_dummy.png")
@@ -409,25 +409,23 @@ t_ext <- c(-25, 150, 19.9916666666667, 72)
 results <- c(0, 0, 0) # initialize results
 
 for (i in 1:3) {
-    if(i == 1) {
-        t_occs = rbind(subset(occs, Year == 2005), subset(occs, Year == 2002))
-    } else{
+    if (i == 1) {
+        t_occs <- rbind(subset(occs, Year == 2005), subset(occs, Year == 2002))
+    } else {
         if (i == 2) {
-            t_occs = subset(occs, Year == 2014)
+            t_occs <- subset(occs, Year == 2014)
         } else {
-            t_occs = subset(occs, Year == 2019)
+            t_occs <- subset(occs, Year == 2019)
         }
     }
     print(i)
-    t_pres <-  vect(t_occs, geom = c("Lon", "Lat"), crs = crs(t_ref))
+    t_pres <- vect(t_occs, geom = c("Lon", "Lat"), crs = crs(t_ref))
     pcnt <- nrow(t_pres)
     # benchmark without subsets
     tot_time <- Sys.time()
     e_cnt <- pcnt
     pa <- data.frame() # initialize pa df
     ext_e <- vect(ext(t_ext), crs = crs(t_ref))
-    # subset occurences inside the extent in question
-    pres_c <- crop(t_pres, ext(ext_e))
     # generate absences inside the extent
     pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, t_ref)
     # merge with already computed points
@@ -476,7 +474,7 @@ colnames(mat) <- c("1", "1/10", "1/2", "1/100")
 mat[1, ] <- res$runtime[1:4]
 mat[2, ] <- res$runtime[5:8]
 mat[3, ] <- res$runtime[9:12]
-mat[, 2:3] = mat[, 3:2]
+mat[, 2:3] <- mat[, 3:2]
 colnames(mat) <- c("1", "1/2", "1/10", "1/100")
 
 png(width = 600, height = 600, file = "R/plots/abs_gen_subdiv_bench_axyridis.png")
@@ -508,4 +506,21 @@ plot(v_crop,
 )
 lines(r_crop)
 lines(d_crop)
+```
+
+```{r,plot axyridis subdiv extents}
+subexts <- readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds")
+ref_ext <- c(-25, 150, 19.9916666666667, 72)
+# colour gradient
+colfunc <- colorRampPalette(c("blue", "green"))
+colors <- colfunc(nrow(subexts))
+# countries map
+countries <- ne_countries(scale = "medium", returnclass = "sf")
+countries <- st_transform(countries, crs = 4326)
+countries <- vect(countries)
+plot(crop(countries, ext(ref_ext)))
+for (s in seq_len(nrow(subexts))) {
+    ext_s <- ext(subexts[s, ])
+    lines(vect(ext_s, crs = "epsg:4326"), col = colors[s])
+}
 ```
