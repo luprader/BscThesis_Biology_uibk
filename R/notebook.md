@@ -92,3 +92,10 @@ One could improve the subsetting process to take a minimum distance to the borde
 At this point in time, this drawback is accepted as part of the absence generation, not only because the current amount of extents (29), does not introduce too many borders.  
 One has to also acknowledge that the chance for this error will be severely higher in regions with more point density, which have to also be split more often to reach the max point count.
 In those areas, the error will not have a severe impact though, since the presence density is already so high.
+
+### 13/08/2023
+A first version of bioclim and land cover value extraction for the pa data was finished.
+It will be rewritten with a defined function and progress statements tomorrow.
+There might be benefit in running the absence generation with no subsets, since the estimated runtime would only bee double the time with subsets according to the benchmark results (so <2h).
+This would remove any possible errors, but there might be issues with memory similar to a merged polygon from 10/08/2023. 
+A test run will be done overnight.
