@@ -99,3 +99,22 @@ It will be rewritten with a defined function and progress statements tomorrow.
 There might be benefit in running the absence generation with no subsets, since the estimated runtime would only bee double the time with subsets according to the benchmark results (so <2h).
 This would remove any possible errors, but there might be issues with memory similar to a merged polygon from 10/08/2023. 
 A test run will be done overnight.
+
+### 14/08/2023
+The test run without sub extents failed with an out of memory error.
+Maybe there are options to fix the memory error, with detriment to runtime, but this will not be pursued for now.  
+The value extraction for all years was rewritten with a defined function (lp_ext_vals()).
+
+The maximum distance for absences was adjusted to 18 km, the estimated "typical" flight distance for *Harmonia axyridis* according to (Jeffries et al. 2013).
+There are many papers discussing minimum and maximum sampling distance of absences.
+The conclusions are often rather specific, so it is hard to know what the best values would be right now.
+With this, the current choices are rather arbitrary, with 1 km minimum being the maximum presence location uncertainty, and typical flight distance as a maximum just to have some limit on the potential area of interest for a specific presence point.
+
+After checking the pa data, an error with the absence generation was found.
+Generated absences were never checked against water or NA.
+The code was fixed and new benchmarks were run.
+
+### 15/08/2023
+The benchmark results show a different optimum of subdivision now, but not a huge increase in runtime as feared at first.
+Memory limitations seem to occur with subdivisions above 10000, this will be investigated. (maybe WSL issue)
+For now, some minor memory management was added to the absence generation process.

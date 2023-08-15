@@ -196,6 +196,9 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
 
     # return generated presence-absence dataframe
     return(pa)
+    # clear memory
+    varlist = c('circs_r', 'circs_d', 'circs_rd', 'c', 'pts', 'pts_n')
+    rm(list = varlist)
 }
 
 ################################################################################

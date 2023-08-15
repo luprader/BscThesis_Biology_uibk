@@ -7,6 +7,7 @@ library(dplyr)
 source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 
 tot_time <- Sys.time()
+set.seed(4326) # consistent randomness
 # load cleaned occurences
 occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
 # load reference lc layers
@@ -22,25 +23,28 @@ ref_ext <- c(-25, 150, 19.9916666666667, 72)
 occs_v <- vect(occs, geom = c("Lon", "Lat"), crs = crs(lc_ref))
 
 # generate subdividing extents to improve computation time
-subexts <- lp_subdiv_pts(occs_v, end_ptcount = 10000, ref_ext)
+subexts <- lp_subdiv_pts(occs_v, end_ptcount = 25000, ref_ext)
 pa <- data.frame() # initialize pa df
 # generate absences for each sub extent and merge
 prog <- 0
 for (e in seq_len(nrow(subexts))) {
-    cat("\r", "|", prog, "|")
+    cat("||", e, "||", "\n")
     prog <- prog + 1
     ext_e <- vect(ext(subexts[e, ]), crs = crs(lc_ref))
     # subset occurences and land cover to the extent in question
     occs_c <- crop(occs_v, ext(ext_e))
     lc_ref_c <- crop(lc_ref, ext(ext_e))
     # generate absences inside the extent
-    pa_e <- lp_gen_abs(occs_c, n_abs = 5, min_d = 1000, max_d = 10000, lc_ref_c)
+    pa_e <- lp_gen_abs(occs_c, n_abs = 5, min_d = 1000, max_d = 18000, lc_ref_c)
     # merge with already computed points
     pa <- rbind(pa, pa_e)
+    
+    # clear memory
+    rm(list = c('ext_e', 'occs_c', 'lc_ref_c'))
 }
 
 # save complete pa data separately
 saveRDS(pa, file = "R/data/occurence_data/axyridis_pa.rds")
 saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
-cat("\n", "absence generation completed ", td, "secs", "\n")
+cat("\n", "absence generation completed", td, "secs", "\n")
