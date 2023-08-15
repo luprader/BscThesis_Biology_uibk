@@ -1,12 +1,8 @@
 # this file includes all self written functions used in this project
 
-# function_name <- function(parameters){
-#  function body
-# }
-
 # libraries used
-library(terra)
-library(dplyr)
+library(terra) # (lp_subdiv_pts(), lp_gen_abs(), lp_ext_vals)
+library(dplyr) # (lp_gen_abs())
 
 ################################################################################
 # function subdividing point extents until all extents have no more than the
@@ -14,7 +10,7 @@ library(dplyr)
 
 # end_ptcount -> the desired maximal point count per extent
 # has to be a number
-# points -> points to subset to the desired point count 
+# points -> points to subset to the desired point count
 # has to be a SpatVector object (terra) with extent <= init_ext
 # init_ext -> the initial extent to start off of
 # has to be a vector in the form of c(xmin, xmax, ymin, ymax)
@@ -22,6 +18,7 @@ library(dplyr)
 # returns a vector containing the needed extents in the form of init_ext
 
 lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
+
     # check if points can be subdivided (goal smaller than given)
     ext_v_init <- vect(ext(init_ext), crs = "epsg:4326")
     ptcount_init <- nrow(crop(points, ext(ext_v_init)))
@@ -135,13 +132,12 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
 # (Lon, Lat, Year, CoordUncert, Area, Presence)
 
 lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
-    set.seed(4326) # have consistent randomness
+
     # check if pres is empty
     if (length(pres) == 0) {
         print('no presences given')
         break
     }
-    Sys.sleep(1)
     starting_time <- Sys.time()
 
     # initialize dataframe for output
@@ -157,7 +153,7 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
 
     ## generate n_abs absence points per circle
     wc <- 0 # how often replacements had to be generated
-    cat("|gen|") # print gen progress
+    #cat("|gen|") # print gen progress
     for (i in seq_along(circs_rd)) {
         cat("\r", "|", i, "|") # print gen progress
         c <- circs_rd[i]
@@ -165,7 +161,7 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
         # extract lc values
         pts <- cbind(pts, extract(lc_ref, pts, ID = FALSE))
         # test for lc = water or NA (out of cropped area)
-        pts <- pts["lccs_class" != 210 & !is.na("lccs_class"), ]
+        pts <- pts[pts$lccs_class != 210 & !is.na(pts$lccs_class), ]
         pts$lccs_class <- NULL # remove lc column
 
         # generate replacements if needed
@@ -174,7 +170,7 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
             n <- n_abs - nrow(pts)
             pts_n <- spatSample(c, n)
             pts_n <- cbind(pts_n, extract(lc_ref, pts_n, ID = FALSE))
-            pts_n <- pts_n["lccs_class" != 210 & !is.na("lccs_class"), ]
+            pts_n <- pts_n[pts_n$lccs_class != 210 & !is.na(pts_n$lccs_class), ]
             pts_n$lccs_class <- NULL # remove lc column
             pts <- rbind(pts, pts_n)
         }
@@ -196,12 +192,47 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
     # function end statements
     td <- difftime(Sys.time(), starting_time, units = "secs")[[1]]
     cat("presences:", n_pres, "absences:", n_abs,
-        "wc:", wc, "|", td, "secs")
+        "wc:", wc, "|", td, "secs", "\n")
 
     # return generated presence-absence dataframe
     return(pa)
 }
 
+################################################################################
+# function extracting all point values of the desired CHELSA bioclim or
+# Copernicus LCCS rasters.
+
+# pts -> points for which to extract the values
+# has to be a dataframe of the following form:
+# (Lon, Lat, Year, CoordUncert, Area, Presence)
+# y_clim -> time frame for which CHELSA data should be extracted
+# has to be one of the following strings: '1981-2010' or '2011-2040'
+# y_lc -> year for which Copernicus LCCS data should be extracted
+# has to be a year between 2002 and 2020
+# area -> cropped area for which to extract the data
+# has to be one of the following strings: 'eu' or 'as'
+
+# returns a dataframe with the extracted values as 20 new columns
+
+lp_ext_vals <- function(pts, y_clim, y_lc, area) {
+
+    # create points SpatVector for extracting
+    pts_v <- vect(pts, geom = c("Lon", "Lat"), crs = "epsg:4326")
+
+    # raster paths
+    clim_p <- "R/data/cropped_rasters/CHELSA_bio_merged_"
+    clim_p_ya <- paste(clim_p, y_clim, "_", area, ".grd", sep = "")
+    lc_p <- "R/data/cropped_rasters/Cop_LC_"
+    lc_p_ya <- paste(lc_p, y_lc, "_", area, ".grd", sep = "")
+
+    # extract clim and lc values
+    clim_l <- rast(clim_p_ya)
+    lc_l <- rast(lc_p_ya)
+    pts_ext <- cbind(pts, extract(clim_l, pts_v, ID = FALSE))
+    pts_ext <- cbind(pts_ext, extract(lc_l, pts_v, ID = FALSE))
+
+    return(pts_ext)
+}
 ################################################################################
 # function computing the occupied niche of given points with environmental data
 # using (Broennimann et al. 2011)
