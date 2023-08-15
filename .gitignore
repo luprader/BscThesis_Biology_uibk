@@ -9,5 +9,12 @@
 *.gz
 *.aux
 *.log
+*.fdb_latexmk
+*.fls
+*.log
+*.bbl
+*.bcf
+*.blg
+*.xml
 
 test.r
