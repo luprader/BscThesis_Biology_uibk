@@ -318,8 +318,8 @@ for (i in seq_len(nrow(exts))) {
     biased_c <- buffer(biased_v, pcnt)
     t_pres <- rbind(init_v, spatSample(biased_c, pcnt * bias))
     # cat(length(init_v), length(biased_v) * 10, "\n")
-    # plot(t_ref)
-    # points(t_pres, pch = 16)
+    #plot(t_ref)
+    #points(t_pres, pch = 16)
 
     # benchmark without subsets
     tot_time <- Sys.time()
@@ -379,10 +379,11 @@ mat[3, ] <- res$runtime[9:12]
 mat[, 2:3] <- mat[, 3:2]
 colnames(mat) <- c("1", "1/2", "1/10", "1/100")
 
-png(width = 600, height = 600, file = "R/plots/abs_gen_subdiv_bench_dummy.png")
+png(width = 600, height = 600, file = "R/data/plotting/abs_gen_subdiv_bench_dummy.png")
 barplot(mat,
     col = rainbow(3), beside = TRUE,
-    main = "Runtime comparison of different subset resolutions (min) with dummy data"
+    main = "Runtime comparison of different subset resolutions (min) with dummy data",
+    ylab = 'runtime (mins)', xlab = 'relative subdivision limit'
 )
 legend("topleft", legend = rownames(mat), fill = rainbow(3))
 dev.off()
@@ -391,7 +392,7 @@ dev.off()
 # legend("topleft", legend = rownames(mat), fill = rainbow(3))
 ```
 
-```{r, benchmark abs_gen with cleaned data (runtime 42 mins)}
+```{r, benchmark abs_gen with cleaned data (runtime 57 mins)}
 rtime <- Sys.time()
 set.seed(4326)
 source("R/0.0-functions.r", encoding = "UTF-8")
@@ -427,7 +428,7 @@ for (i in 1:3) {
     pa <- data.frame() # initialize pa df
     ext_e <- vect(ext(t_ext), crs = crs(t_ref))
     # generate absences inside the extent
-    pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, t_ref)
+    pa_e <- lp_gen_abs(t_pres, n_abs = 5, min_d = 1000, max_d = 18000, t_ref)
     # merge with already computed points
     pa <- rbind(pa, pa_e)
 
@@ -436,7 +437,7 @@ for (i in 1:3) {
     results <- rbind(results, c(td, pcnt, e_cnt))
 
     # start benchmarking subextents
-    t_endcounts <- ceiling(c(pcnt / 10, pcnt / 2, pcnt / 100))
+    t_endcounts <- ceiling(c(pcnt / 5, pcnt / 2, pcnt / 10))
     for (j in seq_along(t_endcounts)) {
         tot_time <- Sys.time()
         e_cnt <- t_endcounts[j]
@@ -449,8 +450,10 @@ for (i in 1:3) {
             ext_e <- vect(ext(subexts[e, ]), crs = crs(t_ref))
             # subset occurences inside the extent in question
             pres_c <- crop(t_pres, ext(ext_e))
+            # crop lc_ref to extent i question
+            t_ref_c = crop(t_ref, ext(ext_e))
             # generate absences inside the extent
-            pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, lc_ref)
+            pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 18000, t_ref_c)
             # merge with already computed points
             pa <- rbind(pa, pa_e)
         }
@@ -470,17 +473,17 @@ names(res) <- c("runtime", "pcnt", "e_cnt")
 res$runtime <- res$runtime / 60 # runtime in mins
 mat <- matrix(nrow = 3, ncol = 4)
 rownames(mat) <- unique(res$pcnt)
-colnames(mat) <- c("1", "1/10", "1/2", "1/100")
 mat[1, ] <- res$runtime[1:4]
 mat[2, ] <- res$runtime[5:8]
 mat[3, ] <- res$runtime[9:12]
 mat[, 2:3] <- mat[, 3:2]
-colnames(mat) <- c("1", "1/2", "1/10", "1/100")
+colnames(mat) <- c("1", "1/2", "1/5", "1/10")
 
 png(width = 600, height = 600, file = "R/plots/abs_gen_subdiv_bench_axyridis.png")
 barplot(mat,
     col = rainbow(3), beside = TRUE,
-    main = "Runtime comparison of different subset resolutions (min) with occurrence subsets"
+    main = "Runtime comparison of different subset resolutions with occurrence subsets",
+    ylab = 'runtime (mins)', xlab = 'relative subdivision limit'
 )
 legend("topleft", legend = rownames(mat), fill = rainbow(3))
 dev.off()
@@ -511,16 +514,50 @@ lines(d_crop)
 ```{r,plot axyridis subdiv extents}
 subexts <- readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds")
 ref_ext <- c(-25, 150, 19.9916666666667, 72)
-# colour gradient
-colfunc <- colorRampPalette(c("blue", "green"))
-colors <- colfunc(nrow(subexts))
+
 # countries map
 countries <- ne_countries(scale = "medium", returnclass = "sf")
 countries <- st_transform(countries, crs = 4326)
 countries <- vect(countries)
-plot(crop(countries, ext(ref_ext)))
+
+# rough aspect ratio of lon and lat
+r <- 175 / 92
+png(width = 600 * r, height = 600, file = "R/plots/glob_subdiv_exts_axyridis.png")
+plot(crop(countries, ext(ref_ext)), 
+    main = "used subextents for absence generation"
+)
 for (s in seq_len(nrow(subexts))) {
     ext_s <- ext(subexts[s, ])
-    lines(vect(ext_s, crs = "epsg:4326"), col = colors[s])
+    lines(vect(ext_s, crs = "epsg:4326"), col = "blue")
 }
+dev.off()
+```
+
+```{r, plot subext border error example}
+subexts = tail(readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds"), 4)
+pa = readRDS("R/data/occurence_data/axyridis_pa.rds")
+ref_ext = ext(c(4.2, 4.6, 51.2, 51.4))
+pa_crop = crop(vect(pa, geom = c("Lon", "Lat"), crs = "epsg:4326"), ref_ext)
+
+# generate min dist circles 
+po = subset(pa, Presence == 'present')
+po_crop = crop(vect(po, geom = c("Lon", "Lat"), crs = "epsg:4326"), ref_ext)
+r_crop = buffer(po_crop, 10000)
+d_crop <- buffer(po_crop, 1000)
+rd_crop = erase(r_crop, d_crop)
+d_rast <- rasterize(rd_crop, rast(rd_crop, ncols=500, nrows=500), "Presence")
+# flag wrong absences
+ao = subset(pa, Presence == 'absent')
+ao_crop = crop(vect(ao, geom = c("Lon", "Lat"), crs = "epsg:4326"), ref_ext)
+ao_flag = cbind(ao_crop, extract(d_rast, ao_crop, ID = FALSE))
+ao_flag[, 4] = NULL # remove Presence duplicate
+ao_flag = ao_flag[is.na(ao_flag$Presence), ]
+#plot(po_crop, "Presence", col = c("grey", "green"))
+plot(d_rast)
+for (s in seq_len(nrow(subexts))) {
+    ext_s <- ext(subexts[s, ])
+    lines(vect(ext_s, crs = "epsg:4326"), col = "blue")
+}
+points(ao_flag, col = "red")
+print(length(ao_flag) / length(ao_crop))
 ```
