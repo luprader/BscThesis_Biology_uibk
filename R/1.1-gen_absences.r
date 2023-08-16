@@ -10,41 +10,70 @@ tot_time <- Sys.time()
 set.seed(4326) # consistent randomness
 # load cleaned occurences
 occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
-# load reference lc layers
-lc_eu <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.grd")
-lc_as <- rast("R/data/cropped_rasters/Cop_LC_2002_as.grd")
-lc_ref <- merge(lc_eu, lc_as)
+occs <- subset(occs, Year >= 2002 & Year <= 2020) # only use years of iteration
+
 # ext(lc_ref) returns:
 # SpatExtent : -25, 150, 19.9916666666667, 72 (xmin, xmax, ymin, ymax)
 # lc_ref extent as vector for subdiv function
 ref_ext <- c(-25, 150, 19.9916666666667, 72)
 
+ao <- data.frame() # initialize ao df
+# values for absence generation
+n_abs <- 5
+min_d <- 1000
+max_d <- 18000
+# path for land cover rasters
+lc_p = "R/data/cropped_rasters/Cop_LC_"
+
 # create SpatVector object of presence points
-occs_v <- vect(occs, geom = c("Lon", "Lat"), crs = crs(lc_ref))
+ref = rast("R/data/cropped_rasters/Cop_LC_2002_as.grd")
+occs_v <- vect(occs, geom = c("Lon", "Lat"), crs = crs(ref))
+rm(ref)
 
-# generate subdividing extents to improve computation time
-subexts <- lp_subdiv_pts(occs_v, end_ptcount = 25000, ref_ext)
-pa <- data.frame() # initialize pa df
-# generate absences for each sub extent and merge
-prog <- 0
-for (e in seq_len(nrow(subexts))) {
-    cat("||", e, "||", "\n")
-    prog <- prog + 1
-    ext_e <- vect(ext(subexts[e, ]), crs = crs(lc_ref))
-    # subset occurences and land cover to the extent in question
-    occs_c <- crop(occs_v, ext(ext_e))
-    lc_ref_c <- crop(lc_ref, ext(ext_e))
-    # generate absences inside the extent
-    pa_e <- lp_gen_abs(occs_c, n_abs = 5, min_d = 1000, max_d = 18000, lc_ref_c)
-    # merge with already computed points
-    pa <- rbind(pa, pa_e)
-    
-    # clear memory
-    rm(list = c('ext_e', 'occs_c', 'lc_ref_c'))
+# generate for asia
+cat("as: \n")
+pres_v <- subset(occs_v, occs_v$Area == "as")
+
+for (i in 2002:2020) {
+    lc_ref = rast(paste(lc_p, i, "_as.grd", sep = ""))
+    ao_y <- lp_gen_abs(pres_v, i, n_abs, min_d, max_d, lc_ref)
+    ao = rbind(ao, ao_y)
+    rm(lc_ref)
 }
+# generate for europe
+cat("eu: \n")
+pres_v <- subset(occs_v, occs_v$Area == "eu")
+rm(occs_v)
+# subset europe
+# ext() for eu returns:
+# SpatExtent : -25, 65, 34.9916666666667, 72 (xmin, xmax, ymin, ymax)
+# t_ref extent as vector for subdiv function
+t_ext <- c(-25, 65, 34.9916666666667, 72)
+subexts <- lp_subdiv_pts(pres_v, 20000, t_ext)
 
-# save complete pa data separately
+
+prog <- 1
+for (e in seq_len(nrow(subexts))) {
+    cat("||", prog, "||", "\n")
+            prog <- prog + 1
+    ext_e = ext(subexts[e, ])
+
+    for (i in 2002:2020) {
+        lc_ref_c = crop(rast(paste(lc_p, i, "_as.grd", sep = "")), ext_e)
+        pres_v_c = crop(pres_v, ext(subexts[e, ]))
+        ao_y <- lp_gen_abs(pres_v_c, i, n_abs, min_d, max_d, lc_ref_c)
+        ao = rbind(ao, ao_y)
+        rm(list = c("lc_ref_c", "pres_v_c"))
+    }
+    gc()
+}
+# create pa dataframe
+po = occs
+po$Presence = "present"
+pa = rbind(po, ao)
+
+# save complete pa data 
 saveRDS(pa, file = "R/data/occurence_data/axyridis_pa.rds")
-saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
+#saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("\n", "absence generation completed", td, "secs", "\n")

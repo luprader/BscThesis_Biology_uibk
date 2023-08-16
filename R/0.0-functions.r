@@ -18,11 +18,10 @@ library(dplyr) # (lp_gen_abs())
 # returns a vector containing the needed extents in the form of init_ext
 
 lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
-
     # check if points can be subdivided (goal smaller than given)
     ext_v_init <- vect(ext(init_ext), crs = "epsg:4326")
     ptcount_init <- nrow(crop(points, ext(ext_v_init)))
-    if(ptcount_init <= end_ptcount) {
+    if (ptcount_init <= end_ptcount) {
         cat("Error(lp_subdiv_pts): points \u2265 end_ptcount", "\n")
         return(init_ext) # subsetting will not help, init_ext is "the best"
     }
@@ -72,7 +71,7 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
         if (ptcount_n_ext <= end_ptcount) {
             if (ptcount_n_ext != 0) {
                 # if not empty, move extent from bad to good
-                good_exts <- rbind(good_exts, n_ext) 
+                good_exts <- rbind(good_exts, n_ext)
             }
         } else {
             # too many points, split extent again
@@ -108,7 +107,7 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
     }
     # function end statements
     td <- difftime(Sys.time(), starting_time, units = "secs")[[1]]
-    cat("\r","Final extents: ",nrow(good_exts),"|",td,"secs","\n")
+    cat("\r", "Final extents: ", nrow(good_exts), "|", td, "secs", "\n")
 
     return(good_exts)
 }
@@ -116,9 +115,13 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
 ################################################################################
 # function generating pseudoabsence/background points with a minimum and maximum
 # distance away from other presences.
+# The absences are generated for a specific year but distance to all years is
+# taken into account.
 
 # pres -> presences for which to compute absence points
 # has to be a SpatVector object (terra)
+# year -> year for which to generate absences
+# has to be a value present in pres$Year
 # n_abs -> number of absences to compute per presence in m
 # has to be an integer
 # min_d -> minimum distance of absences to presences in m
@@ -130,26 +133,34 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
 
 # returns a dataframe with the following columns:
 # (Lon, Lat, Year, CoordUncert, Area, Presence)
+# contains the absences generated for year
 
-lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
+lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
+    starting_time <- Sys.time()
 
     # check if pres is empty
     if (length(pres) == 0) {
-        print('no presences given')
-        break
+        stop(paste("no presences given \n"))
     }
-    starting_time <- Sys.time()
 
     # initialize dataframe for output
     names <- c("Lat", "Lon", "Year", "CoordUncert", "Area", "Presence")
-    pa <- data.frame(matrix(nrow = 0, ncol = length(names)))
-    colnames(pa) <- names
+    ao <- data.frame(matrix(nrow = 0, ncol = length(names)))
+    colnames(ao) <- names
 
     # create circles around each point
-    circs_r <- buffer(pres, max_d) # maximum distance to presences
-    circs_d <- buffer(pres, min_d) # minimum distance to presences
+    # maximum distance to presences of the year to generate for
+    circs_r <- buffer(subset(pres, pres$Year == year), max_d)
+    # minimum distance to presences of all years
+    circs_d <- buffer(pres, min_d)
     # remove min_d circles from all max_d circles
     circs_rd <- erase(circs_r, circs_d)
+
+    # check if circs_rd is empty
+    if (length(circs_rd) == 0) {
+        cat("no presences for", year, "\n")
+        return(ao)
+    }
 
     ## generate n_abs absence points per circle
     wc <- 0 # how often replacements had to be generated
@@ -166,7 +177,7 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
 
         # generate replacements if needed
         while (nrow(pts) < n_abs) {
-            wc <- wc  + 1
+            wc <- wc + 1
             n <- n_abs - nrow(pts)
             pts_n <- spatSample(c, n)
             pts_n <- cbind(pts_n, extract(lc_ref, pts_n, ID = FALSE))
@@ -177,27 +188,23 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
         pts_df <- as.data.frame(pts, geom = "XY") # turn SpatVector to df
         pts_df <- rename(pts_df, c("Lon" = "x", "Lat" = "y"))
         # add generated points to total dataframe
-        pa <- rbind(pa, pts_df)
+        ao <- rbind(ao, pts_df)
     }
 
-    # turn presence SpatVector into dataframe
-    pres_df <- as.data.frame(pres, geom = "XY")
-    pres_df <- rename(pres_df, c("Lon" = "x", "Lat" = "y"))
-    # add presence labels and add presences to total dataframe
-    pres_df$Presence <- "present"
-    pa$Presence <- "absent"
-    n_pres <- nrow(pres_df)
-    n_abs <- nrow(pa)
-    pa <- rbind(pres_df, pa)
+    ao$Presence <- "absent"
+    n_pres <- length(circs_rd)
+    n_abs <- nrow(ao)
     # function end statements
     td <- difftime(Sys.time(), starting_time, units = "secs")[[1]]
-    cat("presences:", n_pres, "absences:", n_abs,
-        "wc:", wc, "|", td, "secs", "\n")
+    cat(
+        "presences:", n_pres, "absences:", n_abs,
+        "wc:", wc, "|", td, "secs", "\n"
+    )
 
     # return generated presence-absence dataframe
-    return(pa)
+    return(ao)
     # free some memory
-    rm(list = c('circs_r', 'circs_d', 'circs_rd', 'c', 'pts', 'pts_n'))
+    rm(list = c("circs_r", "circs_d", "circs_rd", "c", "pts", "pts_n"))
 }
 
 ################################################################################
@@ -217,7 +224,6 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
 # returns a dataframe with the extracted values as 20 new columns
 
 lp_ext_vals <- function(pts, y_clim, y_lc, area) {
-
     # create points SpatVector for extracting
     pts_v <- vect(pts, geom = c("Lon", "Lat"), crs = "epsg:4326")
 
@@ -249,21 +255,20 @@ lp_ext_vals <- function(pts, y_clim, y_lc, area) {
 # returns a dataframe with all points in water (210 lccs_class) or NA removed
 
 lp_clean_lc <- function(points, y_lc, area) {
-
     # load landcover for year and area
     lc_p <- "R/data/cropped_rasters/Cop_LC_"
     lc_p_ya <- paste(lc_p, y_lc, "_", area, ".grd", sep = "")
-    lc_l = rast(lc_p_ya)
+    lc_l <- rast(lc_p_ya)
 
     # extract lc values and remove water or NA
     points_v <- vect(points, geom = c("Lon", "Lat"), crs = crs(lc_l))
-    points<- cbind(points, extract(lc_l, points_v, ID = FALSE))
+    points <- cbind(points, extract(lc_l, points_v, ID = FALSE))
     points_r <- subset(points, lccs_class != 210 & !is.na(points$lccs_class))
     points_r$lccs_class <- NULL
 
     return(points_r)
     # free some memory
-    rm(c('lc_l', 'points_v'))
+    rm(c("lc_l", "points_v"))
 }
 ################################################################################
 # function computing the occupied niche of given points with environmental data

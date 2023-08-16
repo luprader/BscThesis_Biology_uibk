@@ -3,7 +3,7 @@ This entry compiles everything up to the first entry.
 The Gbif data for *Harmonia axyridis* was downloaded from the website, Copernicus land cover classification layers for 1992-2020 as well. 
 The CHELSA bioclim layers were downloaded with wget.  
 At first, all Gbif occurrences were checked for NA values in coordinates, year and coordinate uncertainty. 
-Afterwards, they were cleaned using all default tests for the function 'clean_coordinates' from 'CoordinateCleaner'.  
+Afterwards, they were cleaned using all default tests for the function `clean_coordinates` from `CoordinateCleaner`.  
 The land cover layers were aggregated to match the resolution of the climate data, so a 3x3 cell area of the original layer was aggregated to one larger cell, matching the resolution of the CHELSA bioclim layers.
 The new value was the mode of the 9 grid cells.  
 The global layer was cropped to two spatial extents. 
@@ -45,7 +45,7 @@ The presence points will be subset per year and area to be able to give them the
 
 ### 08/08/2023
 The generation of background points was finished.
-Subsetting was not necessary, since the generated points were automatically assigned by the 'buffer' and 'spatSample' functions from 'terra'.
+Subsetting was not necessary, since the generated points were automatically assigned by the `buffer` and `spatSample` functions from `terra`.
 The script currently takes a lot of time due to the minimum distance check as it is implemented right now.
 There might be better options of doing this, for example with intersected buffer polygons instead of a normal distance calculation.
 
@@ -60,8 +60,8 @@ The current amount of absences per presence is 5, with a range of 10 km and a mi
 Merging all minimum distance circles (1 km), failed since the combined polygon was too large to compute. 
 Combining seems to not improve the runtime at all after further investigation.
 The new approach now is to geographically subset all points and compute the absences for each subset.
-The total extent is now split into extents until the desired density per extent is reached. (function lp_subdiv_pts())
-Afterwards, all occurrences are cropped to those extents and then separately used for absence generation. (function lp_gen_abs())
+The total extent is now split into extents until the desired density per extent is reached. (function `lp_subdiv_pts`)
+Afterwards, all occurrences are cropped to those extents and then separately used for absence generation. (function `lp_gen_abs`)
 The functions for these steps are defined in a separate function.r script.
 
 
@@ -103,7 +103,7 @@ A test run will be done overnight.
 ### 14/08/2023
 The test run without sub extents failed with an out of memory error.
 Maybe there are options to fix the memory error, with detriment to runtime, but this will not be pursued for now.  
-The value extraction for all years was rewritten with a defined function (lp_ext_vals()).
+The value extraction for all years was rewritten with a defined function `lp_ext_vals`.
 
 The maximum distance for absences was adjusted to 18 km, the estimated "typical" flight distance for *Harmonia axyridis* according to (Jeffries et al. 2013).
 There are many papers discussing minimum and maximum sampling distance of absences.
@@ -118,3 +118,12 @@ The code was fixed and new benchmarks were run.
 The benchmark results show a different optimum of subdivision now, but not a huge increase in runtime as feared at first.
 Memory limitations seem to occur with subdivisions above 10000, this will be investigated. (maybe WSL issue)
 For now, some minor memory management was added to the absence generation process.
+
+### 16/08/2023
+It was found that generated absences and some presences were still in water according to their lccs_class.
+This was in part due to not testing for land cover in the cleaning process.
+The occurrence cleaning process was then extended to test for water or NA in the corresponding Copernicus land cover layers.
+The absence generation had to be modified to use the correct land cover layer for each year, while still testing for proximity to presences from all years.
+Subdivision is now only used for Europe, since Asia has so little points in comparison.
+A new benchmark was conducted, with a similar optimum to yesterday (1/2).
+A full computation of absences will be conducted overnight.
