@@ -532,7 +532,7 @@ lines(d_crop)
 
 ```{r,plot axyridis subdiv extents}
 subexts <- readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds")
-ref_ext <- c(-25, 150, 19.9916666666667, 72)
+ref_ext <- c(-25, 65, 34.9916666666667, 72)
 
 # countries map
 countries <- ne_countries(scale = "medium", returnclass = "sf")
@@ -540,7 +540,7 @@ countries <- st_transform(countries, crs = 4326)
 countries <- vect(countries)
 
 # rough aspect ratio of lon and lat
-r <- 175 / 92
+r <- 90 / 37
 png(width = 600 * r, height = 600, file = "R/plots/glob_subdiv_exts_axyridis.png")
 plot(crop(countries, ext(ref_ext)),
     main = "used subextents for absence generation"

@@ -12,11 +12,6 @@ set.seed(4326) # consistent randomness
 occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
 occs <- subset(occs, Year >= 2002 & Year <= 2020) # only use years of iteration
 
-# ext(lc_ref) returns:
-# SpatExtent : -25, 150, 19.9916666666667, 72 (xmin, xmax, ymin, ymax)
-# lc_ref extent as vector for subdiv function
-ref_ext <- c(-25, 150, 19.9916666666667, 72)
-
 ao <- data.frame() # initialize ao df
 # values for absence generation
 n_abs <- 5
@@ -59,7 +54,7 @@ for (e in seq_len(nrow(subexts))) {
     ext_e = ext(subexts[e, ])
 
     for (i in 2002:2020) {
-        lc_ref_c = crop(rast(paste(lc_p, i, "_as.grd", sep = "")), ext_e)
+        lc_ref_c = crop(rast(paste(lc_p, i, "_eu.grd", sep = "")), ext_e)
         pres_v_c = crop(pres_v, ext(subexts[e, ]))
         ao_y <- lp_gen_abs(pres_v_c, i, n_abs, min_d, max_d, lc_ref_c)
         ao = rbind(ao, ao_y)
@@ -74,6 +69,6 @@ pa = rbind(po, ao)
 
 # save complete pa data 
 saveRDS(pa, file = "R/data/occurence_data/axyridis_pa.rds")
-#saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
+saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("\n", "absence generation completed", td, "secs", "\n")
