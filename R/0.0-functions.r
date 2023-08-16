@@ -153,7 +153,7 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
 
     ## generate n_abs absence points per circle
     wc <- 0 # how often replacements had to be generated
-    #cat("|gen|") # print gen progress
+
     for (i in seq_along(circs_rd)) {
         cat("\r", "|", i, "|") # print gen progress
         c <- circs_rd[i]
@@ -196,9 +196,8 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
 
     # return generated presence-absence dataframe
     return(pa)
-    # clear memory
-    varlist = c('circs_r', 'circs_d', 'circs_rd', 'c', 'pts', 'pts_n')
-    rm(list = varlist)
+    # free some memory
+    rm(list = c('circs_r', 'circs_d', 'circs_rd', 'c', 'pts', 'pts_n'))
 }
 
 ################################################################################
@@ -209,11 +208,11 @@ lp_gen_abs <- function(pres, n_abs, min_d, max_d, lc_ref) {
 # has to be a dataframe of the following form:
 # (Lon, Lat, Year, CoordUncert, Area, Presence)
 # y_clim -> time frame for which CHELSA data should be extracted
-# has to be one of the following strings: '1981-2010' or '2011-2040'
+# has to be one of the following strings: "1981-2010" or "2011-2040"
 # y_lc -> year for which Copernicus LCCS data should be extracted
 # has to be a year between 2002 and 2020
 # area -> cropped area for which to extract the data
-# has to be one of the following strings: 'eu' or 'as'
+# has to be one of the following strings: "eu" or "as"
 
 # returns a dataframe with the extracted values as 20 new columns
 
@@ -235,6 +234,36 @@ lp_ext_vals <- function(pts, y_clim, y_lc, area) {
     pts_ext <- cbind(pts_ext, extract(lc_l, pts_v, ID = FALSE))
 
     return(pts_ext)
+}
+################################################################################
+# function to remove water and NA when cleaning occurrences
+
+# points -> points for which to extract the values
+# has to be a dataframe of the following form:
+# (Lon, Lat, Year, CoordUncert, Area)
+# y_lc -> year for which Copernicus LCCS data should be extracted
+# has to be a year between 2002 and 2020
+# area -> cropped area for which to extract the data
+# has to be one of the following strings: "eu" or "as"
+
+# returns a dataframe with all points in water (210 lccs_class) or NA removed
+
+lp_clean_lc <- function(points, y_lc, area) {
+
+    # load landcover for year and area
+    lc_p <- "R/data/cropped_rasters/Cop_LC_"
+    lc_p_ya <- paste(lc_p, y_lc, "_", area, ".grd", sep = "")
+    lc_l = rast(lc_p_ya)
+
+    # extract lc values and remove water or NA
+    points_v <- vect(points, geom = c("Lon", "Lat"), crs = crs(lc_l))
+    points<- cbind(points, extract(lc_l, points_v, ID = FALSE))
+    points_r <- subset(points, lccs_class != 210 & !is.na(points$lccs_class))
+    points_r$lccs_class <- NULL
+
+    return(points_r)
+    # free some memory
+    rm(c('lc_l', 'points_v'))
 }
 ################################################################################
 # function computing the occupied niche of given points with environmental data
