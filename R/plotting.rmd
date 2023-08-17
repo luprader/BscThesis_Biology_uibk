@@ -10,6 +10,7 @@ library(sp)
 library(terra)
 library(ncdf4)
 library(dplyr)
+library(corrplot)
 ```
 
 ```{r, bboxes}
@@ -151,8 +152,8 @@ print(paste("Raw EU < 2002:", eu_bef2k, "Raw Native < 2002:", as_bef2k))
 
 ```{r, plot yearly occ frequency 2002-2022 with cleaned occs}
 occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
-occs_eu <- subset(occs, Area == "EU" & Year >= 2002)
-occs_as <- subset(occs, Area == "AS" & Year >= 2002)
+occs_eu <- subset(occs, Area == "eu" & Year >= 2002)
+occs_as <- subset(occs, Area == "as" & Year >= 2002)
 
 # get occurences per year as df
 freq_eu <- count(occs_eu, Year) # frequency of yearly occs eu
@@ -169,12 +170,12 @@ l <- length(freqs$Year)
 frequencies <- data.frame(
     Year = c(freqs_tot$Year, freqs_tot$Year, freqs_tot$Year),
     n = c(freqs_tot$n_as, freqs_tot$n_eu, freqs_tot$n_tot),
-    label = c(rep("Native", l), rep("EU", l), rep("Total", l))
+    label = c(rep("Native", l), rep("eu", l), rep("Total", l))
 )
 
 # find out how many occurences are before 2000
-eu_bef2k <- count(subset(occs, Area == "EU" & Year < 2002))[[1]]
-as_bef2k <- count(subset(occs, Area == "AS" & Year < 2002))[[1]]
+eu_bef2k <- count(subset(occs, Area == "eu" & Year < 2002))[[1]]
+as_bef2k <- count(subset(occs, Area == "as" & Year < 2002))[[1]]
 cap <- paste("Cleaned EU < 2002:", eu_bef2k, "Cleaned Native < 2002:", as_bef2k)
 plot <- ggplot(frequencies, aes(x = Year, y = n)) +
     geom_point(alpha = 0.5, aes(colour = label)) +
@@ -530,7 +531,7 @@ lines(r_crop)
 lines(d_crop)
 ```
 
-```{r,plot axyridis subdiv extents}
+```{r,plot abs_gen eu subdiv extents}
 subexts <- readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds")
 ref_ext <- c(-25, 65, 34.9916666666667, 72)
 
@@ -539,11 +540,9 @@ countries <- ne_countries(scale = "medium", returnclass = "sf")
 countries <- st_transform(countries, crs = 4326)
 countries <- vect(countries)
 
-# rough aspect ratio of lon and lat
-r <- 90 / 37
-png(width = 600 * r, height = 600, file = "R/plots/glob_subdiv_exts_axyridis.png")
+png(width = 600, height = 600, file = "R/plots/eu_subdiv_exts_axyridis.png")
 plot(crop(countries, ext(ref_ext)),
-    main = "used subextents for absence generation"
+    main = "used eu subextents for absence generation"
 )
 for (s in seq_len(nrow(subexts))) {
     ext_s <- ext(subexts[s, ])
@@ -555,24 +554,29 @@ dev.off()
 ```{r, plot subext border error example}
 subexts <- tail(readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds"), 4)
 pa <- readRDS("R/data/occurence_data/axyridis_pa.rds")
-ref_ext <- ext(c(4.2, 4.6, 51.2, 51.4))
+ref_ext <- ext(c(3.8, 4.2, 51.2, 51.4))
 pa_crop <- crop(vect(pa, geom = c("Lon", "Lat"), crs = "epsg:4326"), ref_ext)
 
 # generate min dist circles
 po <- subset(pa, Presence == "present")
 po_crop <- crop(vect(po, geom = c("Lon", "Lat"), crs = "epsg:4326"), ref_ext)
-r_crop <- buffer(po_crop, 10000)
+r_crop <- buffer(po_crop, 18000)
 d_crop <- buffer(po_crop, 1000)
+d_crop[,1:4] = NULL
 rd_crop <- erase(r_crop, d_crop)
-d_rast <- rasterize(rd_crop, rast(rd_crop, ncols = 1000, nrows = 1000), "Presence")
+
 # flag wrong absences
 ao <- subset(pa, Presence == "absent")
 ao_crop <- crop(vect(ao, geom = c("Lon", "Lat"), crs = "epsg:4326"), ref_ext)
-ao_flag <- cbind(ao_crop, extract(d_rast, ao_crop, ID = FALSE))
-ao_flag[, 4] <- NULL # remove Presence duplicate
-ao_flag <- ao_flag[is.na(ao_flag$Presence), ]
+ao_flag <- cbind(ao_crop, extract(d_crop, ao_crop, id = FALSE))
 # plot(po_crop, "Presence", col = c("grey", "green"))
-plot(d_rast)
+
+# countries map
+countries <- ne_countries(scale = "medium", returnclass = "sf")
+countries <- st_transform(countries, crs = 4326)
+countries <- vect(countries)
+
+plot(crop(countries, ext(ref_ext)))
 for (s in seq_len(nrow(subexts))) {
     ext_s <- ext(subexts[s, ])
     lines(vect(ext_s, crs = "epsg:4326"), col = "blue")
@@ -581,10 +585,49 @@ points(ao_flag, col = "red")
 print(length(ao_flag) / length(ao_crop))
 ```
 
-```{r}
+```{r, list total occs up to year}
 clean <- readRDS("R/data/occurence_data/axyridis_clean.rds")
 clean <- subset(clean, Year >= 2002)
-for (i in 2002:2020) {
+for (i in 2002:2022) {
     cat(i, nrow(subset(clean, Year <= i)), "\n")
 }
+```
+
+```{r, bioclim corrplots 2002,2011,2020}
+#load extracted pa data
+pa_ex = readRDS("R/data/occurence_data/axyridis_pa_vals_extracted.rds")
+
+## plot 3 correlation plots for bioclim
+png(width = 1800, height = 600, file = "R/plots/bio_corrmat_02-11-20.png")
+par(mfrow = c(1, 3))
+
+pa_y = subset(pa_ex, Year == 2002)
+vars_df = select(pa_y, starts_with("bio")) # only take bioclim variables
+vars_sc = scale(vars_df) # scale all variables (-mean, /stdev)
+m_cor = cor(vars_sc, method='spearman')
+corrplot.mixed(m_cor, tl.pos='lt', addCoefasPercent=T)
+
+pa_y = subset(pa_ex, Year == 2011)
+vars_df = select(pa_y, starts_with("bio")) # only take bioclim variables
+vars_sc = scale(vars_df) # scale all variables (-mean, /stdev)
+m_cor = cor(vars_sc, method='spearman')
+corrplot.mixed(m_cor, tl.pos='lt', addCoefasPercent=T)
+
+pa_y = subset(pa_ex, Year == 2020)
+vars_df = select(pa_y, starts_with("bio")) # only take bioclim variables
+vars_sc = scale(vars_df) # scale all variables (-mean, /stdev)
+m_cor = cor(vars_sc, method='spearman')
+corrplot.mixed(m_cor, tl.pos='lt', addCoefasPercent=T)
+
+dev.off()
+```
+
+```{r, plot lc with correct colorscheme}
+lc_eu_20 = rast("R/data/cropped_rasters/Cop_LC_2020_eu.grd")
+lccs_legend = read.csv("R/plots/Cop_LCCS_legend.csv", header = TRUE)
+# take only values present in the current raster
+lccs_legend = lccs_legend[lccs_legend$value %in% unique(lc_eu_20)$lccs_class, ]
+levels(lc_eu_20) = lccs_legend[, 2:3]
+plot(lc_eu_20, col = lccs_legend[, 3])
+#text(lc_eu_20, digits=3, cex=.75, halo=TRUE)
 ```

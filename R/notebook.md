@@ -127,3 +127,22 @@ The absence generation had to be modified to use the correct land cover layer fo
 Subdivision is now only used for Europe, since Asia has so little points in comparison.
 A new benchmark was conducted, with a similar optimum to yesterday (1/2).
 A full computation of absences will be conducted overnight.
+
+## 17/08/2023
+Absence generation was successful, with a computation time of ~113 mins for a Europe subdivision to <20000.
+The absence generation is now only conducted for years 2002-2020.
+Those few points prior to 2002 are negligible, and 21/22 will only be used for model validation.
+With this, a new plot of the used subdivisions was created and the procedure of variable selection was started.
+
+There is the question of what data to use for variable selection, since variable correlation can be different for different years for example.
+This was also visualized comparing correlation matrices for all bioclim variables of 2002, 2011 and 2020.  
+Since the iteration should help with future models of emerging invasive species, an approach using the earliest usable year seems reasonable.
+This way, the iteration can model an example of really trying to model *H. axyridis* at the time of its emergence.
+
+Right now, bioclim variable selection uses variance inflation factors of a GLM fitted on data only from 2002 to choose the best variables for modeling. Variables, also using the squared values of each variable as an option, are dropped iteratively until no VIF in the model exceeds a value of 10.
+Squared variables are also dropped before their linear counterparts.
+The order of dropping seems to have a large influence on the outcome though.
+For comparison, this iteration was also conducted with only 2020 occurrences used.
+The resulting variables for both years are commented out in "1.3-model_var-select.r" right now.
+
+The yearly occurrence plots were also updated with the new cleaned occurrence data.
