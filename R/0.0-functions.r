@@ -166,7 +166,7 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
     wc <- 0 # how often replacements had to be generated
 
     for (i in seq_along(circs_rd)) {
-        cat("\r", "|", i, "|") # print gen progress
+        cat("\r", "|", year, "|", i, "|") # print gen progress
         c <- circs_rd[i]
         pts <- spatSample(c, n_abs) # generate random points inside
         # extract lc values
