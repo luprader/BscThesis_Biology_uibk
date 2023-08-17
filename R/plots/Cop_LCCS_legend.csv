@@ -1,5 +1,5 @@
 value,name,colour
-0,no_data,
+0,no_data,#bf2bd6
 10,cropland_rainfed,#ffff64
 11,cropland_rainfed_herbaceous_cover,#ffff64
 12,cropland_rainfed_tree_or_shrub_cover,#ffff00
@@ -37,4 +37,3 @@ value,name,colour
 202,bare_areas_unconsolidated,#fff5d7
 210,water,#0046c8
 220,snow_and_ice,#ffffff
-                  
