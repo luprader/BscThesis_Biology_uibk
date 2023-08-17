@@ -72,3 +72,4 @@ saveRDS(pa, file = "R/data/occurence_data/axyridis_pa.rds")
 saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("\n", "absence generation completed", td, "secs", "\n")
+saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
