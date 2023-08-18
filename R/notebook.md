@@ -129,7 +129,7 @@ A new benchmark was conducted, with a similar optimum to yesterday (1/2).
 A full computation of absences will be conducted overnight.
 
 ## 17/08/2023
-Absence generation was successful, with a computation time of ~113 mins for a Europe subdivision to <20000.
+Absence generation was successful, with a computation time of ~92 mins for a Europe subdivision to <20000.
 The absence generation is now only conducted for years 2002-2020.
 Those few points prior to 2002 are negligible, and 21/22 will only be used for model validation.
 With this, a new plot of the used subdivisions was created and the procedure of variable selection was started.
@@ -146,3 +146,9 @@ For comparison, this iteration was also conducted with only 2020 occurrences use
 The resulting variables for both years are commented out in "1.3-model_var-select.r" right now.
 
 The yearly occurrence plots were also updated with the new cleaned occurrence data.
+
+### 18/08/2023
+For variable selection a PCA for the land cover classes was conducted by creating binary columns for each present class.
+The PCA results in many dimensions with small explained variances (<15%).
+A PCA of the scaled bioclim variables is very successful in comparison, so maybe the method is implemented wrong.
+Plots were created to visualize the PCA results for land cover.
