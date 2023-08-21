@@ -10,7 +10,7 @@ tot_time <- Sys.time()
 set.seed(4326) # consistent randomness
 # load cleaned occurences
 occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
-occs <- subset(occs, Year >= 2002 & Year <= 2020) # only use years of iteration
+occs <- subset(occs, Year >= 2002) # remove insignificant historic presences
 
 ao <- data.frame() # initialize ao df
 # values for absence generation
@@ -72,4 +72,8 @@ saveRDS(pa, file = "R/data/occurence_data/axyridis_pa.rds")
 saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("\n", "absence generation completed", td, "secs", "\n")
-saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
+
+source("/mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/R/0.3-occ_clean.r", encoding = "UTF-8")
+source("/mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/R/1.1-gen_absences.r", encoding = "UTF-8")
+source("/mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/R/1.2-pa_extract_vals.r", encoding = "UTF-8")
+source("/mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/R/1.4-niche_comp.r", encoding = "UTF-8")

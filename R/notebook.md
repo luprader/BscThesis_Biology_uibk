@@ -152,3 +152,13 @@ For variable selection a PCA for the land cover classes was conducted by creatin
 The PCA results in many dimensions with small explained variances (<15%).
 A PCA of the scaled bioclim variables is very successful in comparison, so maybe the method is implemented wrong.
 Plots were created to visualize the PCA results for land cover.
+
+### 21/08/2023
+Niche comparison was implemented using the `ecospat` library.
+It follows methods described in (Broennimann et al. 2011).
+Right now, two iterations of niche comparisons are computed.
+The first one compares the climatic niche of each year to all data of the native range.
+The second iteration compares each year of data in Europe to the year after in order to have a measure for the niche change.
+The comparison of each year with the native range might not be that beneficial in the end, since the main interest there would be the difference between the native and invaded range.
+
+Absence generation was extended to also include 2021 and 2022, since the absences are used as background during niche comparison.
