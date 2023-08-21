@@ -72,8 +72,3 @@ saveRDS(pa, file = "R/data/occurence_data/axyridis_pa.rds")
 saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("\n", "absence generation completed", td, "secs", "\n")
-
-source("/mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/R/0.3-occ_clean.r", encoding = "UTF-8")
-source("/mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/R/1.1-gen_absences.r", encoding = "UTF-8")
-source("/mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/R/1.2-pa_extract_vals.r", encoding = "UTF-8")
-source("/mnt/c/Users/lukas/Documents/Lukas_Prader/uibk/Biologie_Unterlagen/Bachelorarbeit_SDM/BscBio_LP23/R/1.4-niche_comp.r", encoding = "UTF-8")
