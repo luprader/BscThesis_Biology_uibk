@@ -4,6 +4,8 @@
 .Ruserdata
 # data files
 /R/data/*
+# single niche plots
+/R/plots/niche_comp/single_ys/*
 
 # latex files
 *.gz
