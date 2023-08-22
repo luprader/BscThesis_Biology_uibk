@@ -18,15 +18,6 @@ for (area in unique(pa$Area)) {
     pa_a <- subset(pa, Area == area)
     print(area)
 
-    ## climate and lc for < 2002, use 2002
-    # extract values for subset
-    pa_y <- lp_ext_vals(subset(pa_a, Year < 2002), "1981-2010", 2002, area)
-
-    # add to total dataframe
-    pa_ext <- rbind(pa_ext, pa_y)
-
-    cat("<2002", "\n") # progress
-
     ## climate and lc for 2002 - 2010
     for (y in 2002:2010) {
         # extract values for subset
