@@ -165,7 +165,9 @@ Absence generation was extended to also include 2021 and 2022, since the absence
 
 ### 22/08/2023
 Model variable selection was extended to now incorporate the land cover PCA results into the VIF selection process.
-In addition to the already mentioned low amount of collinearity in land cover, the VIFs of each PCA component are very low, even at the beginning of dropping variables.
+Land cover PCA was fixed by correcting `scale.unit` to FALSE, since a 0/1 binary variable is obviously not scaled to zero mean and unit variance.
+This results in a great PCA with almost 40% of variance covered by PC1
+The VIFs of each PCA component are very low, even at the beginning of dropping variables.
 With each run until now, no land cover dimension has been dropped by the VIF algorithm.
 
 It was also discovered, that a large portion of occurrences are in areas with the lccs_class 'urban'.

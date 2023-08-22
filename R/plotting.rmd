@@ -647,3 +647,16 @@ countries <- project(countries, "epsg:3035")
 plot(countries)
 lines(circs_ea, col = rainbow(2))
 ```
+
+```{r, plot var select pca results}
+lc_pca = readRDS("R/data/modelling/var_select_lc_pca_res.rds")
+# plot pca results
+png(width = 1800, height = 600, filename = "R/plots/var_select_lc_pca.png")
+p1 <- fviz_pca(lc_pca)
+p2 <- fviz_screeplot(lc_pca)
+p3 <- ggplot(pa_ext, aes(x = lccs_class)) +
+    geom_histogram() +
+    scale_x_continuous(breaks = sort(unique(pa_ext$lccs_class)))
+ggarrange(p1, p2, p3, nrow = 1)
+dev.off()
+```
