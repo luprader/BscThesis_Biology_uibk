@@ -162,3 +162,15 @@ The second iteration compares each year of data in Europe to the year after in o
 The comparison of each year with the native range might not be that beneficial in the end, since the main interest there would be the difference between the native and invaded range.
 
 Absence generation was extended to also include 2021 and 2022, since the absences are used as background during niche comparison.
+
+### 22/08/2023
+Model variable selection was extended to now incorporate the land cover PCA results into the VIF selection process.
+In addition to the already mentioned low amount of collinearity in land cover, the VIFs of each PCA component are very low, even at the beginning of dropping variables.
+With each run until now, no land cover dimension has been dropped by the VIF algorithm.
+
+It was also discovered, that a large portion of occurrences are in areas with the lccs_class 'urban'.
+This could have bad influences on the modelling capability, yet it could also be a distinct feature of *H. axyridis*.
+The modelling will show if those points skew the predictions too much.
+
+A new file named openissues.md was created to collect all concerns and unresolved issues regarding the project.
+It was also verified, that the buffer generation creates equal area circles.

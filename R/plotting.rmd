@@ -283,7 +283,7 @@ cat("no splits: ", n, " pts: ")
 print(Sys.time() - btime)
 ```
 
-```{r, benchmark absence gen (runtime 38 mins) }
+```{r, benchmark absence gen with dummy occs(runtime 38 mins) }
 rtime <- Sys.time()
 set.seed(4326)
 source("R/0.0-functions.r", encoding = "UTF-8")
@@ -630,4 +630,20 @@ lccs_legend = lccs_legend[lccs_legend$value %in% unique(lc_eu_20)$lccs_class, ]
 levels(lc_eu_20) = lccs_legend[, 2:3]
 plot(lc_eu_20, col = lccs_legend[, 3])
 #text(lc_eu_20, digits=3, cex=.75, halo=TRUE)
+```
+
+```{r, test buffer gen equal area}
+pts = vect(rbind(c(10,0), c(10,55)), crs = "epsg:4326")
+ref_ext <- c(-25, 65, 34.9916666666667, 72)
+circs = buffer(pts, 1500000)
+countries <- ne_countries(scale = "medium", returnclass = "sf")
+countries <- st_transform(countries, crs = 4326)
+countries <- crop(vect(countries), ext(ref_ext))
+plot(countries)
+lines(circs, col = rainbow(2))
+# convert to Lambert Cylindrical Equal Area (Spherical)
+circs_ea = project(circs, "epsg:3035")
+countries <- project(countries, "epsg:3035")
+plot(countries)
+lines(circs_ea, col = rainbow(2))
 ```
