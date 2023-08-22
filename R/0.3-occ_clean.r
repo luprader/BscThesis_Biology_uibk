@@ -1,4 +1,4 @@
-# This file prepares the downloaded occurence data from gbif,
+# This file prepares the downloaded occurrence data from gbif,
 # checking the dataset for low quality points and removing them
 library(CoordinateCleaner)
 library(terra)
@@ -6,7 +6,7 @@ source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 
 s_time <- Sys.time()
 # load raw gbif data
-axyridis_raw <- read.csv("R/data/occurence_data/Harmonia-axyridis_gbif_raw.csv",
+axyridis_raw <- read.csv("R/data/occurrence_data/Harmonia-axyridis_gbif_raw.csv",
     header = TRUE,
     sep = "\t"
 )
@@ -16,7 +16,7 @@ axyridis_raw <- axyridis_raw[c("decimalLatitude", "decimalLongitude", "year", "c
 names(axyridis_raw) <- c("Lat", "Lon", "Year", "CoordUncert")
 
 # remove relevant NAs in data
-# remove occurences after 2022 and with larger uncertainty than 1 km
+# remove occurrences after 2022 and with larger uncertainty than 1 km
 axyridis_sub <- subset(axyridis_raw, complete.cases(axyridis_raw) &
     Year < 2023 & CoordUncert <= 1000)
 cat(length(axyridis_raw$Year) - length(axyridis_sub$Year), "points removed with subset", "\n")
@@ -89,5 +89,5 @@ axyridis_fin = rbind(axyridis_fin, lc_clean)
 
 cat(length(axyridis_clean$Year) - length(axyridis_fin$Year), "points removed with lc", "\n")
 cat(length(axyridis_fin$Year), "cleaned points remaining in total", "\n")
-saveRDS(axyridis_fin, file = "R/data/occurence_data/axyridis_clean.rds")
+saveRDS(axyridis_fin, file = "R/data/occurrence_data/axyridis_clean.rds")
 print(Sys.time() - s_time)

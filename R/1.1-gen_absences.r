@@ -8,8 +8,8 @@ source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 
 tot_time <- Sys.time()
 set.seed(4326) # consistent randomness
-# load cleaned occurences
-occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
+# load cleaned occurrences
+occs <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
 occs <- subset(occs, Year >= 2002) # remove insignificant historic presences
 
 ao <- data.frame() # initialize ao df
@@ -84,7 +84,7 @@ po$Presence <- "present"
 pa <- rbind(po, ao)
 
 # save complete pa data
-saveRDS(pa, file = "R/data/occurence_data/axyridis_pa.rds")
+saveRDS(pa, file = "R/data/occurrence_data/axyridis_pa.rds")
 saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("\n", "absence generation completed", td, "secs", "\n")

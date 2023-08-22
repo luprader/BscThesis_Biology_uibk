@@ -7,7 +7,7 @@ source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 
 tot_time <- Sys.time()
 # load generated absences
-pa <- readRDS("R/data/occurence_data/axyridis_pa.rds")
+pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 
 # initialize extracted pa dataframe
 pa_ext <- data.frame()
@@ -49,6 +49,6 @@ for (area in unique(pa$Area)) {
     cat("\n", ">2020", "\n") # progress
 }
 # save extracted dataframe
-saveRDS(pa_ext, file = "R/data/occurence_data/axyridis_pa_vals_extracted.rds")
+saveRDS(pa_ext, file = "R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("value extraction finished", td, "secs", "\n")

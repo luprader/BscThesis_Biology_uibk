@@ -14,10 +14,10 @@ library(corrplot)
 ```
 
 ```{r, bboxes}
-## plot cleaned occurence data with native extent and extent of interest
+## plot cleaned occurrence data with native extent and extent of interest
 sf_use_s2(FALSE) # to get rectangular intersect boxes instead of a projection
 
-occs_global <- readRDS("F:/BscBio_LP23_data/occurence/axyridis_clean.rds")
+occs_global <- readRDS("F:/BscBio_LP23_data/occurrence/axyridis_clean.rds")
 occs_global_sf <- st_as_sf(occs_global, coords = c(
     "decimalLongitude",
     "decimalLatitude"
@@ -91,11 +91,11 @@ plot(lc_16_v)
 
 ```{r, plot glob raw vs clean gbif}
 # load raw gbif raster
-axyridis_raw <- read.csv("R/data/occurence_data/Harmonia-axyridis_gbif_raw.csv",
+axyridis_raw <- read.csv("R/data/occurrence_data/Harmonia-axyridis_gbif_raw.csv",
     header = TRUE,
     sep = "\t"
 )
-axyridis_clean <- readRDS("R/data/occurence_data/axyridis_clean.rds")
+axyridis_clean <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
 
 ## plot global on countries map
 countries <- ne_countries(scale = "medium", returnclass = "sf")
@@ -124,7 +124,7 @@ ggsave(m_lc, filename = "R/data/plotting/lc_glob_extents.pdf")
 ```{r, how many raw occs before 2002 eu and as}
 # create uncleaned eu and as subsets (modified copy of occ_clean)
 # load raw gbif data
-axyridis_raw <- read.csv("R/data/occurence_data/Harmonia-axyridis_gbif_raw.csv",
+axyridis_raw <- read.csv("R/data/occurrence_data/Harmonia-axyridis_gbif_raw.csv",
     header = TRUE,
     sep = "\t"
 )
@@ -134,7 +134,7 @@ axyridis_raw <- axyridis_raw[c("decimalLatitude", "decimalLongitude", "year", "c
 names(axyridis_raw) <- c("Lat", "Lon", "Year", "CoordUncert")
 
 # remove relevant NAs in data
-# remove occurences after 2022
+# remove occurrences after 2022
 axyridis_sub <- subset(axyridis_raw, !is.na(Lat & Lon & Year & CoordUncert))
 
 # subset data into eu and as spatial extent
@@ -151,11 +151,11 @@ print(paste("Raw EU < 2002:", eu_bef2k, "Raw Native < 2002:", as_bef2k))
 ```
 
 ```{r, plot yearly occ frequency 2002-2022 with cleaned occs}
-occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
+occs <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
 occs_eu <- subset(occs, Area == "eu" & Year >= 2002)
 occs_as <- subset(occs, Area == "as" & Year >= 2002)
 
-# get occurences per year as df
+# get occurrences per year as df
 freq_eu <- count(occs_eu, Year) # frequency of yearly occs eu
 freq_as <- count(occs_as, Year) # frequency of yearly occs as
 freqs <- data.frame(Year = 2002:2022, n = 0)
@@ -173,7 +173,7 @@ frequencies <- data.frame(
     label = c(rep("Native", l), rep("eu", l), rep("Total", l))
 )
 
-# find out how many occurences are before 2000
+# find out how many occurrences are before 2000
 eu_bef2k <- count(subset(occs, Area == "eu" & Year < 2002))[[1]]
 as_bef2k <- count(subset(occs, Area == "as" & Year < 2002))[[1]]
 cap <- paste("Cleaned EU < 2002:", eu_bef2k, "Cleaned Native < 2002:", as_bef2k)
@@ -269,7 +269,7 @@ lines(t_rd)
 t_area <- vect(ext(c(0, 20, 0, 20)), crs = "+proj=longlat")
 n_ab <- 5 # number of generated points
 n <- 10000
-pres <- readRDS("R/data/occurence_data/axyridis_clean.rds")
+pres <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
 pres <- subset(pres, Year == 2019)
 
 btime <- Sys.time()
@@ -327,7 +327,7 @@ for (i in seq_len(nrow(exts))) {
     e_cnt <- pcnt
     pa <- data.frame() # initialize pa df
     ext_e <- vect(ext(t_ext), crs = crs(t_ref))
-    # subset occurences inside the extent in question
+    # subset occurrences inside the extent in question
     pres_c <- crop(t_pres, ext(ext_e))
     # generate absences inside the extent
     pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, t_ref)
@@ -350,7 +350,7 @@ for (i in seq_len(nrow(exts))) {
             cat("\r", "|", prog, "|")
             prog <- prog + 1
             ext_e <- vect(ext(subexts[e, ]), crs = crs(t_ref))
-            # subset occurences inside the extent in question
+            # subset occurrences inside the extent in question
             pres_c <- crop(t_pres, ext(ext_e))
             # generate absences inside the extent
             pa_e <- lp_gen_abs(pres_c, n_abs = 5, min_d = 1000, max_d = 10000, lc_ref)
@@ -397,8 +397,8 @@ dev.off()
 rtime <- Sys.time()
 set.seed(4326)
 source("R/0.0-functions.r", encoding = "UTF-8")
-# load cleaned occurences
-occs <- readRDS("R/data/occurence_data/axyridis_clean.rds")
+# load cleaned occurrences
+occs <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
 occs <- subset(occs, Year > 2001 & Area == "eu")
 # load reference lc layers
 t_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.grd")
@@ -463,7 +463,7 @@ for (i in 1:3) {
             cat("||", prog, "||", "\n")
             prog <- prog + 1
             ext_e <- vect(ext(subexts[e, ]), crs = crs(t_ref))
-            # subset occurences inside the extent in question
+            # subset occurrences inside the extent in question
             pres_c <- crop(t_pres, ext(ext_e))
 
             for (i in 2002:2010) {
@@ -486,7 +486,7 @@ saveRDS(results, file = "R/data/plotting/gen_benchmarkresults_axyridis.rds")
 print(Sys.time() - rtime) # total runtime of cell
 ```
 
-```{r, barplot with occurence benchmark results}
+```{r, barplot with occurrence benchmark results}
 results <- readRDS("R/data/plotting/gen_benchmarkresults_axyridis.rds")
 res <- as.data.frame(results[-1, ])
 names(res) <- c("runtime", "pcnt", "e_cnt")
@@ -510,7 +510,7 @@ dev.off()
 ```
 
 ```{r, test plot pa from gen}
-pa <- readRDS("R/data/occurence_data/axyridis_pa.rds")
+pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 pa_as <- subset(pa, Area == "as")
 pa_as_v <- vect(pa_as, geom = c("Lon", "Lat"), crs = "epsg:4326")
 v_crop <- crop(pa_as_v, ext(87.85, 88.35, 53.4, 53.85))
@@ -553,7 +553,7 @@ dev.off()
 
 ```{r, plot subext border error example}
 subexts <- tail(readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds"), 4)
-pa <- readRDS("R/data/occurence_data/axyridis_pa.rds")
+pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 ref_ext <- ext(c(3.8, 4.2, 51.2, 51.4))
 pa_crop <- crop(vect(pa, geom = c("Lon", "Lat"), crs = "epsg:4326"), ref_ext)
 
@@ -586,7 +586,7 @@ print(length(ao_flag) / length(ao_crop))
 ```
 
 ```{r, list total occs up to year}
-clean <- readRDS("R/data/occurence_data/axyridis_clean.rds")
+clean <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
 clean <- subset(clean, Year >= 2002)
 for (i in 2002:2022) {
     cat(i, nrow(subset(clean, Year <= i)), "\n")
@@ -595,7 +595,7 @@ for (i in 2002:2022) {
 
 ```{r, bioclim corrplots 2002,2011,2020}
 #load extracted pa data
-pa_ex = readRDS("R/data/occurence_data/axyridis_pa_vals_extracted.rds")
+pa_ex = readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
 
 ## plot 3 correlation plots for bioclim
 png(width = 1800, height = 600, file = "R/plots/bio_corrmat_02-11-20.png")

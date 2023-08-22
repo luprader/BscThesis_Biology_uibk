@@ -8,7 +8,7 @@ library(dplyr)
 
 tot_time <- Sys.time()
 # load extracted pa data
-pa <- readRDS("R/data/occurence_data/axyridis_pa_vals_extracted.rds")
+pa <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
 pa_as <- subset(pa, Area == "as")
 po_as <- subset(pa_as, Presence == "present")
 pa_eu <- subset(pa, Area == "eu")

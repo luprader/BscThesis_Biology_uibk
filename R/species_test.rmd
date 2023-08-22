@@ -11,7 +11,7 @@ library(raster)
 ```
 
 ```{r species}
-# selection of invasive alien species of EU concern with occurences in austria from EASIN (+ others from other research)
+# selection of invasive alien species of EU concern with occurrences in austria from EASIN (+ others from other research)
 spec <- c("Harmonia axyridis", "Fallopia japonica", "Myocastor coypus", "Ondatra zibethicus", "Tamias sibiricus", "Vespa velutina") # velutina nigrithorax
 spec_eng <- c("Asian lady beetle", "Japanese knotweed", "Nutria", "Muskrat", "Siberian chipmunk", "Asian hornet")
 # AS     AS        SA      N       AS      AS
@@ -22,7 +22,7 @@ for (s in seq(length(spec))) {
     print(spec[s]) # species name
     tkey <- name_suggest(q = spec[s], rank = "species")
 
-    # total gbif occurences in europe and in native range for the species per taxon key
+    # total gbif occurrences in europe and in native range for the species per taxon key
     totaloccs_eu <- 0
     totaloccs_nat <- 0
     for (k in tkey$data$key) {
@@ -37,7 +37,7 @@ for (s in seq(length(spec))) {
 for (s in seq(length(spec))) {
     tkey <- name_suggest(q = spec[s], rank = "species")
 
-    # find occurences in europe per year from 1950 to 2023
+    # find occurrences in europe per year from 1950 to 2023
     years <- seq(2000, 2023)
     occsperyear <- replicate(length(years), 0)
     for (t in years) {
