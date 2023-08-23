@@ -68,15 +68,15 @@ for (e in seq_len(nrow(subexts))) {
         ao <- rbind(ao, ao_y)
         rm(list = c("lc_ref_c", "pres_v_c"))
     }
+    # 2021 and 2022 using 2020 lc
+    lc_ref <- rast(paste(lc_p, 2020, "_eu.grd", sep = ""))
+    ao_y <- lp_gen_abs(pres_v, 2021, n_abs, min_d, max_d, lc_ref)
+    ao <- rbind(ao, ao_y)
+    ao_y <- lp_gen_abs(pres_v, 2022, n_abs, min_d, max_d, lc_ref)
+    ao <- rbind(ao, ao_y)
+    rm(lc_ref)
     gc()
 }
-# 2021 and 2022 using 2020 lc
-lc_ref <- rast(paste(lc_p, 2020, "_eu.grd", sep = ""))
-ao_y <- lp_gen_abs(pres_v, 2021, n_abs, min_d, max_d, lc_ref)
-ao <- rbind(ao, ao_y)
-ao_y <- lp_gen_abs(pres_v, 2022, n_abs, min_d, max_d, lc_ref)
-ao <- rbind(ao, ao_y)
-rm(lc_ref)
 
 # create pa dataframe
 po <- occs
