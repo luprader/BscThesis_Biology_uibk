@@ -1,8 +1,12 @@
 # this file includes all self written functions used in this project
 
 # libraries used
-library(terra) # (lp_subdiv_pts(), lp_gen_abs(), lp_ext_vals)
-library(dplyr) # (lp_gen_abs())
+library(terra) 
+# (lp_subdiv_pts, lp_gen_abs, lp_ext_vals, lp_clean_lc, lp_pca_proj_lc)
+library(dplyr) 
+# (lp_gen_abs)
+library(FactoMineR) 
+# (lp_pca_proj, lp_pca_proj_lc)
 
 ################################################################################
 # function subdividing point extents until all extents have no more than the
@@ -271,7 +275,48 @@ lp_clean_lc <- function(points, y_lc, area) {
     rm(c("lc_l", "points_v"))
 }
 ################################################################################
-# function computing the occupied niche of given points with environmental data
-# using (Broennimann et al. 2011)
-# use ecospat?
+# function computing pca projected coordinates for a lccs_class vector
+
+# lc -> vector of lccs_class values to project
+# pca_res -> result from a PCA
+
+# returns a matrix with the separate values of lc on all dimensions of pca_res
+
+lp_pca_proj <- function(lc, pca_res) {
+    # extract the lccs_classes used by the pca
+    lccs_factors = as.factor(sub("lc_", "", rownames(pca_res$var$contrib)))
+
+    for (i in seq_along(lccs_factors)) {
+    v = lccs_factors[i]
+    lc <- cbind(lc, c_name = as.numeric(lc == v)) # make binary column
+    colnames(lc)[ncol(lc)] <- paste0("lc_", v) # rename column to variable
+    }
+    lc_bin <- lc[, -1] # remove original lccs_class column
+
+    # project lc onto pca axes
+    lc_proj = predict.PCA(lc_pca, lc_bin)$coord
+    colnames(lc_proj) <- paste0("lc", seq_len(ncol(lc_proj))) # rename
+    
+    return(lc_proj)
+}
 ################################################################################
+# function projecting Cop LC layers to pca dims, writing to file
+
+# pca_res -> result of a PCA to pass onto lp_pca_proj
+# year -> year for which the Cop LC layer should be projected
+
+# returns the year for which projection was computed
+# writes the projected raster as a new file with filename = fn
+
+lp_pca_proj_lc <- function(pca_res, year) {
+    # load Cop LC layer of year
+    lc_r = rast(paste0("R/data/cropped_rasters/Cop_lc_", year, "_eu.grd"))
+
+    # create destination file name
+    fn = paste0("R/data/modelling/pca_rasters/pca_", year, "_eu.grd")
+
+    # project raster onto pca axes
+    app(lc_r, lp_pca_proj, pca_res = pca_res, filename = fn, overwrite = TRUE)
+    cat("projected", year, "onto pca axes \n")
+    return(year)
+}

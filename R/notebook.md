@@ -166,7 +166,7 @@ Absence generation was extended to also include 2021 and 2022, since the absence
 ### 22/08/2023
 Model variable selection was extended to now incorporate the land cover PCA results into the VIF selection process.
 Land cover PCA was fixed by correcting `scale.unit` to FALSE, since a 0/1 binary variable is obviously not scaled to zero mean and unit variance.
-This results in a great PCA with almost 40% of variance covered by PC1
+This results in a great PCA with almost 40% of variance covered by PC1.
 The VIFs of each PCA component are very low, even at the beginning of dropping variables.
 With each run until now, no land cover dimension has been dropped by the VIF algorithm.
 
@@ -176,3 +176,10 @@ The modelling will show if those points skew the predictions too much.
 
 A new file named openissues.md was created to collect all concerns and unresolved issues regarding the project.
 It was also verified, that the buffer generation creates equal area circles.
+
+### 23/08/2023
+The land cover PCA used in variable selection was improved to use a cutoff value of 80% for the cumulative variance covered by PCA axes.
+To prepare for model building and prediction, the selected variables were added as value columns to the pa data, reprojecting land cover to the used PCA dimensions (`lp_pca_proj`).
+
+To enable prediction in geographic space, rasters were created with layers corresponding to the projected lccs classes (`lp_pca_proj_lc`).
+It uses a parallel for loop for the years of land cover data, since the projection is very CPU intensive.

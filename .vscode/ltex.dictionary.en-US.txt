@@ -1,3 +1,9 @@
 EASIN
 subsetting
 bioclim
+VIF
+VIFs
+lccs
+axyridis
+rasters
+reprojecting

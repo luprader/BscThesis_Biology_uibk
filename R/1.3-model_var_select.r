@@ -23,12 +23,15 @@ for (v in unique(lc$lccs_class)) {
 lc_bin <- lc[, -1] # separate colvals (1, 0)
 
 # calculate pca for binary lc values
-lc_pca <- PCA(lc_bin, ncp = 5, scale.unit = FALSE, graph = FALSE)
+lc_pca <- PCA(lc_bin, ncp = 10, scale.unit = FALSE, graph = FALSE)
 
-# extract pca dims (5 best)
-lc_pca_dims <- as.data.frame(lc_pca$ind$coord)
+# extract pca dims with cumulative variance closest to 80%
+cutoff <- which.min(abs(lc_pca$eig[, 3] - 80))
+lc_pca_dims <- as.data.frame(lc_pca$ind$coord[, 1:cutoff])
 colnames(lc_pca_dims) <- paste0("lc", seq_len(ncol(lc_pca_dims)))
 
+# calculate pca with cutoff for saving
+lc_pca <- PCA(lc_bin, ncp = cutoff, scale.unit = FALSE, graph = FALSE)
 # save lc pca results
 saveRDS(lc_pca, file = "R/data/modelling/var_select_lc_pca_res.rds")
 rm(lc_pca)
@@ -74,6 +77,6 @@ while (max(vifs) > 10) {
 
 # save final vifs and var scaling
 saveRDS(vifs, file = "R/data/modelling/var_select_vifs.rds")
-saveRDS()
+saveRDS(vars_scaling, file = "R/data/modelling/var_select_vars_scaling.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("reduced model with vifs:", td, "secs", "\n")
