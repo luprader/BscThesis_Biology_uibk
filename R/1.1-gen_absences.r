@@ -13,7 +13,7 @@ tot_time <- Sys.time()
 set.seed(4326) # consistent randomness
 # load cleaned occurrences
 occs <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
-occs <- subset(occs, Year >= 2019) # remove insignificant historic presences
+occs <- subset(occs, Year >= 2002) # remove insignificant historic presences
 
 ao <- data.frame() # initialize ao df
 # values for absence generation
@@ -59,7 +59,7 @@ t_ext <- c(-25, 65, 34.9916666666667, 72)
 subexts <- lp_subdiv_pts(pres_v, 20000, t_ext)
 
 # prepare for parallelization
-e_s <- seq_len(nrow(subexts)) # for iteration in foreach
+e_s <- seq_len(nrow(subexts)) # for iteration of foreach
 cl <- makeCluster(detectCores() - 1)
 # load libraries in cl
 clusterEvalQ(cl, lapply(c("terra", "dplyr"), library, character.only = TRUE))
@@ -84,6 +84,7 @@ ao_eu <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
     return(ao_e)
 }
 stopCluster(cl)
+unlink("R/data/occurrence_data/pres_v.rds") # remove saved pres_v again
 
 ao <- rbind(ao, ao_eu) # merge all ao
 
