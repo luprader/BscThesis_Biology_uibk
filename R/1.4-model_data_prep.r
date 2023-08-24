@@ -20,7 +20,6 @@ vs_vifs <- as.data.frame(readRDS("R/data/modelling/var_select_vifs.rds"))
 
 # prepare pa with selected vars
 pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-pa_ext <- subset(pa_ext, Year == 2002)
 
 lc <- data.matrix(select(pa_ext, lccs_class))
 lc_proj <- as.data.frame(lp_pca_proj(lc, lc_pca))
