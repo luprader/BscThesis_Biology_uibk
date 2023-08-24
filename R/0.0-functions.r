@@ -153,7 +153,7 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
     colnames(ao) <- names
 
     # subset presences to year in question
-    pres_y = subset(pres, pres$Year == year)
+    pres_y <- subset(pres, pres$Year == year)
     # check if pres_y is empty
     if (length(pres_y) == 0) {
         cat("no presences for", year, "\n")
@@ -279,24 +279,24 @@ lp_clean_lc <- function(points, y_lc, area) {
 ################################################################################
 # function computing pca projected coordinates for a lccs_class vector
 
-# lc -> vector of lccs_class values to project
+# lc -> vector/matrix of lccs_class values to project
 # pca_res -> result from a PCA
 
 # returns a matrix with the separate values of lc on all dimensions of pca_res
 
 lp_pca_proj <- function(lc, pca_res) {
     # extract the lccs_classes used by the pca
-    lccs_factors = as.factor(sub("lc_", "", rownames(pca_res$var$contrib)))
+    lccs_factors <- as.factor(sub("lc_", "", rownames(pca_res$var$contrib)))
 
     for (i in seq_along(lccs_factors)) {
-    v = lccs_factors[i]
-    lc <- cbind(lc, c_name = as.numeric(lc == v)) # make binary column
-    colnames(lc)[ncol(lc)] <- paste0("lc_", v) # rename column to variable
+        v <- lccs_factors[i]
+        lc <- cbind(lc, c_name = as.numeric(lc == v)) # make binary column
+        colnames(lc)[ncol(lc)] <- paste0("lc_", v) # rename column to variable
     }
     lc_bin <- lc[, -1] # remove original lccs_class column
 
     # project lc onto pca axes
-    lc_proj = predict.PCA(lc_pca, lc_bin)$coord
+    lc_proj <- predict.PCA(lc_pca, lc_bin)$coord
     colnames(lc_proj) <- paste0("lc", seq_len(ncol(lc_proj))) # rename
 
     return(lc_proj)
@@ -312,10 +312,10 @@ lp_pca_proj <- function(lc, pca_res) {
 
 lp_pca_proj_lc <- function(pca_res, year) {
     # load Cop LC layer of year
-    lc_r = rast(paste0("R/data/cropped_rasters/Cop_lc_", year, "_eu.grd"))
+    lc_r <- rast(paste0("R/data/cropped_rasters/Cop_lc_", year, "_eu.grd"))
 
     # create destination file name
-    fn = paste0("R/data/modelling/pca_rasters/pca_", year, "_eu.grd")
+    fn <- paste0("R/data/modelling/pca_rasters/pca_", year, "_eu.grd")
 
     # project raster onto pca axes
     app(lc_r, lp_pca_proj, pca_res = pca_res, filename = fn, overwrite = TRUE)
