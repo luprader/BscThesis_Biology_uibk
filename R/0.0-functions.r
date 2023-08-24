@@ -1,11 +1,11 @@
 # this file includes all self written functions used in this project
 
 # libraries used
-library(terra) 
+library(terra)
 # (lp_subdiv_pts, lp_gen_abs, lp_ext_vals, lp_clean_lc, lp_pca_proj_lc)
-library(dplyr) 
+library(dplyr)
 # (lp_gen_abs)
-library(FactoMineR) 
+library(FactoMineR)
 # (lp_pca_proj, lp_pca_proj_lc)
 
 ################################################################################
@@ -152,19 +152,21 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
     ao <- data.frame(matrix(nrow = 0, ncol = length(names)))
     colnames(ao) <- names
 
+    # subset presences to year in question
+    pres_y = subset(pres, pres$Year == year)
+    # check if pres_y is empty
+    if (length(pres_y) == 0) {
+        cat("no presences for", year, "\n")
+        return(ao)
+    }
+
     # create circles around each point
     # maximum distance to presences of the year to generate for
-    circs_r <- buffer(subset(pres, pres$Year == year), max_d)
+    circs_r <- buffer(pres_y, max_d)
     # minimum distance to presences of all years
     circs_d <- buffer(pres, min_d)
     # remove min_d circles from all max_d circles
     circs_rd <- erase(circs_r, circs_d)
-
-    # check if circs_rd is empty
-    if (length(circs_rd) == 0) {
-        cat("no presences for", year, "\n")
-        return(ao)
-    }
 
     ## generate n_abs absence points per circle
     wc <- 0 # how often replacements had to be generated
@@ -296,7 +298,7 @@ lp_pca_proj <- function(lc, pca_res) {
     # project lc onto pca axes
     lc_proj = predict.PCA(lc_pca, lc_bin)$coord
     colnames(lc_proj) <- paste0("lc", seq_len(ncol(lc_proj))) # rename
-    
+
     return(lc_proj)
 }
 ################################################################################
@@ -317,6 +319,8 @@ lp_pca_proj_lc <- function(pca_res, year) {
 
     # project raster onto pca axes
     app(lc_r, lp_pca_proj, pca_res = pca_res, filename = fn, overwrite = TRUE)
-    cat("projected", year, "onto pca axes \n")
+    cat("projected", year, "lc raster onto pca axes \n")
+
     return(year)
 }
+################################################################################

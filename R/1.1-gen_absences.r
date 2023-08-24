@@ -4,16 +4,20 @@
 # used libraries
 library(terra)
 library(dplyr)
+library(parallel)
+library(foreach)
+library(doParallel)
 source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 
 tot_time <- Sys.time()
 set.seed(4326) # consistent randomness
 # load cleaned occurrences
 occs <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
-occs <- subset(occs, Year >= 2002) # remove insignificant historic presences
+occs <- subset(occs, Year >= 2019) # remove insignificant historic presences
 
 ao <- data.frame() # initialize ao df
 # values for absence generation
+years <- c(2002:2022)
 n_abs <- 5
 min_d <- 1000
 max_d <- 18000
@@ -28,24 +32,24 @@ rm(ref)
 # generate for asia
 cat("as: \n")
 pres_v <- subset(occs_v, occs_v$Area == "as")
-
-for (i in 2002:2020) {
-    lc_ref <- rast(paste(lc_p, i, "_as.grd", sep = ""))
-    ao_y <- lp_gen_abs(pres_v, i, n_abs, min_d, max_d, lc_ref)
+for (y in years) {
+    # choose correct lc reference
+    if (y > 2020) {
+        lc_ref <- rast(paste0(lc_p, 2020, "_as.grd"))
+    } else {
+        lc_ref <- rast(paste0(lc_p, y, "_as.grd"))
+    }
+    # generate absences
+    ao_y <- lp_gen_abs(pres_v, y, n_abs, min_d, max_d, lc_ref)
     ao <- rbind(ao, ao_y)
     rm(lc_ref)
 }
-# 2021 and 2022 using 2020 lc
-lc_ref <- rast(paste(lc_p, 2020, "_as.grd", sep = ""))
-ao_y <- lp_gen_abs(pres_v, 2021, n_abs, min_d, max_d, lc_ref)
-ao <- rbind(ao, ao_y)
-ao_y <- lp_gen_abs(pres_v, 2022, n_abs, min_d, max_d, lc_ref)
-ao <- rbind(ao, ao_y)
-rm(lc_ref)
 
 # generate for europe
-cat("eu: \n")
+cat("eu, sub extents in parallel: \n")
 pres_v <- subset(occs_v, occs_v$Area == "eu")
+# save to access in foreach
+saveRDS(pres_v, file = "R/data/occurrence_data/pres_v.rds")
 rm(occs_v)
 # subset europe
 # ext() for eu returns:
@@ -54,29 +58,34 @@ rm(occs_v)
 t_ext <- c(-25, 65, 34.9916666666667, 72)
 subexts <- lp_subdiv_pts(pres_v, 20000, t_ext)
 
-
-prog <- 1
-for (e in seq_len(nrow(subexts))) {
-    cat("||", prog, "||", "\n")
-    prog <- prog + 1
-    ext_e <- ext(subexts[e, ])
-
-    for (i in 2002:2020) {
-        lc_ref_c <- crop(rast(paste(lc_p, i, "_eu.grd", sep = "")), ext_e)
-        pres_v_c <- crop(pres_v, ext(subexts[e, ]))
-        ao_y <- lp_gen_abs(pres_v_c, i, n_abs, min_d, max_d, lc_ref_c)
-        ao <- rbind(ao, ao_y)
-        rm(list = c("lc_ref_c", "pres_v_c"))
+# prepare for parallelization
+e_s <- seq_len(nrow(subexts)) # for iteration in foreach
+cl <- makeCluster(detectCores() - 1)
+# load libraries in cl
+clusterEvalQ(cl, lapply(c("terra", "dplyr"), library, character.only = TRUE))
+registerDoParallel(cl)
+# parallelized for loop
+ao_eu <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
+    ext_e <- ext(subexts[e, ]) # get extent
+    pres_v_c <- crop(readRDS("R/data/occurrence_data/pres_v.rds"), ext_e)
+    ao_e <- data.frame() # initialize ao df
+    for (y in years) {
+        # choose correct lc reference
+        if (y > 2020) {
+            lc_ref_c <- crop(rast(paste0(lc_p, 2020, "_eu.grd")), ext_e)
+        } else {
+            lc_ref_c <- crop(rast(paste0(lc_p, y, "_eu.grd")), ext_e)
+        }
+        # generate absences
+        ao_y <- lp_gen_abs(pres_v_c, y, n_abs, min_d, max_d, lc_ref_c)
+        ao_e <- rbind(ao_e, ao_y)
+        rm(lc_ref_c)
     }
-    # 2021 and 2022 using 2020 lc
-    lc_ref <- rast(paste(lc_p, 2020, "_eu.grd", sep = ""))
-    ao_y <- lp_gen_abs(pres_v, 2021, n_abs, min_d, max_d, lc_ref)
-    ao <- rbind(ao, ao_y)
-    ao_y <- lp_gen_abs(pres_v, 2022, n_abs, min_d, max_d, lc_ref)
-    ao <- rbind(ao, ao_y)
-    rm(lc_ref)
-    gc()
+    return(ao_e)
 }
+stopCluster(cl)
+
+ao <- rbind(ao, ao_eu) # merge all ao
 
 # create pa dataframe
 po <- occs
