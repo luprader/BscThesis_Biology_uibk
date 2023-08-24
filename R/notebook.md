@@ -183,3 +183,9 @@ To prepare for model building and prediction, the selected variables were added 
 
 To enable prediction in geographic space, rasters were created with layers corresponding to the projected lccs classes (`lp_pca_proj_lc`).
 It uses a parallel for loop for the years of land cover data, since the projection is very CPU intensive.
+
+## 24/08/2023
+After it was attempted to run 1.1-gen_absences overnight, an error with the generation in Europe was fixed (21/22 not using sub extent).
+The iteration over each sub extent in Europe was also parallelized with `foreach` to improve computation time.
+
+With this finished, model building was started.
