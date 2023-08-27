@@ -189,3 +189,7 @@ After it was attempted to run 1.1-gen_absences overnight, an error with the gene
 The iteration over each sub extent in Europe was also parallelized with `foreach` to improve computation time.
 
 With this finished, model building was started.
+
+### 25/08/2023
+A full absence generation was run, having a runtime of ~130 min.
+The outline was improved, updating and expanding the methods to the current state of progress.
