@@ -77,6 +77,5 @@ while (max(vifs) > 10) {
 
 # save final vifs and var scaling
 saveRDS(vifs, file = "R/data/modelling/var_select_vifs.rds")
-saveRDS(vars_scaling, file = "R/data/modelling/var_select_vars_scaling.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("reduced model with vifs:", td, "secs", "\n")

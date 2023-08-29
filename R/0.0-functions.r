@@ -171,10 +171,13 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
     ## generate n_abs absence points per circle
     wc <- 0 # how often replacements had to be generated
 
-    for (i in seq_along(circs_rd)) {
-        cat("\r", "|", year, "|", i, "|") # print gen progress
-        c <- circs_rd[i]
-        pts <- spatSample(c, n_abs) # generate random points inside
+    #for (i in seq_along(circs_rd)) {
+        cat("\r", "|", year, "|")#, i, "|") # print gen progress
+        c <- vect(ext(pres_y), crs = crs(pres_y)) # normal random extent sampling
+        c$Year = y
+        c$CoordUncert = 0
+        c$Area = pres_y$Area[1]
+        pts <- spatSample(c, n_abs * nrow(pres_y)) # generate random points inside
         # extract lc values
         pts <- cbind(pts, extract(lc_ref, pts, ID = FALSE))
         # test for lc = water or NA (out of cropped area)
@@ -182,9 +185,9 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
         pts$lccs_class <- NULL # remove lc column
 
         # generate replacements if needed
-        while (nrow(pts) < n_abs) {
+        while (nrow(pts) < (n_abs * nrow(pres_y))) {
             wc <- wc + 1
-            n <- n_abs - nrow(pts)
+            n <- n_abs * nrow(pres_y) - nrow(pts)
             pts_n <- spatSample(c, n)
             pts_n <- cbind(pts_n, extract(lc_ref, pts_n, ID = FALSE))
             pts_n <- pts_n[pts_n$lccs_class != 210 & !is.na(pts_n$lccs_class), ]
@@ -195,10 +198,10 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
         pts_df <- rename(pts_df, c("Lon" = "x", "Lat" = "y"))
         # add generated points to total dataframe
         ao <- rbind(ao, pts_df)
-    }
+    #}
 
     ao$Presence <- "absent"
-    n_pres <- length(circs_rd)
+    n_pres <- length(pres_y)
     n_abs <- nrow(ao)
     # function end statements
     td <- difftime(Sys.time(), starting_time, units = "secs")[[1]]
