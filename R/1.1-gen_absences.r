@@ -25,7 +25,7 @@ max_d <- 18000
 lc_p <- "R/data/cropped_rasters/Cop_LC_"
 
 # create SpatVector object of presence points
-ref <- rast("R/data/cropped_rasters/Cop_LC_2002_as.grd")
+ref <- rast("R/data/cropped_rasters/Cop_LC_2002_as.tif")
 occs_v <- vect(occs, geom = c("Lon", "Lat"), crs = crs(ref))
 rm(ref)
 
@@ -35,9 +35,9 @@ pres_v <- subset(occs_v, occs_v$Area == "as")
 for (y in years) {
     # choose correct lc reference
     if (y > 2020) {
-        lc_ref <- rast(paste0(lc_p, 2020, "_as.grd"))
+        lc_ref <- rast(paste0(lc_p, 2020, "_as.tif"))
     } else {
-        lc_ref <- rast(paste0(lc_p, y, "_as.grd"))
+        lc_ref <- rast(paste0(lc_p, y, "_as.tif"))
     }
     # generate absences
     ao_y <- lp_gen_abs(pres_v, y, n_abs, min_d, max_d, lc_ref)
@@ -72,9 +72,9 @@ ao_eu <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
     for (y in years) {
         # choose correct lc reference
         if (y > 2020) {
-            lc_ref_c <- crop(rast(paste0(lc_p, 2020, "_eu.grd")), ext_e)
+            lc_ref_c <- crop(rast(paste0(lc_p, 2020, "_eu.tif")), ext_e)
         } else {
-            lc_ref_c <- crop(rast(paste0(lc_p, y, "_eu.grd")), ext_e)
+            lc_ref_c <- crop(rast(paste0(lc_p, y, "_eu.tif")), ext_e)
         }
         # generate absences
         ao_y <- lp_gen_abs(pres_v_c, y, n_abs, min_d, max_d, lc_ref_c)

@@ -37,21 +37,19 @@ for (f in filenames) {
     fn <- strsplit(f, "[-]")
     y <- fn[[1]][8] # extract year of land cover layer
     dest <- "R/data/cropped_rasters" # destination directory
-    n_eu <- paste("Cop_LC_", y, "_eu.grd", sep = "") # eu filename
-    n_as <- paste("Cop_LC_", y, "_as.grd", sep = "") # as filename
+    n_eu <- paste("Cop_LC_", y, "_eu.tif", sep = "") # eu filename
+    n_as <- paste("Cop_LC_", y, "_as.tif", sep = "") # as filename
 
     # crop to eu and as extent and resample LC layer to coarser resolution
     layer_cr <- crop(layer, ext(eu_box), snap = "out")
     layer_agg <- aggregate(layer_cr, fact = 3, fun = "modal", na.rm = TRUE)
-    fname <- file.path(dest, n_eu)
-    writeRaster(layer_agg, filename = fname, overwrite = TRUE)
-    unlink(paste(fname, ".aux.xml", sep = "")) # remove unnecessary .xml file
+    fn <- file.path(dest, n_eu)
+    writeRaster(layer_agg, filename = fn, overwrite = TRUE)
 
     layer_cr <- crop(layer, ext(as_box), snap = "out")
     layer_agg <- aggregate(layer_cr, fact = 3, fun = "modal", na.rm = TRUE)
-    fname <- file.path(dest, n_as)
-    writeRaster(layer_agg, filename = fname, overwrite = TRUE)
-    unlink(paste(fname, ".aux.xml", sep = "")) # remove unnecessary .xml file
+    fn <- file.path(dest, n_as)
+    writeRaster(layer_agg, filename = fn, overwrite = TRUE)
 
     etime_f <- Sys.time()
     cat(y, ": ")

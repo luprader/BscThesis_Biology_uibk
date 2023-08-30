@@ -174,7 +174,7 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
     #for (i in seq_along(circs_rd)) {
         cat("\r", "|", year, "|")#, i, "|") # print gen progress
         c <- vect(ext(pres_y), crs = crs(pres_y)) # normal random extent sampling
-        c$Year = y
+        c$Year = year
         c$CoordUncert = 0
         c$Area = pres_y$Area[1]
         pts <- spatSample(c, n_abs * nrow(pres_y)) # generate random points inside
@@ -238,9 +238,9 @@ lp_ext_vals <- function(pts, y_clim, y_lc, area) {
 
     # raster paths
     clim_p <- "R/data/cropped_rasters/CHELSA_bio_merged_"
-    clim_p_ya <- paste(clim_p, y_clim, "_", area, ".grd", sep = "")
+    clim_p_ya <- paste(clim_p, y_clim, "_", area, ".tif", sep = "")
     lc_p <- "R/data/cropped_rasters/Cop_LC_"
-    lc_p_ya <- paste(lc_p, y_lc, "_", area, ".grd", sep = "")
+    lc_p_ya <- paste(lc_p, y_lc, "_", area, ".tif", sep = "")
 
     # extract clim and lc values
     clim_l <- rast(clim_p_ya)
@@ -266,7 +266,7 @@ lp_ext_vals <- function(pts, y_clim, y_lc, area) {
 lp_clean_lc <- function(points, y_lc, area) {
     # load landcover for year and area
     lc_p <- "R/data/cropped_rasters/Cop_LC_"
-    lc_p_ya <- paste(lc_p, y_lc, "_", area, ".grd", sep = "")
+    lc_p_ya <- paste(lc_p, y_lc, "_", area, ".tif", sep = "")
     lc_l <- rast(lc_p_ya)
 
     # extract lc values and remove water or NA
@@ -299,7 +299,7 @@ lp_pca_proj <- function(lc, pca_res) {
     lc_bin <- lc[, -1] # remove original lccs_class column
 
     # project lc onto pca axes
-    lc_proj <- predict.PCA(lc_pca, lc_bin)$coord
+    lc_proj <- predict.PCA(pca_res, lc_bin)$coord
     colnames(lc_proj) <- paste0("lc", seq_len(ncol(lc_proj))) # rename
 
     return(lc_proj)
@@ -315,10 +315,10 @@ lp_pca_proj <- function(lc, pca_res) {
 
 lp_pca_proj_lc <- function(pca_res, year) {
     # load Cop LC layer of year
-    lc_r <- rast(paste0("R/data/cropped_rasters/Cop_lc_", year, "_eu.grd"))
+    lc_r <- rast(paste0("R/data/cropped_rasters/Cop_lc_", year, "_eu.tif"))
 
     # create destination file name
-    fn <- paste0("R/data/modelling/pca_rasters/pca_", year, "_eu.grd")
+    fn <- paste0("R/data/modelling/pca_rasters/pca_", year, "_eu.tif")
 
     # project raster onto pca axes
     app(lc_r, lp_pca_proj, pca_res = pca_res, filename = fn, overwrite = TRUE)

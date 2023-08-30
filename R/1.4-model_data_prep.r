@@ -49,8 +49,5 @@ ys <- foreach(y = years, .inorder = FALSE) %dopar% {
 }
 stopCluster(cl)
 
-# remove unnecessary .xml files
-unlink(paste0("R/data/modelling/pca_rasters/", "*.aux.xml"))
-
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("data prep for model prediction finished:", td, "secs", "\n")

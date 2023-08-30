@@ -23,8 +23,8 @@ cat(length(axyridis_raw$Year) - length(axyridis_sub$Year), "points removed with 
 
 # subset data into eu and as spatial extent for further cleaning
 # land cover layers vor reference (xmin, xmax, ymin, ymax)
-eu <- ext(rast("R/data/cropped_rasters/Cop_LC_2016_eu.grd"))
-as <- ext(rast("R/data/cropped_rasters/Cop_LC_2016_as.grd"))
+eu <- ext(rast("R/data/cropped_rasters/Cop_LC_2016_eu.tif"))
+as <- ext(rast("R/data/cropped_rasters/Cop_LC_2016_as.tif"))
 # some issue with crop and SpatVector with terra, so ugly subset
 axyridis_eu <- subset(axyridis_sub, Lon > eu[1] & Lon < eu[2] & Lat > eu[3] & Lat < eu[4])
 axyridis_eu <- subset(axyridis_eu, Year >= 1991) # first invasion according to EASIN (contradiction in Roy et al. 2015 ?)
