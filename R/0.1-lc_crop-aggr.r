@@ -14,7 +14,7 @@ library(ncdf4)
 # create boundary boxes for europe and asia (native range)
 sf_use_s2(FALSE) # to get rectangular intersect boxes instead of a projection
 # extent of europe (chosen)
-eu_box <- c(xmin = -25, ymin = 35, xmax = 65, ymax = 72)
+eu_box <- c(xmin = -25, ymin = 38, xmax = 65, ymax = 72)
 class(eu_box) <- "bbox"
 eu_box <- st_as_sfc(eu_box)
 eu_box <- st_as_sf(eu_box, crs = 4326)
