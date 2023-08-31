@@ -7,15 +7,16 @@ library(car) # for vif
 library(FactoMineR) # for pca
 library(factoextra) # for pca visualization
 library(ggpubr)
+source("R/0.0-functions.r", encoding = "UTF-8")
 
 tot_time <- Sys.time()
 # load pa data
 pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-pa_ext <- subset(pa_ext, Year == 2002) # only take 2002 as reference
+pa_mod <- subset(pa_ext, Year == 2002) # only take 2002 as reference
 
 ## compute pca for lccs_class
 # transform each present class into separate column
-lc <- select(pa_ext, lccs_class)
+lc <- select(pa_mod, lccs_class)
 for (v in unique(lc$lccs_class)) {
     lc <- cbind(lc, c_name = as.numeric(lc$lccs_class == v)) # make binary
     lc <- rename(lc, !!paste0("lc_", v) := c_name) # rename to variable
@@ -34,10 +35,9 @@ colnames(lc_pca_dims) <- paste0("lc", seq_len(ncol(lc_pca_dims)))
 lc_pca <- PCA(lc_bin, ncp = cutoff, scale.unit = FALSE, graph = FALSE)
 # save lc pca results
 saveRDS(lc_pca, file = "R/data/modelling/var_select_lc_pca_res.rds")
-rm(lc_pca)
 
 # add squared bioclim values as variable columns
-bio <- select(pa_ext, starts_with("bio"))
+bio <- select(pa_mod, starts_with("bio"))
 bio_sq <- bio^2
 names(bio_sq) <- paste0(names(bio), "_2")
 
@@ -45,15 +45,12 @@ names(bio_sq) <- paste0(names(bio), "_2")
 vars <- cbind(lc_pca_dims, bio, bio_sq)
 # scale variables (-mean, /stdev)
 vars_sc <- data.frame(scale(vars)) # scale all variables (-mean, /stdev)
-vars_scaling <- rbind("mean" = colMeans(vars), "sd" = apply(vars, 2, sd))
-
-vars_sc$Presence <- factor(pa_ext$Presence) # add factorized presence column
+vars_sc$Presence <- factor(pa_mod$Presence) # add factorized presence column
 
 # create full glm for all vars
 var_mod <- glm(Presence ~ ., data = vars_sc, family = "binomial")
 # compute vifs for all variables
 vifs <- vif(var_mod)
-print(vifs)
 
 # drop components until no vif is > 10
 while (max(vifs) > 10) {
@@ -61,7 +58,7 @@ while (max(vifs) > 10) {
     highest <- names(which(vifs == max(vifs)))
 
     # drop quadratic term before linear
-    if (!grepl("_2", highest) & paste0(highest, "_2") %in% names(vars_sc)) {
+    if (!grepl("_2", highest) && paste0(highest, "_2") %in% names(vars_sc)) {
         # drop quadratic variable from dataframe
         vars_sc <- vars_sc[, -which(names(vars_sc) %in% paste0(highest, "_2"))]
         cat("dropped", paste0(highest, "_2"), "\n")
@@ -74,8 +71,25 @@ while (max(vifs) > 10) {
     var_mod <- glm(Presence ~ ., data = vars_sc, family = "binomial")
     vifs <- vif(var_mod)
 }
-
-# save final vifs and var scaling
+vifs <- as.data.frame(vifs)
+# save final vifs
 saveRDS(vifs, file = "R/data/modelling/var_select_vifs.rds")
+
+lc <- data.matrix(select(pa_ext, lccs_class))
+lc_proj <- as.data.frame(lp_pca_proj(lc, lc_pca))
+# subset selected lc vars
+lc_vars <- select(lc_proj, any_of(rownames(vifs)))
+
+# subset selected bioclim variables
+bio_vars <- select(pa_ext, any_of(rownames(vifs)))
+# add any present squared variables
+sq_names <- grep("_2", rownames(vifs), value = TRUE)
+bio_vars_sq <- select(bio_vars, sub("_2", "", sq_names))^2
+colnames(bio_vars_sq) <- sq_names
+
+# merge all variables to pa and save
+pa_mod_vars <- cbind(pa_ext[, 1:6], bio_vars, bio_vars_sq, lc_vars)
+saveRDS(pa_mod_vars, file = "R/data/modelling/pa_mod_vars.rds")
+
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
-cat("reduced model with vifs:", td, "secs", "\n")
+cat("reduced model with vifs, selected modelling variables:", td, "secs", "\n")

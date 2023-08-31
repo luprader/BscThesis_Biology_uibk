@@ -8,6 +8,8 @@ library(dplyr)
 library(FactoMineR)
 # (lp_pca_proj, lp_pca_proj_lc)
 
+library(rnaturalearth)
+
 ################################################################################
 # function subdividing point extents until all extents have no more than the
 # desired pointcount
@@ -171,34 +173,34 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
     ## generate n_abs absence points per circle
     wc <- 0 # how often replacements had to be generated
 
-    #for (i in seq_along(circs_rd)) {
-        cat("\r", "|", year, "|")#, i, "|") # print gen progress
-        c <- vect(ext(pres_y), crs = crs(pres_y)) # normal random extent sampling
-        c$Year = year
-        c$CoordUncert = 0
-        c$Area = pres_y$Area[1]
-        pts <- spatSample(c, n_abs * nrow(pres_y)) # generate random points inside
-        # extract lc values
-        pts <- cbind(pts, extract(lc_ref, pts, ID = FALSE))
-        # test for lc = water or NA (out of cropped area)
-        pts <- pts[pts$lccs_class != 210 & !is.na(pts$lccs_class), ]
-        pts$lccs_class <- NULL # remove lc column
+    # for (i in seq_along(circs_rd)) {
+    cat("\r", "|", year, "|") # , i, "|") # print gen progress
+    c <- vect(ext(pres_y), crs = crs(pres_y)) # normal random extent sampling
+    c$Year <- year
+    c$CoordUncert <- 0
+    c$Area <- pres_y$Area[1]
+    pts <- spatSample(c, n_abs * nrow(pres_y)) # generate random points inside
+    # extract lc values
+    pts <- cbind(pts, extract(lc_ref, pts, ID = FALSE))
+    # test for lc = water or NA (out of cropped area)
+    pts <- pts[pts$lccs_class != 210 & !is.na(pts$lccs_class), ]
+    pts$lccs_class <- NULL # remove lc column
 
-        # generate replacements if needed
-        while (nrow(pts) < (n_abs * nrow(pres_y))) {
-            wc <- wc + 1
-            n <- n_abs * nrow(pres_y) - nrow(pts)
-            pts_n <- spatSample(c, n)
-            pts_n <- cbind(pts_n, extract(lc_ref, pts_n, ID = FALSE))
-            pts_n <- pts_n[pts_n$lccs_class != 210 & !is.na(pts_n$lccs_class), ]
-            pts_n$lccs_class <- NULL # remove lc column
-            pts <- rbind(pts, pts_n)
-        }
-        pts_df <- as.data.frame(pts, geom = "XY") # turn SpatVector to df
-        pts_df <- rename(pts_df, c("Lon" = "x", "Lat" = "y"))
-        # add generated points to total dataframe
-        ao <- rbind(ao, pts_df)
-    #}
+    # generate replacements if needed
+    while (nrow(pts) < (n_abs * nrow(pres_y))) {
+        wc <- wc + 1
+        n <- n_abs * nrow(pres_y) - nrow(pts)
+        pts_n <- spatSample(c, n)
+        pts_n <- cbind(pts_n, extract(lc_ref, pts_n, ID = FALSE))
+        pts_n <- pts_n[pts_n$lccs_class != 210 & !is.na(pts_n$lccs_class), ]
+        pts_n$lccs_class <- NULL # remove lc column
+        pts <- rbind(pts, pts_n)
+    }
+    pts_df <- as.data.frame(pts, geom = "XY") # turn SpatVector to df
+    pts_df <- rename(pts_df, c("Lon" = "x", "Lat" = "y"))
+    # add generated points to total dataframe
+    ao <- rbind(ao, pts_df)
+    # }
 
     ao$Presence <- "absent"
     n_pres <- length(pres_y)
@@ -309,21 +311,26 @@ lp_pca_proj <- function(lc, pca_res) {
 
 # pca_res -> result of a PCA to pass onto lp_pca_proj
 # year -> year for which the Cop LC layer should be projected
+# cont_eu -> SpatVector of European country extents to remove oceans
 
 # returns the year for which projection was computed
 # writes the projected raster as a new file with filename = fn
 
-lp_pca_proj_lc <- function(pca_res, year) {
+lp_pca_proj_lc <- function(pca_res, year, cont_eu) {
     # load Cop LC layer of year
     lc_r <- rast(paste0("R/data/cropped_rasters/Cop_lc_", year, "_eu.tif"))
 
+    # remove oceans from LC layer
+    lc_c <- crop(lc_r, cont_eu, mask = TRUE)
+
     # create destination file name
-    fn <- paste0("R/data/modelling/pca_rasters/pca_", year, "_eu.tif")
+    fn <- paste0("R/data/modelling/pca_rasters/pca_", year, "_eu_water.tif")
 
     # project raster onto pca axes
-    app(lc_r, lp_pca_proj, pca_res = pca_res, filename = fn, overwrite = TRUE)
+    app(lc_c, lp_pca_proj, pca_res = pca_res, filename = fn, overwrite = TRUE)
     cat("projected", year, "lc raster onto pca axes \n")
 
+    rm(list = c("lc_r", "lc_c"))
     return(year)
 }
 ################################################################################
