@@ -588,8 +588,9 @@ print(length(ao_flag) / length(ao_crop))
 ```{r, list total occs up to year}
 clean <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
 clean <- subset(clean, Year >= 2002)
+eu = subset(clean, Area == "eu")
 for (i in 2002:2022) {
-    cat(i, nrow(subset(clean, Year <= i)), "\n")
+    cat(i, nrow(subset(eu, Year <= i)), "\n")
 }
 ```
 
@@ -659,4 +660,34 @@ p3 <- ggplot(pa_ext, aes(x = lccs_class)) +
     scale_x_continuous(breaks = sort(unique(pa_ext$lccs_class)))
 ggarrange(p1, p2, p3, nrow = 1)
 dev.off()
+```
+
+```{r, create model prediction raster}
+# create prediction raster from pca and clim
+data_r <- rast("R/data/modelling/pca_rasters/pca_2002_eu.tif")
+clim_r <- rast("R/data/cropped_rasters/CHELSA_bio_merged_1981-2010_eu.tif")
+clim_r = subset(clim_r, grep("bio", colnames(data), val = TRUE))
+clim_r = crop(clim_r, data_r, mask = TRUE)
+data_r <- c(clim_r, data_r)
+rm(clim_r)
+data_r_sc <- scale(data_r, center = scaling["mean", ], scale = scaling["sd", ])
+
+pred_rast <- predict(data_r_sc, mod_glm, filename = "test_pred.tif", overwrite = TRUE)
+pred_rast <- rast("test_pred.tif")
+plot(pred_rast)
+pred_class <- classify(pred_rast, cbind(0, 1, 1), others = 0)
+plot(pred_class)
+
+
+lc_r <- rast(paste0("R/data/cropped_rasters/Cop_lc_", 2002, "_eu.tif"))
+    countries <- ne_countries(scale = "medium", returnclass = "sf")
+    countries <- st_transform(countries, crs = crs(lc_r))
+    countries_eu <- crop(vect(countries), lc_ref)
+    lc_r = crop(lc_r, countries_eu, mask = TRUE) == 210
+plot(lc_r)
+
+pca_w = rast("R/data/modelling/pca_rasters/pca_2002_eu.tif")
+plot(pca_w, y = "lc1")
+subst(pca_w$lc1, NA, water_pca[1,1])
+plot(pca_w, y = "lc1")
 ```

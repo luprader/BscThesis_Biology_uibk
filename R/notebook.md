@@ -198,3 +198,14 @@ The outline was improved, updating and expanding the methods to the current stat
 It was noticed that a glm fit on the native data did not produce a working model at all.
 Investigating the value histograms it was noticed that absence generation created absences mimicking the distribution of the presence points.
 For now, absence generation was simplified to just take random spatial samples in the specified extent for each year.
+
+### 30/08/2023
+For all generated raster files, a format switch from .grd to .tif was made, since they take up less space and are used by `terra` for internal processes anyway.
+
+### 31/08/2023
+The function `lp_pca_proj_lc` was modified to remove oceans beforehand, which speeds up computation.
+The generation of prediction rasters was removed for now, since model accuracy can be computed just from the extracted pa data as well.
+With this, the creation of a modelling-ready dataframe was moved from `1.4-model_data_prep.r` to `1.3-model_var_select.r`.
+With randomly sampled absences it was noticed that the bio14 layer for 2011-2040 has NA cells at one edge, which is why the geographic extent for Europe was slightly modified.
+
+A first version of the basic model building structure was made, implementing a native fit with `glm` and `gam`.
