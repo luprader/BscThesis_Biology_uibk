@@ -1,5 +1,6 @@
 ### Data
 NAs in bio14 2011-2040 layer?
+Crop with sf in box mode?
 
 ### Absence generation
 How many absences? Prevalence?
@@ -10,9 +11,11 @@ Compare with AIC?
 Use all years for selection?
 Use all lccs_classes as binary in pca?
 Use absence points in pca?
+Even include quadratic versions? (maxent includes them again)
 
 ### Model building
-Why GLM family binomial?
-Scale data for each subset, or ok if scale at beginning?
+Use family binomial?
+Problem fitting "categorical" data with linear models?
 Model predicts suitability higher than 1?
 Absences in testing not misleading since generated?
+Give maxent different background?

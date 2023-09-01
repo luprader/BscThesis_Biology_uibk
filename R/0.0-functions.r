@@ -7,8 +7,12 @@ library(dplyr)
 # (lp_gen_abs)
 library(FactoMineR)
 # (lp_pca_proj, lp_pca_proj_lc)
-
 library(rnaturalearth)
+# (lp_pca_proj_lc)
+library(PresenceAbsence)
+# (lp_eval_mods)
+library(maxnet)
+# (lp_eval_mods)
 
 ################################################################################
 # function subdividing point extents until all extents have no more than the
@@ -334,3 +338,96 @@ lp_pca_proj_lc <- function(pca_res, year, cont_eu) {
     return(year)
 }
 ################################################################################
+# function generating response curves and evaluating all given models
+# all models should have been trained on the same dataset
+
+# glm -> object of class "glm"
+# gam -> object of class "gam" (library "gam")
+# brt -> object of class "gbm" (library "gbm")
+# maxent -> object of class "maxnet" (library "maxnet")
+# data -> data with which to evaluate the models
+# year -> year of which to use data for evaluation
+# sc -> scaling used to scale the training data prior to building models
+# png_name -> filename of the response curve png
+
+# returns a dataframe containing the covmats for each model
+# generates a png with response curves for all variables in the trained range
+
+lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, year, sc, png_name) {
+    ## plot data distribution compared to response curves
+    m_data <- m_glm$data # data used to train the models
+    # create a dummy data frame for predicting response curves
+    pr_data <- data.frame(matrix(0, nrow = 100, ncol = ncol(m_data) - 1))
+    colnames(pr_data) <- colnames(m_data)[colnames(m_data) != "pres"]
+
+    png(width = 3000, height = 600 * ncol(pr_data), filename = png_name)
+    par(mfrow = c(ncol(pr_data), 5), cex = 1.5)
+    for (v in colnames(pr_data)) {
+        # plot data distribution histograms
+        x <- m_data[[v]] * sc["sd", v] + sc["mean", v] # rescaled for plot
+        b <- seq(min(x), max(x), length.out = 20) # breaks
+        hist(subset(x, m_data$pres == 0),
+            breaks = b, main = "training data distribution", xlab = v,
+            xlim = range(b), col = "grey"
+        )
+        hist(subset(x, m_data$pres == 1),
+            breaks = b, main = "training data distribution", xlab = v,
+            xlim = range(b), col = "grey35", add = TRUE
+        )
+        legend("topright", c("absent", "present"), fill = c("grey", "grey35"))
+
+        # plot model response curves
+        pr_data[[v]] <- seq(min(m_data[[v]]), max(m_data[[v]]), length.out = nrow(pr_data))
+        x <- pr_data[[v]] * sc["sd", v] + sc["mean", v] # rescaled for plot
+        # glm response
+        p <- predict(m_glm, newdata = pr_data, type = "response")
+        plot(x, p,
+            type = "l", ylim = c(0, 1), xlim = range(x),
+            xlab = v, ylab = "suitability", main = "glm response curve"
+        )
+        # gam response
+        p <- predict(m_gam, newdata = pr_data, type = "response")
+        plot(x, p,
+            type = "l", ylim = c(0, 1), xlim = range(x),
+            xlab = v, ylab = "suitability", main = "gam response curve"
+        )
+        # brt response
+        p <- predict(m_brt, newdata = pr_data, type = "response")
+        plot(x, p,
+            type = "l", ylim = c(0, 1), xlim = range(x),
+            xlab = v, ylab = "suitability", main = "brt response curve"
+        )
+        # maxent response
+        p <- predict(m_max, newdata = pr_data, type = "logistic")
+        plot(x, p,
+            type = "l", ylim = c(0, 1), xlim = range(x),
+            xlab = v, ylab = "suitability", main = "maxent response curve"
+        )
+        pr_data[[v]] <- 0 # set variable constant again
+    }
+    dev.off()
+
+    ## evaluate model accuracies against European data of year
+    # data for evaluation
+    data <- subset(data, Area == "eu" & Year == year)
+    e_data <- select(data, matches("[[:digit:]]"))
+    for (v in colnames(e_data)) {
+        e_data[[v]] <- e_data[[v]] * sc["sd", v] + sc["mean", v]
+    }
+    # data frame for evaluation
+    th_data <- data.frame(id = 1:nrow(e_data), pres = data$Pres)
+    # model predictions for e_data
+    th_data$glm <- predict(m_glm, newdata = e_data, type = "response")
+    th_data$gam <- predict(m_gam, newdata = e_data, type = "response")
+    th_data$brt <- predict(m_brt, newdata = e_data, type = "response")
+    th_data$max <- predict(m_max, newdata = e_data, type = "logistic")
+    # threshhold optimising mean of sensitivity and specificity
+    ths <- optimal.thresholds(th_data, opt.methods = 3)
+    # generate confusion matrices
+    evals <- data.frame(matrix(0, nrow = 2, ncol = 4))
+    colnames(evals) <- c("glm", "gam", "brt", "max")
+    for (m in 1:4) {
+        evals[, m] <- list(cmx(th_data, which.model = m, ths[[m + 1]]))
+    }
+    return(evals)
+}

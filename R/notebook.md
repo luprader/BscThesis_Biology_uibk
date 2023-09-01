@@ -209,3 +209,8 @@ With this, the creation of a modelling-ready dataframe was moved from `1.4-model
 With randomly sampled absences it was noticed that the bio14 layer for 2011-2040 has NA cells at one edge, which is why the geographic extent for Europe was slightly modified.
 
 A first version of the basic model building structure was made, implementing a native fit with `glm` and `gam`.
+
+### 01/09/2023
+Model evaluation was implemented, as well as fits with `gbm` and `maxnet`.
+Right now, a complete creation of a native model and evaluation with 2022 data is realized in `2.2-model_building.r`.
+With this, the basic pipeline for this project is more or less in place.
