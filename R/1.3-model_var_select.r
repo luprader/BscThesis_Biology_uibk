@@ -75,6 +75,7 @@ vifs <- as.data.frame(vifs)
 # save final vifs
 saveRDS(vifs, file = "R/data/modelling/var_select_vifs.rds")
 
+# create dataframe with final variables for modelling
 lc <- data.matrix(select(pa_ext, lccs_class))
 lc_proj <- as.data.frame(lp_pca_proj(lc, lc_pca))
 # subset selected lc vars
@@ -88,7 +89,9 @@ bio_vars_sq <- select(bio_vars, sub("_2", "", sq_names))^2
 colnames(bio_vars_sq) <- sq_names
 
 # merge all variables to pa and save
-pa_mod_vars <- cbind(pa_ext[, 1:6], bio_vars, bio_vars_sq, lc_vars)
+pa_mod_vars <- cbind(Area = pa_ext$Area, Year = pa_ext$Year,
+                     Pres = as.numeric(pa_ext$Presence == "present"),
+                     bio_vars, bio_vars_sq, lc_vars)
 saveRDS(pa_mod_vars, file = "R/data/modelling/pa_mod_vars.rds")
 
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
