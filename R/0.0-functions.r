@@ -346,14 +346,16 @@ lp_pca_proj_lc <- function(pca_res, year, cont_eu) {
 # brt -> object of class "gbm" (library "gbm")
 # maxent -> object of class "maxnet" (library "maxnet")
 # data -> data with which to evaluate the models
-# year -> year of which to use data for evaluation
+# ys -> years of which to use EU data for evaluation (each year used separately)
+# must be a vector containing numeric values between 2002 and 2022
 # sc -> scaling used to scale the training data prior to building models
 # png_name -> filename of the response curve png
 
-# returns a dataframe containing the covmats for each model
+# returns a list containing the presence.absence.accuracy() results for each
+# model and each value of ys
 # generates a png with response curves for all variables in the trained range
 
-lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, year, sc, png_name) {
+lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
     ## plot data distribution compared to response curves
     m_data <- m_glm$data # data used to train the models
     # create a dummy data frame for predicting response curves
@@ -407,27 +409,33 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, year, sc, png_name) {
     }
     dev.off()
 
-    ## evaluate model accuracies against European data of year
-    # data for evaluation
-    data <- subset(data, Area == "eu" & Year == year)
-    e_data <- select(data, matches("[[:digit:]]"))
-    for (v in colnames(e_data)) {
-        e_data[[v]] <- e_data[[v]] * sc["sd", v] + sc["mean", v]
+    ## evaluate model accuracies against European data of ys
+    res <- c() # initialize results vector
+    for(y in ys) {
+        print(y)
+        # data for evaluation
+        data_y <- subset(data, Area == "eu" & Year == y)
+        e_data <- select(data_y, matches("[[:digit:]]"))
+        for (v in colnames(e_data)) {
+            e_data[[v]] <- e_data[[v]] * sc["sd", v] + sc["mean", v]
+        }
+        # data frame for evaluation
+        th_data <- data.frame(id = 1:nrow(e_data), pres = data_y$Pres)
+        # model predictions for e_data
+        th_data$glm <- predict(m_glm, newdata = e_data, type = "response")
+        th_data$gam <- predict(m_gam, newdata = e_data, type = "response")
+        th_data$brt <- predict(m_brt, newdata = e_data, type = "response")
+        th_data$max <- predict(m_max, newdata = e_data, type = "logistic")
+        # threshhold optimising mean of sensitivity and specificity
+        ths <- optimal.thresholds(th_data, opt.methods = 3)
+        # compute accuracy measurements (PCC, sens, spec, Kappa)
+        ma <- list()
+        for (m in 1:4) {
+            ma[[m]] <- presence.absence.accuracy(th_data, 
+            which.model = m, ths[[m + 1]], find.auc = FALSE)
+        }
+        res <- rbind(res, ma)
     }
-    # data frame for evaluation
-    th_data <- data.frame(id = 1:nrow(e_data), pres = data$Pres)
-    # model predictions for e_data
-    th_data$glm <- predict(m_glm, newdata = e_data, type = "response")
-    th_data$gam <- predict(m_gam, newdata = e_data, type = "response")
-    th_data$brt <- predict(m_brt, newdata = e_data, type = "response")
-    th_data$max <- predict(m_max, newdata = e_data, type = "logistic")
-    # threshhold optimising mean of sensitivity and specificity
-    ths <- optimal.thresholds(th_data, opt.methods = 3)
-    # generate confusion matrices
-    evals <- data.frame(matrix(0, nrow = 2, ncol = 4))
-    colnames(evals) <- c("glm", "gam", "brt", "max")
-    for (m in 1:4) {
-        evals[, m] <- list(cmx(th_data, which.model = m, ths[[m + 1]]))
-    }
-    return(evals)
+    rownames(res) = ys
+    return(res)
 }

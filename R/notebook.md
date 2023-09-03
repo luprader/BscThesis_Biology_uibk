@@ -214,3 +214,7 @@ A first version of the basic model building structure was made, implementing a n
 Model evaluation was implemented, as well as fits with `gbm` and `maxnet`.
 Right now, a complete creation of a native model and evaluation with 2022 data is realized in `2.2-model_building.r`.
 With this, the basic pipeline for this project is more or less in place.
+
+### 03/09/2023
+Model evaluation was changed to return a list of accuracy measurements (PCC, sensitivity, specificity and Cohens Kappa).
+A test run with 2004 and 2008 as cutoff years showed that the current maxent implementation has a very long computation time, the used formula might need to be simplified.
