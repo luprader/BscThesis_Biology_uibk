@@ -9,13 +9,13 @@ How many absences? Prevalence?
 Check all possible variable combinations for smallest VIFs?
 Compare with AIC?
 Use all years for selection?
-Use all lccs_classes as binary in pca?
+Use all lccs_classes for relative in lc?
 Use absence points in pca?
 Include quadratic versions as options in selection? (maxent includes them again after)
 
 ### Model building
 Use family binomial?
-Problem fitting "categorical" data with linear models?
+Problem fitting "categorical" data with regression models?
 Model predicts suitability higher than 1?
 Absences in testing not misleading since generated?
 Give maxent different background?

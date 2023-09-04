@@ -239,6 +239,11 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
 # returns a dataframe with the extracted values as 20 new columns
 
 lp_ext_vals <- function(pts, y_clim, y_lc, area) {
+    # check if pts is empty
+    if (nrow(pts) == 0) {
+        cat("no points given")
+        return(c())
+    }
     # create points SpatVector for extracting
     pts_v <- vect(pts, geom = c("Lon", "Lat"), crs = "epsg:4326")
 
@@ -250,11 +255,32 @@ lp_ext_vals <- function(pts, y_clim, y_lc, area) {
 
     # extract clim and lc values
     clim_l <- rast(clim_p_ya)
-    lc_l <- rast(lc_p_ya)
     pts_ext <- cbind(pts, extract(clim_l, pts_v, ID = FALSE))
-    pts_ext <- cbind(pts_ext, extract(lc_l, pts_v, ID = FALSE))
+    rm(clim_l)
 
+    # extract lc as relative area covered in a buffer around each presence
+    lc_l <- rast(lc_p_ya)
+    lc_cs <- cellSize(lc_l) # cell size for each raster cell
+    lc_b <- buffer(pts_v, 36000) # 18 km radius buffer for extraction
+    # all lccs_class values used in a raster
+    lc_classes <- read.csv("R/plots/Cop_LCCS_legend.csv", header = TRUE)[, 1]
+
+    # compute relative area of each lccs_class per circle
+    lc_rel <- data.frame()
+    for (i in seq_along(lc_b)) {
+        circ <- lc_b[i]
+        # extract lccs_class and cell size for single circle
+        c_vals <- cbind(extract(lc_l, circ), extract(lc_cs, circ, ID = FALSE))
+        for (c in lc_classes) {
+            colnm <- paste0("lc_", c) # column name for class
+            c_vals_c <- subset(c_vals, lccs_class == c)
+            lc_rel[i, colnm] <- sum(c_vals_c$area) / sum(c_vals$area)
+        }
+    }
+    rm(lc_l)
+    pts_ext <- cbind(pts_ext, lc_rel)
     return(pts_ext)
+    gc()
 }
 ################################################################################
 # function to remove water and NA when cleaning occurrences
@@ -294,18 +320,8 @@ lp_clean_lc <- function(points, y_lc, area) {
 # returns a matrix with the separate values of lc on all dimensions of pca_res
 
 lp_pca_proj <- function(lc, pca_res) {
-    # extract the lccs_classes used by the pca
-    lccs_factors <- as.factor(sub("lc_", "", rownames(pca_res$var$contrib)))
-
-    for (i in seq_along(lccs_factors)) {
-        v <- lccs_factors[i]
-        lc <- cbind(lc, c_name = as.numeric(lc == v)) # make binary column
-        colnames(lc)[ncol(lc)] <- paste0("lc_", v) # rename column to variable
-    }
-    lc_bin <- lc[, -1] # remove original lccs_class column
-
     # project lc onto pca axes
-    lc_proj <- predict.PCA(pca_res, lc_bin)$coord
+    lc_proj <- predict.PCA(pca_res, lc)$coord
     colnames(lc_proj) <- paste0("lc", seq_len(ncol(lc_proj))) # rename
 
     return(lc_proj)
@@ -411,7 +427,7 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
 
     ## evaluate model accuracies against European data of ys
     res <- c() # initialize results vector
-    for(y in ys) {
+    for (y in ys) {
         print(y)
         # data for evaluation
         data_y <- subset(data, Area == "eu" & Year == y)
@@ -431,28 +447,28 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
         # compute accuracy measurements (PCC, sens, spec, Kappa) for each model
         ma <- list()
         for (m in 1:4) {
-            ma[[m]] <- presence.absence.accuracy(th_data, which.model = m, ths[[m + 1]]) #, find.auc = FALSE)
+            ma[[m]] <- presence.absence.accuracy(th_data, which.model = m, ths[[m + 1]]) # , find.auc = FALSE)
         }
 
         # create TSS weighted ensemble
-        tss = c()
+        tss <- c()
         # get tss for each model
         for (m in 1:4) {
-            sens = ma[[m]]$sensitivity
-            spec = ma[[m]]$specificity
-            tss = c(tss, sens + spec - 1)
+            sens <- ma[[m]]$sensitivity
+            spec <- ma[[m]]$specificity
+            tss <- c(tss, sens + spec - 1)
         }
         print(tss)
         # get weighted average prediction with tss
-        th_data$ens = apply(th_data[, 3:6], 1, weighted.mean, w = tss)
+        th_data$ens <- apply(th_data[, 3:6], 1, weighted.mean, w = tss)
         # compute performance of ensemble
-        th = optimal.thresholds(th_data, which.model = 5, threshold = mean(th_data$ens), opt.methods = 3)
+        th <- optimal.thresholds(th_data, which.model = 5, threshold = mean(th_data$ens), opt.methods = 3)
         print(th)
-        ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2]) #, find.auc = FALSE)
+        ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2]) # , find.auc = FALSE)
 
         # merge to other ys
         res <- rbind(res, ma)
     }
-    rownames(res) = ys
+    rownames(res) <- ys
     return(res)
 }

@@ -218,3 +218,9 @@ With this, the basic pipeline for this project is more or less in place.
 ### 03/09/2023
 Model evaluation was changed to return a list of accuracy measurements (PCC, sensitivity, specificity and Cohens Kappa).
 A test run with 2004 and 2008 as cutoff years showed that the current maxent implementation has a very long computation time, the used formula might need to be simplified.
+
+### 04/09/2023
+Model evaluation was extended to include an ensemble prediction using the TSS weighted means of all model predictions.
+Due to a suggestion, land cover PCA was changed to be computed on relative area covered by each lccs class in a buffer around each point.
+Currently, the buffer is set to a radius of 18 km, the typical flight distance of *H. axyridis*. 
+The value extraction will have to be rewritten using parallel for loops in order to decrease computation time.

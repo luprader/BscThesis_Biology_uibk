@@ -11,6 +11,7 @@ library(terra)
 library(ncdf4)
 library(dplyr)
 library(corrplot)
+library(factoextra)
 ```
 
 ```{r, bboxes}

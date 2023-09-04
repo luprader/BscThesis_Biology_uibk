@@ -25,7 +25,7 @@ for (area in unique(pa$Area)) {
         # add to total dataframe
         pa_ext <- rbind(pa_ext, pa_y)
 
-        cat("\r", y) # progress
+        print(y) # progress
     }
 
     ## climate and lc for 2011 - 2020
@@ -36,7 +36,7 @@ for (area in unique(pa$Area)) {
         # add to total dataframe
         pa_ext <- rbind(pa_ext, pa_y)
 
-        cat("\r", y) # progress
+        print(y) # progress
     }
 
     ## climate and lc for > 2020, use 2020
@@ -46,7 +46,7 @@ for (area in unique(pa$Area)) {
     # add to total dataframe
     pa_ext <- rbind(pa_ext, pa_y)
 
-    cat("\n", ">2020", "\n") # progress
+    print(">2020") # progress # progress
 }
 # save extracted dataframe
 saveRDS(pa_ext, file = "R/data/occurrence_data/axyridis_pa_vals_extracted.rds")

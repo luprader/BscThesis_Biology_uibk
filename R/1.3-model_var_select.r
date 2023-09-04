@@ -5,8 +5,6 @@
 library(dplyr)
 library(car) # for vif
 library(FactoMineR) # for pca
-library(factoextra) # for pca visualization
-library(ggpubr)
 source("R/0.0-functions.r", encoding = "UTF-8")
 
 tot_time <- Sys.time()
@@ -16,15 +14,10 @@ pa_mod <- subset(pa_ext, Year == 2002) # only take 2002 as reference
 
 ## compute pca for lccs_class
 # transform each present class into separate column
-lc <- select(pa_mod, lccs_class)
-for (v in unique(lc$lccs_class)) {
-    lc <- cbind(lc, c_name = as.numeric(lc$lccs_class == v)) # make binary
-    lc <- rename(lc, !!paste0("lc_", v) := c_name) # rename to variable
-}
-lc_bin <- lc[, -1] # separate colvals (1, 0)
+lc <- select(pa_mod, starts_with("lc"))
 
 # calculate pca for binary lc values
-lc_pca <- PCA(lc_bin, ncp = 10, scale.unit = FALSE, graph = FALSE)
+lc_pca <- PCA(lc, ncp = 10, scale.unit = FALSE, graph = FALSE)
 
 # extract pca dims with cumulative variance closest to 80%
 cutoff <- which.min(abs(lc_pca$eig[, 3] - 80))
@@ -32,7 +25,7 @@ lc_pca_dims <- as.data.frame(lc_pca$ind$coord[, 1:cutoff])
 colnames(lc_pca_dims) <- paste0("lc", seq_len(ncol(lc_pca_dims)))
 
 # calculate pca with cutoff for saving
-lc_pca <- PCA(lc_bin, ncp = cutoff, scale.unit = FALSE, graph = FALSE)
+lc_pca <- PCA(lc, ncp = cutoff, scale.unit = FALSE, graph = FALSE)
 # save lc pca results
 saveRDS(lc_pca, file = "R/data/modelling/var_select_lc_pca_res.rds")
 
@@ -76,7 +69,7 @@ vifs <- as.data.frame(vifs)
 saveRDS(vifs, file = "R/data/modelling/var_select_vifs.rds")
 
 # create dataframe with final variables for modelling
-lc <- data.matrix(select(pa_ext, lccs_class))
+lc <- data.matrix(select(pa_ext, starts_with("lc")))
 lc_proj <- as.data.frame(lp_pca_proj(lc, lc_pca))
 # subset selected lc vars
 lc_vars <- select(lc_proj, any_of(rownames(vifs)))
