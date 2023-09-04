@@ -47,7 +47,6 @@ m_max <- maxnet(data_sc$pres, select(data_sc, !pres), formula = f)
 pname <- "R/plots/response_curves/native_mod_resp.png"
 rnt <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, 2002:2022, sc, pname)
 saveRDS(rnt, file = "R/data/modelling/eval_results/eval_mod_native.rds")
-head(rnt)
 # build and evaluate models built iteratively
 # parallel for loop?
 rys <- c() # initialize results
@@ -104,4 +103,4 @@ for (y in years) {
     cat("eval", difftime(Sys.time(), a, units = "secs")[[1]], "\n")
     print(Sys.time() - t_time)
 }
-colnames(rys) <- c("glm_f", "gam_f", "brt_f", "max_f", "glm_22", "gam_22", "brt_22", "max_22")
+colnames(rys) <- c("glm", "gam", "brt", "max", "ens")

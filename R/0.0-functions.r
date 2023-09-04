@@ -352,7 +352,7 @@ lp_pca_proj_lc <- function(pca_res, year, cont_eu) {
 # png_name -> filename of the response curve png
 
 # returns a list containing the presence.absence.accuracy() results for each
-# model and each value of ys
+# model and each value of ys as well as an ensemble prediction weighted with TSS
 # generates a png with response curves for all variables in the trained range
 
 lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
@@ -428,12 +428,29 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
         th_data$max <- predict(m_max, newdata = e_data, type = "logistic")
         # threshhold optimising mean of sensitivity and specificity
         ths <- optimal.thresholds(th_data, opt.methods = 3)
-        # compute accuracy measurements (PCC, sens, spec, Kappa)
+        # compute accuracy measurements (PCC, sens, spec, Kappa) for each model
         ma <- list()
         for (m in 1:4) {
-            ma[[m]] <- presence.absence.accuracy(th_data, 
-            which.model = m, ths[[m + 1]], find.auc = FALSE)
+            ma[[m]] <- presence.absence.accuracy(th_data, which.model = m, ths[[m + 1]]) #, find.auc = FALSE)
         }
+
+        # create TSS weighted ensemble
+        tss = c()
+        # get tss for each model
+        for (m in 1:4) {
+            sens = ma[[m]]$sensitivity
+            spec = ma[[m]]$specificity
+            tss = c(tss, sens + spec - 1)
+        }
+        print(tss)
+        # get weighted average prediction with tss
+        th_data$ens = apply(th_data[, 3:6], 1, weighted.mean, w = tss)
+        # compute performance of ensemble
+        th = optimal.thresholds(th_data, which.model = 5, threshold = mean(th_data$ens), opt.methods = 3)
+        print(th)
+        ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2]) #, find.auc = FALSE)
+
+        # merge to other ys
         res <- rbind(res, ma)
     }
     rownames(res) = ys
