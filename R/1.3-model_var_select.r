@@ -19,8 +19,8 @@ lc <- select(pa_mod, starts_with("lc"))
 # calculate pca for binary lc values
 lc_pca <- PCA(lc, ncp = 10, scale.unit = FALSE, graph = FALSE)
 
-# extract pca dims with cumulative variance closest to 80%
-cutoff <- which.min(abs(lc_pca$eig[, 3] - 80))
+# extract pca dims with cumulative variance closest to 90%
+cutoff <- which.min(abs(lc_pca$eig[, 3] - 90))
 lc_pca_dims <- as.data.frame(lc_pca$ind$coord[, 1:cutoff])
 colnames(lc_pca_dims) <- paste0("lc", seq_len(ncol(lc_pca_dims)))
 
@@ -82,9 +82,11 @@ bio_vars_sq <- select(bio_vars, sub("_2", "", sq_names))^2
 colnames(bio_vars_sq) <- sq_names
 
 # merge all variables to pa and save
-pa_mod_vars <- cbind(Area = pa_ext$Area, Year = pa_ext$Year,
-                     Pres = as.numeric(pa_ext$Presence == "present"),
-                     bio_vars, bio_vars_sq, lc_vars)
+pa_mod_vars <- cbind(
+    Area = pa_ext$Area, Year = pa_ext$Year,
+    Pres = as.numeric(pa_ext$Presence == "present"),
+    bio_vars, bio_vars_sq, lc_vars
+)
 saveRDS(pa_mod_vars, file = "R/data/modelling/pa_mod_vars.rds")
 
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]

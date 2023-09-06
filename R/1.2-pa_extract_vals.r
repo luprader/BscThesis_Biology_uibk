@@ -3,6 +3,9 @@
 
 # used libraries
 library(terra)
+library(parallel)
+library(foreach)
+library(doParallel)
 source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 
 tot_time <- Sys.time()
@@ -18,35 +21,32 @@ for (area in unique(pa$Area)) {
     pa_a <- subset(pa, Area == area)
     print(area)
 
-    ## climate and lc for 2002 - 2010
-    for (y in 2002:2010) {
+    # prepare for parallelization
+    years <- 2002:2022 # for iteration of foreach
+    cl <- makeCluster(detectCores() - 1)
+    clusterEvalQ(cl, library(terra))
+    registerDoParallel(cl)
+    # parallelized for loop
+    pa_ys <- foreach(y = years, .combine = rbind, .inorder = FALSE) %dopar% {
+        # which bioclim time frame and land cover year to use
+        if (y <= 2010) { # 2002-2010
+            y_clim <- "1981-2010"
+            y_lc <- y
+        } else if (y > 2010 & y <= 2020) { # 2011-2020
+            y_clim <- "2011-2040"
+            y_lc <- y
+        } else { # 2021-2022
+            y_clim <- "2011-2040"
+            y_lc <- 2020
+        }
+
         # extract values for subset
-        pa_y <- lp_ext_vals(subset(pa_a, Year == y), "1981-2010", y, area)
-        # add to total dataframe
-        pa_ext <- rbind(pa_ext, pa_y)
-
-        print(y) # progress
+        pa_y <- lp_ext_vals(subset(pa_a, Year == y), y_clim, y_lc, area)
+        return(pa_y)
     }
-
-    ## climate and lc for 2011 - 2020
-    for (y in 2011:2020) {
-        # extract values for subset
-        pa_y <- lp_ext_vals(subset(pa_a, Year == y), "2011-2040", y, area)
-
-        # add to total dataframe
-        pa_ext <- rbind(pa_ext, pa_y)
-
-        print(y) # progress
-    }
-
-    ## climate and lc for > 2020, use 2020
-    # extract values for subset
-    pa_y <- lp_ext_vals(subset(pa_a, Year > 2020), "2011-2040", 2020, area)
-
+    stopCluster(cl)
     # add to total dataframe
-    pa_ext <- rbind(pa_ext, pa_y)
-
-    print(">2020") # progress # progress
+    pa_ext <- rbind(pa_ext, pa_ys)
 }
 # save extracted dataframe
 saveRDS(pa_ext, file = "R/data/occurrence_data/axyridis_pa_vals_extracted.rds")

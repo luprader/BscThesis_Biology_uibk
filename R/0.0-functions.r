@@ -428,7 +428,6 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
     ## evaluate model accuracies against European data of ys
     res <- c() # initialize results vector
     for (y in ys) {
-        print(y)
         # data for evaluation
         data_y <- subset(data, Area == "eu" & Year == y)
         e_data <- select(data_y, matches("[[:digit:]]"))
@@ -458,12 +457,10 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
             spec <- ma[[m]]$specificity
             tss <- c(tss, sens + spec - 1)
         }
-        print(tss)
         # get weighted average prediction with tss
         th_data$ens <- apply(th_data[, 3:6], 1, weighted.mean, w = tss)
         # compute performance of ensemble
         th <- optimal.thresholds(th_data, which.model = 5, threshold = mean(th_data$ens), opt.methods = 3)
-        print(th)
         ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2]) # , find.auc = FALSE)
 
         # merge to other ys
