@@ -224,3 +224,18 @@ Model evaluation was extended to include an ensemble prediction using the TSS we
 Due to a suggestion, land cover PCA was changed to be computed on relative area covered by each lccs class in a buffer around each point.
 Currently, the buffer is set to a radius of 18 km, the typical flight distance of *H. axyridis*. 
 The value extraction will have to be rewritten using parallel for loops in order to decrease computation time.
+
+### 05/09/2023
+Value extraction was rewritten to use a parallelized for loop over all years.
+A full execution will be done overnight, since the computation time seems to still be rather long.
+
+### 06/09/2023
+A full value extraction with the land cover buffers apparently took 12 hours to complete, even with parallelization.
+Main bottleneck is probably RAM.
+Variable selection was run with the new land cover data, resulting in the first two components already covering more than 90% of cumulative variance.
+Due to this, the cutoff was increased to 90% to at least include the first two components.
+There might be reason in only including the first component, since it already accounts for 84% of cumulative variance.
+Model building now uses a parallel for loop over the years of the iteration.
+A simplified maxnet formula, using linear, hinge and threshold feature classes is now used.
+This does not seem to influence computation time significantly though.
+A full run of the iteration will be done overnight.

@@ -460,7 +460,7 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
         # get weighted average prediction with tss
         th_data$ens <- apply(th_data[, 3:6], 1, weighted.mean, w = tss)
         # compute performance of ensemble
-        th <- optimal.thresholds(th_data, which.model = 5, threshold = mean(th_data$ens), opt.methods = 3)
+        th <- optimal.thresholds(th_data, which.model = 5, opt.methods = 3)
         ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2]) # , find.auc = FALSE)
 
         # merge to other ys

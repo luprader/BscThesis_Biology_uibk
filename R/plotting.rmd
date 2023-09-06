@@ -595,6 +595,15 @@ for (i in 2002:2022) {
 }
 ```
 
+```{r, list total pa up to year}
+clean <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
+clean <- subset(clean, Year >= 2002)
+eu = subset(clean, Area == "eu")
+for (i in 2002:2022) {
+    cat(i, nrow(subset(eu, Year <= i)), "\n")
+}
+```
+
 ```{r, bioclim corrplots 2002,2011,2020}
 #load extracted pa data
 pa_ex = readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
@@ -656,10 +665,10 @@ lc_pca = readRDS("R/data/modelling/var_select_lc_pca_res.rds")
 png(width = 1800, height = 600, filename = "R/plots/var_select_lc_pca.png")
 p1 <- fviz_pca(lc_pca)
 p2 <- fviz_screeplot(lc_pca)
-p3 <- ggplot(pa_ext, aes(x = lccs_class)) +
-    geom_histogram() +
-    scale_x_continuous(breaks = sort(unique(pa_ext$lccs_class)))
-ggarrange(p1, p2, p3, nrow = 1)
+#p3 <- ggplot(pa_ext, aes(x = lccs_class)) +
+#    geom_histogram() +
+#    scale_x_continuous(breaks = sort(unique(pa_ext$lccs_class)))
+ggarrange(p1, p2, nrow = 1)
 dev.off()
 ```
 

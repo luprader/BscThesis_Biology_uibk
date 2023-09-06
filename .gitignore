@@ -6,6 +6,8 @@
 /R/data/*
 # single niche plots
 /R/plots/niche_comp/single_ys/*
+# modelling response curves
+/R/plots/response_curves/*
 
 # latex files
 *.gz

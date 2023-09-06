@@ -15,18 +15,20 @@ pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 # initialize extracted pa dataframe
 pa_ext <- data.frame()
 
+# prepare for parallelization
+years <- 2002:2022 # for iteration of foreach
+cl <- makeCluster(detectCores() - 1)
+# load libraries in cl
+clusterEvalQ(cl, library(terra))
+registerDoParallel(cl)
+
 # for each geographical area
 for (area in unique(pa$Area)) {
     # subset to area
     pa_a <- subset(pa, Area == area)
     print(area)
 
-    # prepare for parallelization
-    years <- 2002:2022 # for iteration of foreach
-    cl <- makeCluster(detectCores() - 1)
-    clusterEvalQ(cl, library(terra))
-    registerDoParallel(cl)
-    # parallelized for loop
+    # parallelized for loop over years
     pa_ys <- foreach(y = years, .combine = rbind, .inorder = FALSE) %dopar% {
         # which bioclim time frame and land cover year to use
         if (y <= 2010) { # 2002-2010
@@ -44,10 +46,11 @@ for (area in unique(pa$Area)) {
         pa_y <- lp_ext_vals(subset(pa_a, Year == y), y_clim, y_lc, area)
         return(pa_y)
     }
-    stopCluster(cl)
     # add to total dataframe
     pa_ext <- rbind(pa_ext, pa_ys)
 }
+stopCluster(cl)
+
 # save extracted dataframe
 saveRDS(pa_ext, file = "R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
