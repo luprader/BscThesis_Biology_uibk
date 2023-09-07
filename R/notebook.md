@@ -239,3 +239,7 @@ Model building now uses a parallel for loop over the years of the iteration.
 A simplified maxnet formula, using linear, hinge and threshold feature classes is now used.
 This does not seem to influence computation time significantly though.
 A full run of the iteration will be done overnight.
+
+### 07/09/2023
+A full run of model building did not finish overnight due to an error, which was fixed.
+The current state outline was ported to the main thesis document, next steps will be to rewrite methods and introduction.

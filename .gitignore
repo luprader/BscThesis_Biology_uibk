@@ -20,5 +20,6 @@
 *.bcf
 *.blg
 *.xml
+*.toc
 
 test.r
