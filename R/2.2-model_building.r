@@ -1,11 +1,16 @@
 # this file creates an ensemble of sdm models for each year
 
 # libraries uesd
+library(dplyr)
 library(gam) # for gam
 library(gbm) # for brt
 library(maxnet) # for maxent
+library(parallel)
+library(foreach)
+library(doParallel)
 source("R/0.0-functions.r", encoding = "UTF-8")
 
+tot_time <- Sys.time()
 set.seed(4326) # consistent randomness
 
 # load modelling data
@@ -47,16 +52,20 @@ pname <- "R/plots/response_curves/native_mod_resp.png"
 rnt <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, 2002:2022, sc, pname)
 rm(list = c("m_glm", "m_gam", "m_brt", "m_max")) # clear up memory
 saveRDS(rnt, file = "R/data/modelling/eval_mod_native.rds")
+cat("native model built and evaluated, starting yearly iteration \n")
 
 # build and evaluate models built iteratively
 # prepare for parallelization
 years <- 2002:2020 # for iteration of foreach
 cl <- makeCluster(detectCores() - 1)
 # load libraries in cl
-clusterEvalQ(cl, lapply(c("gam", "gbm", "maxnet"), library, character.only = TRUE))
+clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
+    library,
+    character.only = TRUE
+))
 registerDoParallel(cl)
 # parallelized for loop
-rys <- foreach(y = years, .combine = rbind) %dopar% {
+rys <- foreach(y = years, .inorder = FALSE) %dopar% {
     t_time <- Sys.time()
     # load modelling data
     pa <- readRDS("R/data/modelling/pa_mod_vars.rds")
@@ -101,5 +110,6 @@ rys <- foreach(y = years, .combine = rbind) %dopar% {
 stopCluster(cl)
 
 # save evaluation results
-colnames(rys) <- c("glm", "gam", "brt", "max", "ens")
 saveRDS(rys, file = "R/data/modelling/eval_mod_years.rds")
+td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
+cat("building and model evaluation finished:", td, "secs", "\n")

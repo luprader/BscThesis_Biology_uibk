@@ -4,7 +4,7 @@
 library(terra)
 # (lp_subdiv_pts, lp_gen_abs, lp_ext_vals, lp_clean_lc, lp_pca_proj_lc)
 library(dplyr)
-# (lp_gen_abs)
+# (lp_gen_abs, lp_eval_mods)
 library(FactoMineR)
 # (lp_pca_proj, lp_pca_proj_lc)
 library(rnaturalearth)
