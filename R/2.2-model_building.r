@@ -66,7 +66,6 @@ clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
 registerDoParallel(cl)
 # parallelized for loop
 rys <- foreach(y = years, .inorder = FALSE) %dopar% {
-    t_time <- Sys.time()
     # load modelling data
     pa <- readRDS("R/data/modelling/pa_mod_vars.rds")
     # subset to eu data up to y
