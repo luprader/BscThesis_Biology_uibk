@@ -243,3 +243,7 @@ A full run of the iteration will be done overnight.
 ### 07/09/2023
 A full run of model building did not finish overnight due to an error, which was fixed.
 The current state outline was ported to the main thesis document, next steps will be to rewrite methods and introduction.
+
+### 10/09/2023
+A section giving information about *Harmonia axyridis* was written in the main thesis, which is now mostly complete.
+There will be additional chapters on invasion theory and SDMs in order to give sufficient background.
