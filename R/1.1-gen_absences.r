@@ -60,7 +60,7 @@ subexts <- lp_subdiv_pts(pres_v, 20000, t_ext)
 
 # prepare for parallelization
 e_s <- seq_len(nrow(subexts)) # for iteration of foreach
-cl <- makeCluster(detectCores() - 1)
+cl <- makeCluster(detectCores())
 # load libraries in cl
 clusterEvalQ(cl, lapply(c("terra", "dplyr"), library, character.only = TRUE))
 registerDoParallel(cl)

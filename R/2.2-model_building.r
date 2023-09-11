@@ -57,7 +57,7 @@ cat("native model built and evaluated, starting yearly iteration \n")
 # build and evaluate models built iteratively
 # prepare for parallelization
 years <- 2002:2020 # for iteration of foreach
-cl <- makeCluster(detectCores() - 1)
+cl <- makeCluster(detectCores())
 # load libraries in cl
 clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
     library,
@@ -65,7 +65,7 @@ clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
 ))
 registerDoParallel(cl)
 # parallelized for loop
-rys <- foreach(y = years, .inorder = FALSE) %dopar% {
+rys <- foreach(y = years, .inorder = FALSE, .maxcombine = 20) %dopar% {
     # load modelling data
     pa <- readRDS("R/data/modelling/pa_mod_vars.rds")
     # subset to eu data up to y

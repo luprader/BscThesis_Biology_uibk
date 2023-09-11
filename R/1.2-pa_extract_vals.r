@@ -17,7 +17,7 @@ pa_ext <- data.frame()
 
 # prepare for parallelization
 years <- 2002:2022 # for iteration of foreach
-cl <- makeCluster(detectCores() - 1)
+cl <- makeCluster(detectCores())
 # load libraries in cl
 clusterEvalQ(cl, library(terra))
 registerDoParallel(cl)
