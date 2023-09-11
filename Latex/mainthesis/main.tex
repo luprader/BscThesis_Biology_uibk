@@ -81,16 +81,39 @@ Variance inflation factors were computed for this GLM and the variable with the 
 All SDM models of each year were tested for their accuracy on predicting the occurrences of the following year and the final year of 2022. 
 For each year, the occupied niche was also computed by running a PCA analysis on the bioclim variables. The niche can then be visualized by plotting a dynamic occurrence density grid for the first two PCA axes(Broennimann et al. 2011).
 
+\newpage
 \section{Background}
 This section aims to give sufficient background on \textit{Harmonia axyridis} and the theory necessary to understand this thesis.
 
 \subsection{Invasion theory}
-basic theory of how invasions work and maybe a bit on sdms in that area
+The Invasive Alien Species Regulation of the European Union from 2014 uses the following definitions for alien species and invasive alien species \cite{EU2014LexIAS}:
+\begin{quote}
+    (1) 'alien species' means any live specimen of a species, subspecies or lower taxon of animals, plants, fungi or micro-organisms introduced outside its natural range; it includes any part, gametes, seeds, eggs or propagules of such species, as well as any hybrids, varieties or breeds that might survive and subsequently reproduce;
+
+    (2) 'invasive alien species' means an alien species whose introduction or spread has been found to threaten or adversely impact upon biodiversity and related ecosystem services;
+\end{quote}
+
+This already shows the main concerns associated with invasive species, non-native species that have an often negative impact on native ecosystems.
+Main goals in research are to find out which species have potential to become invasive, what habitat will be susceptible to invasion by those species, how fast the species will invade the new area and what impact its invasion will have on the native ecosystem \cite{shigesada1997invasions}. To this end, many theories have been created to describe the invasion process.
+The invasion of a species can  generally be described with four stages \cite{blackburn2011invasionstages}: 
+\begin{enumerate}
+    \item Transport: Leaving the native range, arriving at a new location
+    \item Introduction: Existing in specific locations (captivity / cultivation)
+    \item Establishment: Existing outside of areas of introduction in the wild
+    \item Spread: Sustaining establishment and dispersing to new environments
+\end{enumerate}
+
+The impacts of invasive alien species can be numerous, ranging from food web changes to reductions in habitat and species richness, hydrology and nutrient cycle changes, enhanced invasion of other species and mass extinctions \cite{simberloff2013invasiveimpacts}.
+For example intraguild predation, the predation of species using similar resources, can create completely new stable states of an ecological system \cite{polis1989theoryIGP}.
+
+\subsection{Species Distribution Modelling}
+The original intention of Species Distribution Models (SDMs) is the description of biological patterns in relationship to the environment \cite{elith2009sdmtheory}.
+
 
 \subsection{Harmonia axyridis}
 \textit{Harmonia axyridis}, also known as the Harlequin ladybird or multicoloured Asian lady beetle, is of the family of the Coccinellidae and has its native origin in Asia \cite{roy2016harmonia}.
 At first widely introduced as a control species against pest aphids, \textit{H. axyridis} has turned out to be a highly invasive species reaching an almost global distribution \cite{brown2008harmonia}.
-In America, the species was introduced as early as 1916 (California) and in 1988, first populations outside intended release were found \cite{chapin1991harmonia}.
+In America, the species was introduced as early as 1916 (California) and in 1988, first populations outside intended release were found \cite{chapin1991harmoniaNA}.
 Usage of \textit{H. axyridis} for biological control in Europe dates back as far as 1990 (France) \cite{coutanceau2006harmoniaFR}.
 First invasive occurrences were confirmed in multiple countries during the early 2000s, including Germany (2000), Belgium (2001), the Netherlands (2002) and the United Kingdom (2003) \cite{roy2016harmonia}.
 The first confirmation in Austria, where it was never used for biological control, was 2006 \cite{rabitsch2006harmoniaAT}.  

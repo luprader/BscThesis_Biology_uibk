@@ -247,3 +247,8 @@ The current state outline was ported to the main thesis document, next steps wil
 ### 10/09/2023
 A section giving information about *Harmonia axyridis* was written in the main thesis, which is now mostly complete.
 There will be additional chapters on invasion theory and SDMs in order to give sufficient background.
+
+### 11/09/2023
+All parallel code was edited to potentially allow all cores.
+This was mainly done since apparently even thread numbers are optimized better by the operating system.
+A background section in invasion theory was written.
