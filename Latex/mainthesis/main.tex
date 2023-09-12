@@ -81,6 +81,8 @@ Variance inflation factors were computed for this GLM and the variable with the 
 All SDM models of each year were tested for their accuracy on predicting the occurrences of the following year and the final year of 2022. 
 For each year, the occupied niche was also computed by running a PCA analysis on the bioclim variables. The niche can then be visualized by plotting a dynamic occurrence density grid for the first two PCA axes(Broennimann et al. 2011).
 
+
+
 \newpage
 \section{Background}
 This section aims to give sufficient background on \textit{Harmonia axyridis} and the theory necessary to understand this thesis.
@@ -94,7 +96,8 @@ The Invasive Alien Species Regulation of the European Union from 2014 uses the f
 \end{quote}
 
 This already shows the main concerns associated with invasive species, non-native species that have an often negative impact on native ecosystems.
-Main goals in research are to find out which species have potential to become invasive, what habitat will be susceptible to invasion by those species, how fast the species will invade the new area and what impact its invasion will have on the native ecosystem \cite{shigesada1997invasions}. To this end, many theories have been created to describe the invasion process.
+Main goals in research are to find out which species have potential to become invasive, what habitat will be susceptible to invasion by those species, how fast the species will invade the new area and what impact its invasion will have on the native ecosystem \cite{shigesada1997invasions}. 
+To this end, many theories have been created to describe invasion processes.
 The invasion of a species can  generally be described with four stages \cite{blackburn2011invasionstages}: 
 \begin{enumerate}
     \item Transport: Leaving the native range, arriving at a new location
@@ -107,8 +110,16 @@ The impacts of invasive alien species can be numerous, ranging from food web cha
 For example intraguild predation, the predation of species using similar resources, can create completely new stable states of an ecological system \cite{polis1989theoryIGP}.
 
 \subsection{Species Distribution Modelling}
-The original intention of Species Distribution Models (SDMs) is the description of biological patterns in relationship to the environment \cite{elith2009sdmtheory}.
-
+Species Distribution Models (SDMs) attempt to connect species distribution data, i.e. occurrence at a location, to the environmental and spatial properties of said location \cite{elith2009sdmtheory}.
+They have been shown to generate substantial insight into the ecological requirements of species and, as niche models, can be used to predict the potential habitat of a species \cite{araujo2006sdmchallenges}.
+There has been considerable debate on the capabilities and limitations of SDMs, especially when used for prediction.
+In general, SDMs are made with the (ideal) assumption that the species is in environmental equilibrium \cite{elith2009sdmtheory}, implying that its ecological niche is not currently changing.
+If these models are now used to predict new, unsampled areas, there actually is no measure to assess their accuracy, since no data is presently available for that area \cite{araujo2006sdmchallenges}.
+There is also no guarantee that the biotic interactions sampled in the study area will reflect the final interactions in the new area \cite{elith2009sdmtheory}.
+All of these issues apply especially to the prediction of invasive species, since there might be limited data in the invaded range, the species is often not currently at equilibrium and interactions with native species are completely new \cite{mainali2015sdmprojecting}.
+Despite all these challenges, SDMs have been used numerous times to provide insight into the invasive potential and the invasion dynamics of alien species \cite{zimmermann2010sdmtrends}.
+One way of gaining more insight into the invasion process is to create models with data from different time periods during the invasion \cite{briscoe2019palmerisdm}.
+For example, data from a time period early in the invasion process can be used to build models which then are evaluated against data from a later time period \cite{barbet2018nigrithoraxsdm}.
 
 \subsection{Harmonia axyridis}
 \textit{Harmonia axyridis}, also known as the Harlequin ladybird or multicoloured Asian lady beetle, is of the family of the Coccinellidae and has its native origin in Asia \cite{roy2016harmonia}.
