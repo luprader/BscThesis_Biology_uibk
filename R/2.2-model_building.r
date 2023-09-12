@@ -50,13 +50,13 @@ m_max <- maxnet(data_sc$pres, select(data_sc, !pres), formula = f)
 # evaluate native models for all years
 pname <- "R/plots/response_curves/native_mod_resp.png"
 rnt <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, 2002:2022, sc, pname)
-rm(list = c("m_glm", "m_gam", "m_brt", "m_max")) # clear up memory
 saveRDS(rnt, file = "R/data/modelling/eval_mod_native.rds")
+rm(list=ls()[! ls() %in% c("tot_time", "years", "y", "lp_eval_mods")]) # memory
 cat("native model built and evaluated, starting yearly iteration \n")
 
 # build and evaluate models built iteratively
 # prepare for parallelization
-years <- 2002:2020 # for iteration of foreach
+years <- 2002:2005 # for iteration of foreach
 cl <- makeCluster(detectCores())
 # load libraries in cl
 clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
@@ -65,7 +65,7 @@ clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
 ))
 registerDoParallel(cl)
 # parallelized for loop
-rys <- foreach(y = years, .inorder = FALSE, .maxcombine = 20) %dopar% {
+rys <- foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
     # load modelling data
     pa <- readRDS("R/data/modelling/pa_mod_vars.rds")
     # subset to eu data up to y
@@ -103,8 +103,11 @@ rys <- foreach(y = years, .inorder = FALSE, .maxcombine = 20) %dopar% {
     pnm <- paste0("R/plots/response_curves/", y, "_mod_resp.png")
     ry <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, c(y + 1, 2022), sc, pnm)
 
-    rm(list = c("m_glm", "m_gam", "m_brt", "m_max")) # clear up memory
+    # save evaluation results separately as backup
+    fnm = paste0("R/data/modelling/eval_mod_", y, ".rds")
+    saveRDS(ry, file = fnm)
     return(ry)
+    rm(list=ls()[! ls() %in% c("tot_time", "years", "y", "lp_eval_mods")])
 }
 stopCluster(cl)
 
