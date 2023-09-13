@@ -1,0 +1,10 @@
+This file generates all plots and tables for final analysis and visualization 
+of the projects results.
+
+```{r, libraries}
+
+```
+
+```{r}
+
+```

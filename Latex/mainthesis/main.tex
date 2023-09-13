@@ -121,6 +121,70 @@ Despite all these challenges, SDMs have been used numerous times to provide insi
 One way of gaining more insight into the invasion process is to create models with data from different time periods during the invasion \cite{briscoe2019palmerisdm}.
 For example, data from a time period early in the invasion process can be used to build models which then are evaluated against data from a later time period \cite{barbet2018nigrithoraxsdm}.
 
+\subsection{Modelling methods}
+A diverse array of mathematical models have been developed to describe ecological processes.
+In species distribution modelling, several modelling methods have emerged with differing strengths and weaknesses, including the following:
+
+\textbf{Generalized Linear Models (GLM)} \cite{nelder1972glm}:\\
+GLMs are the generalized extension of a classical linear model, meaning a linear combination of all used variables in the form of
+\begin{equation}
+    \label{eq:lm}
+    Y = \beta_1 x_1 + \beta_2 x_2 + \dots = \sum_{i} \beta_i x_i,
+\end{equation}
+where $Y$ is the final response value, $x_i$ are the independent variables used in the model and $\beta_i$ are the parameters that need to be estimated for each variable.
+This can now be generalized for non-linear relationships between the variables and the response value, for example the expectation values of a statistical distribution.
+A link function $g$ (non-linear), is applied to the response in order to match the results of the (still linear) combination of model variables to a statistical distribution (i.e. normal, binomial, Poisson, gamma), resulting in
+\begin{equation}
+    \label{eq:glm}
+    E = g(Y) = \sum_{i} \beta_i x_i .
+\end{equation}
+With this transformation, $g(Y)$ now represents the expectation value $E$ for the model in the chosen distribution.
+
+\textbf{Generalized Additive Models (GAM)} \cite{hastie1986gam}:\\
+A GAM can be understood as an even further extension of a GLM. Here, variables are not estimated with a linear parameter any more, but are each contained in a "smooth function" $s()$:
+\begin{equation}
+    \label{eq:gam}
+    E = \sum_{i} s_i(x_i)
+\end{equation}
+The smooth functions are estimated non-parametrically, meaning that the form of $s()$ is not strictly predefined in comparison to GLMs, where $\beta_i$ is clearly a simple parameter to be estimated.
+The smooth function could for example be estimated using splines, piecewise defined polynomial functions.
+Both GLMs and GAMS are fundamental advancements in statistical regression and have been used heavily in ecological research \cite{guisan2002glm-gam}.
+
+\textbf{Boosted Regression Trees (BRT)} \cite{elith2008brt}:\\
+BRTs are a form of machine learning model using multiple decision trees and boosting to create a well performing model.
+Tree based models can be used for classification or regression tasks.
+Decision trees fit a constant value to intervals of all variables, either the most probable class (classification) or the mean response (regression) of all observed values in that interval.
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width = \linewidth]{figures/elith-brt.png}
+    \caption{\label{fig:elith_brt} Visualization of a decision tree (left) and the resulting response surface for the two variables $X_1$ and $X_2$. (modified from \cite{elith2008brt})}
+\end{figure}
+
+Multiple decision trees can be combined using boosting to generate a tree ensemble with much better performance.
+Here, a first tree is built trying to maximize the prediction accuracy for the fitted values.
+All following trees are generated with emphasis on values that are not well described by the current amount of trees.
+This can be done by applying weights to those values for the next tree.
+When using BRTs for regression, boosting can be understood as optimizing the residuals of the fit function, the difference between the observed value and the estimated value.
+Each tree usually only contributes a very small amount to the total result, scaled by a so-called learning rate.
+BRTs have the potential to strongly overfit the data, meaning that the resulting function is very accurate for the used training data, but much less so for new data not used in the training process.
+
+\textbf{Maximum Entropy Method (MaxEnt)} \cite{phillips2006maxent, phillips2017maxnet}:\\
+Maximum Entropy at its core is an optimization method commonly used in machine learning.
+It follows the concept that as few constrains as possible should be used when modelling a distribution that is currently unknown.
+This is achieved by maximizing the "entropy" of the estimation, here meaning a measurement for the amount of constraints influencing the result.
+In MaxEnt SDMs, variables are added in form of "features" representing different constraints put on the model for a specific variable:
+\begin{itemize}
+    \item Linear feature: The mean of the response should be close to the observed value.
+    \item Quadratic feature: The variance of the response should be close to the observed value.
+    \item Product feature: The covariance of two variable responses should be close to the observed value.
+    \item Threshold feature: The proportion of response values above a given threshold should be close to the observed value.
+    \item Binary feature: The proportion of response values belonging to a certain binary value should be close to the observed value (for categorical data).
+    \item Hinge feature: A piecewise linear function imposing constraints similar to the threshold feature.
+\end{itemize}
+
+MaxEnt models also use regularization, a process that puts penalties on complex models and produces a simpler model (fewer and less complex coefficients).
+It has recently been shown that MaxEnt models can be fit using infinitely weighted logistic regression, making it very similar to GLMs and GAMs in its concept, apart from the use of "features".
+
 \subsection{Harmonia axyridis}
 \textit{Harmonia axyridis}, also known as the Harlequin ladybird or multicoloured Asian lady beetle, is of the family of the Coccinellidae and has its native origin in Asia \cite{roy2016harmonia}.
 At first widely introduced as a control species against pest aphids, \textit{H. axyridis} has turned out to be a highly invasive species reaching an almost global distribution \cite{brown2008harmonia}.

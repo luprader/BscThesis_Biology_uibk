@@ -245,10 +245,15 @@ A full run of model building did not finish overnight due to an error, which was
 The current state outline was ported to the main thesis document, next steps will be to rewrite methods and introduction.
 
 ### 10/09/2023
-A section giving information about *Harmonia axyridis* was written in the main thesis, which is now mostly complete.
+A section giving information about *Harmonia axyridis* was written in the main thesis.
 There will be additional chapters on invasion theory and SDMs in order to give sufficient background.
 
 ### 11/09/2023
 All parallel code was edited to potentially allow all cores.
 This was mainly done since apparently even thread numbers are optimized better by the operating system.
 A background section in invasion theory was written.
+
+### 12/09/2023
+Model building was edited to save the results for each year separately as well, making it easier to compute the results in batches (if necessary).
+A background section for SDMs and the used modelling methods was written.
+After a better understanding of maxnet's feature classes, threshold features were removed and quadratic features were added back.

@@ -44,7 +44,7 @@ m_brt <- gbm(f,
 )
 
 # fit maxent
-f <- maxnet.formula(data_sc$pres, select(data_sc, !pres), classes = "lht")
+f <- maxnet.formula(data_sc$pres, select(data_sc, !pres), classes = "lqh")
 m_max <- maxnet(data_sc$pres, select(data_sc, !pres), formula = f)
 
 # evaluate native models for all years
@@ -56,7 +56,7 @@ cat("native model built and evaluated, starting yearly iteration \n")
 
 # build and evaluate models built iteratively
 # prepare for parallelization
-years <- 2002:2005 # for iteration of foreach
+years <- 2002:2020 # for iteration of foreach
 cl <- makeCluster(detectCores())
 # load libraries in cl
 clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
@@ -65,7 +65,7 @@ clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
 ))
 registerDoParallel(cl)
 # parallelized for loop
-rys <- foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
+foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
     # load modelling data
     pa <- readRDS("R/data/modelling/pa_mod_vars.rds")
     # subset to eu data up to y
@@ -96,7 +96,7 @@ rys <- foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
     )
 
     # fit maxent
-    f <- maxnet.formula(data_sc$pres, select(data_sc, !pres), classes = "lht")
+    f <- maxnet.formula(data_sc$pres, select(data_sc, !pres), classes = "lqh")
     m_max <- maxnet(data_sc$pres, select(data_sc, !pres), formula = f)
 
     # evaluate models for following year and 2022
@@ -111,7 +111,5 @@ rys <- foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
 }
 stopCluster(cl)
 
-# save evaluation results
-saveRDS(rys, file = "R/data/modelling/eval_mod_years.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("building and model evaluation finished:", td, "secs", "\n")

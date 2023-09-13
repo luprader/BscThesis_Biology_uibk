@@ -12,8 +12,7 @@ Use all years for selection?
 Use all lccs_classes for relative in lc?
 Only use comp1, since 84% of variance?
 Use absence points in pca?
-Include quadratic versions as options in selection? (maxent includes them again after)
-
+Include all quadratic versions as options in selection? (so lc too)
 ### Model building
 Use family binomial?
 Problem fitting "categorical" data with regression models?
