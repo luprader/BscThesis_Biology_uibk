@@ -23,3 +23,4 @@ Which threshold method to use? (very low suitability, methods don't work?)
 
 ### Writing
 Where to put reference when quoting.
+Can use pictures from papers with citation?

@@ -255,5 +255,12 @@ A background section in invasion theory was written.
 
 ### 12/09/2023
 Model building was edited to save the results for each year separately as well, making it easier to compute the results in batches (if necessary).
-A background section for SDMs and the used modelling methods was written.
+A background section on SDMs was written.
+
+### 13/09/2023
+A background section for the used modelling methods was written.
 After a better understanding of maxnet's feature classes, threshold features were removed and quadratic features were added back.
+
+### 14/09/2023
+A rewrite of the methods chapter was started.
+Citation style was changed to the Nature superscript citation style for better readability.
