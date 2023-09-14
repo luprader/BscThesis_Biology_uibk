@@ -52,6 +52,7 @@ pname <- "R/plots/response_curves/native_mod_resp.png"
 rnt <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, 2002:2022, sc, pname)
 saveRDS(rnt, file = "R/data/modelling/eval_mod_native.rds")
 rm(list=ls()[! ls() %in% c("tot_time", "years", "y", "lp_eval_mods")]) # memory
+gc()
 cat("native model built and evaluated, starting yearly iteration \n")
 
 # build and evaluate models built iteratively
@@ -108,6 +109,7 @@ foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
     saveRDS(ry, file = fnm)
     return(ry)
     rm(list=ls()[! ls() %in% c("tot_time", "years", "y", "lp_eval_mods")])
+    gc()
 }
 stopCluster(cl)
 

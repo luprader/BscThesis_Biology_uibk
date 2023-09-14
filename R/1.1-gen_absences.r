@@ -43,6 +43,7 @@ for (y in years) {
     ao_y <- lp_gen_abs(pres_v, y, n_abs, min_d, max_d, lc_ref)
     ao <- rbind(ao, ao_y)
     rm(lc_ref)
+    gc()
 }
 
 # generate for europe
@@ -80,6 +81,7 @@ ao_eu <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
         ao_y <- lp_gen_abs(pres_v_c, y, n_abs, min_d, max_d, lc_ref_c)
         ao_e <- rbind(ao_e, ao_y)
         rm(lc_ref_c)
+        gc()
     }
     return(ao_e)
 }

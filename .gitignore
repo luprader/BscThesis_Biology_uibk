@@ -21,5 +21,6 @@
 *.blg
 *.xml
 *.toc
+*.out
 
 test.r

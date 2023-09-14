@@ -163,6 +163,7 @@ for (y in 2003:2022) {
     rm(sim_test)
     dev.off()
     rm(grid_eu_y1)
+    gc()
 }
 cat("compared each year to following year \n")
 
