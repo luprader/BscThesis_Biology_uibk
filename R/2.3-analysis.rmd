@@ -2,9 +2,78 @@ This file generates all plots and tables for final analysis and visualization
 of the projects results.
 
 ```{r, libraries}
-
+library(ggplot2)
+library(dplyr)
+library(terra)
+library(rnaturalearth)
+library(sf)
 ```
 
-```{r}
+```{r, plot tss development for following year and 2022}
+# get tss for each year
+tss_fy = data.frame(year = 2002:2020) #initialize tss dataframe
+tss_22 = tss_fy
+for (y in 2002:2020) {
+    eval = readRDS(paste0("R/data/modelling/eval_mod_", y, ".rds")) # read eval
+    # if entry NA (no ensemble possible) compute tss = 0
+    if (any(is.na(eval))) {
+        na = which(is.na(eval))
+        eval[[na]]$sensitivity = 0.5
+        eval[[na]]$specificity = 0.5
+        eval[[na]]$model = "ens"
+    }
+    for (m in 1:5) { # get tss for each model
+        # fy tss df
+        ev = eval[1, ]
+        tss_fy[y - 2001, m + 1] = ev[[m]]$sensitivity + ev[[m]]$specificity - 1
+        colnames(tss_fy)[m + 1] = ev[[m]]$model
+        # 2022 tss df
+        ev = eval[2, ]
+        tss_22[y - 2001, m + 1] = ev[[m]]$sensitivity + ev[[m]]$specificity - 1
+        colnames(tss_22)[m + 1] = ev[[m]]$model
+    }
+}
+# convert to long format
+long_fy = data.frame()
+long_22 = data.frame()
+for (m in 1:5) {
+    # fy tss
+    tss_m = tss_fy[,c(1, m + 1)]
+    tss_m$model = colnames(tss_m)[2]
+    colnames(tss_m)[2] = "tss"
+    long_fy = rbind(long_fy, tss_m)
+    # 2022 tss 
+    tss_m = tss_22[,c(1, m + 1)]
+    tss_m$model = colnames(tss_m)[2]
+    colnames(tss_m)[2] = "tss"
+    long_22 = rbind(long_22, tss_m)
+}
 
+# plot
+ggplot(data = long_fy, aes(x = year, y = tss, color = model)) + 
+geom_point() + geom_line() + ggtitle("tss for predicting following year")
+ggplot(data = long_22, aes(x = year, y = tss, color = model)) + 
+geom_point() + geom_line() + ggtitle("tss for predicting 2022")
+```
+
+```{r, test plot pa from gen}
+pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
+pa <- subset(pa, Area == "eu" & Year == 2008)
+pa_v <- vect(pa, geom = c("Lon", "Lat"), crs = "epsg:4326")
+
+# countries map
+countries <- ne_countries(scale = "medium", returnclass = "sf")
+countries <- st_transform(countries, crs = 4326)
+countries <- vect(countries)
+
+plot(crop(countries, ext(pa_v)))
+
+points(subset(pa_v, pa_v$Presence == "absent"), col = "grey")
+#points(subset(pa_v, pa_v$Presence == "present"), col = "green")
+# add subsexts
+subexts <- readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds")
+for (s in seq_len(nrow(subexts))) {
+    ext_s <- ext(subexts[s, ])
+    lines(vect(ext_s, crs = "epsg:4326"), col = "blue")
+}
 ```

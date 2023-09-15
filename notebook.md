@@ -264,3 +264,11 @@ After a better understanding of maxnet's feature classes, threshold features wer
 ### 14/09/2023
 A rewrite of the methods chapter was started.
 Citation style was changed to the Nature superscript citation style for better readability.
+
+### 15/09/2023
+Model performance was plotted, computing the two tss for every model and year, following year and 2022.
+Model performance is incredibly bad for all models, not getting over 0.2 for any year.
+TSS is even decreasing on average for all models after 2011.
+This indicates that either the model building or data processing is flawed, since its hardly believable that the species is impossible to predict.
+Plotting the presence and absence datapoints for europe showed that the density subdivision seems to significantly bias background, even with random selection in those areas.
+Absence generation will have to be revisited, as well as the exact process of ensemble calculation.

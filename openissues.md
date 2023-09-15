@@ -20,6 +20,7 @@ Model predicts suitability higher than 1?
 Absences in testing not misleading since generated?
 Give maxent different background?
 Which threshold method to use? (very low suitability, methods don't work?)
+Very bad model performance (TSS ensemble wrong?)
 
 ### Writing
 Where to put reference when quoting.
