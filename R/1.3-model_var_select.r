@@ -10,7 +10,7 @@ source("R/0.0-functions.r", encoding = "UTF-8")
 tot_time <- Sys.time()
 # load pa data
 pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-pa_mod <- subset(pa_ext, Year == 2002) # only take 2002 as reference
+pa_mod <- subset(pa_ext, Year == 2022) # only take 2022 as reference
 
 ## compute pca for lccs_class
 # transform each present class into separate column
@@ -19,8 +19,8 @@ lc <- select(pa_mod, starts_with("lc"))
 # calculate pca for binary lc values
 lc_pca <- PCA(lc, ncp = 10, scale.unit = FALSE, graph = FALSE)
 
-# extract pca dims with cumulative variance closest to 90%
-cutoff <- which.min(abs(lc_pca$eig[, 3] - 90))
+# extract pca dims with cumulative variance closest to 80%
+cutoff <- which.min(abs(lc_pca$eig[, 3] - 80))
 lc_pca_dims <- as.data.frame(lc_pca$ind$coord[, 1:cutoff])
 colnames(lc_pca_dims) <- paste0("lc", seq_len(ncol(lc_pca_dims)))
 

@@ -32,60 +32,67 @@
 \newpage
 
 \section{Introduction}
-(citations missing)
+ (citations missing)
 
 The topic of invasive species has become more and more important, even more so with recent changes in climate and habitats due to human influence.
 In order to deal with invasive species and the impact they can have on existing ecosystems, species distribution models (SDMs) have been used to predict the potential habitat and with that the threat of an emerging invasive species.
-Especially time-partitioned models can provide more insight into the process of invasion. 
-Ensemble models are often used in applications where models are projected, since aspects of different modelling approaches can be combined to hopefully gain a more complete model of the species distribution. 
+Especially time-partitioned models can provide more insight into the process of invasion.
+Ensemble models are often used in applications where models are projected, since aspects of different modelling approaches can be combined to hopefully gain a more complete model of the species distribution.
 
-There are certain challenges when using SDMs in invasive research though. 
-For example, the invading species is usually not currently in equilibrium with its environment, leading to underestimations of the final niche occupied. 
+There are certain challenges when using SDMs in invasive research though.
+For example, the invading species is usually not currently in equilibrium with its environment, leading to underestimations of the final niche occupied.
 A similar difficulty is modelling the invaded range with data from a species native range since the native niche can be quite different from the realized invaded niche.
 Nonetheless, SDMs are frequently used in trying to predict the spread of invasive species, which is why it is important to gain a better understanding of invasion processes and an SDM's ability to accurately represent it.
 
 \gls{harm}, also known as the harlequin or Asian lady beetle, is an invasive species already established in non-native habitats all around the world.
-The invasion process has already been studied extensively and there have been SDMs modelling the invaded range in Europe as well, though mostly on a national scale. 
+The invasion process has already been studied extensively and there have been SDMs modelling the invaded range in Europe as well, though mostly on a national scale.
 
-One goal of this thesis is to look into the limitations of models built early in the invasion process of a species. 
+One goal of this thesis is to look into the limitations of models built early in the invasion process of a species.
 By iterating over the years of the invasion, model performance can be evaluated with consideration to the current state of invasion.
 Computing the occupied niche separately for each year also provides more insight into the invasion process and might help to understand modelling limitations for certain years.
 
 \newpage
 \section{Methods}
-(citations missing)
+ (citations missing)
 \subsection{Datasets}
 For occurrence data, all global occurrences of \gls{harm} were downloaded from the GBIF database \autocite{GBIFaxyridisdataset}.
-All traditional 19 bioclim variables were obtained from the CHELSA V2.1 climatologies dataset \autocite{karger2017CHELSApaper, CHELSAbioclimdataset}, using the 1981-2010 time frame for all years from 2002 to 2010 as well as the MPI-ESM 1.2 ssp370 scenario 2011-2040 for all years from 2011 to 2022. 
+All traditional 19 bioclim variables were obtained from the CHELSA V2.1 climatologies dataset \autocite{karger2017CHELSApaper, CHELSAbioclimdataset}, using the 1981-2010 time frame for all years from 2002 to 2010 as well as the MPI-ESM 1.2 ssp370 scenario 2011-2040 for all years from 2011 to 2022.
 In order to also have some kind of influence of the human nature of first introduction, land cover data was used from the Copernicus Land cover Classification dataset \autocite{COPlandcoverdataset}  with yearly resolution for 2002 up to 2020.
 
 \subsection{Data preparation}
-All bioclim and land cover layers were resampled to a matching resolution of 30 arc seconds and cropped to two spatial extents, Europe and the presumed native range referencing (Orlova-Bienkowskaja, Ukrainsky \& Brown, 2015).
+All bioclim and land cover layers were resampled to a matching resolution of 30 arc seconds and cropped to two spatial extents, Europe and the presumed native range referencing (Orlova-Bienkowskaja, Ukrainsky \& Brown, 2015) \autocite{orlova2015harmonia}.
 
-The presence-only points from GBIF were subset to the afore mentioned spatial extents and then checked for missing values for latitude, longitude, year or coordinate uncertainty. 
-No occurrences after 2022 were used, also no points with a coordinate uncertainty larger than 1 km. 
-In Europe, the initial cut off year for presences was 1991, since this is the year of in vasion according to the EASIN website.
-Afterwards, using the library `CoordinateCleaner`, all remaining data points were again checked for common errors or biases in the respective subset.
-To prepare the data for modelling, pseudoabsences were generated for each year. 
-For this, the subset of a specific year was taken and used to generate pseudo-absences limited to a radius around the occurrence points.
-For each presence point, a buffer circle was generated with a maximum distance of 18 km. This buffer circle also excluded any area closer than 1 km to any presence point of any year to limit contradiction in environmental space.
+The presence-only points from GBIF were checked for missing values for latitude, longitude, year or coordinate uncertainty and then subset to the afore mentioned spatial extents.
+No occurrences after 2022 were used, also no points with a coordinate uncertainty larger than 1 km.
+In Europe, the initial cut off year for presences was 1991, since this is the year of invasion according to the EASIN website.
+Afterwards, using the library \texttt{CoordinateCleaner}, all remaining data points were again checked for common errors or biases in the respective subset (tests used: "capitals", "centroids", "duplicates", "equal", "institutions", "outliers", "seas", "zeros").
+In addition, all occurrences were checked for their land cover class values in their respective year, removing points in the water or with no data.
+In the end, remaining data points prior to 2002 were deemed insignificant and removed from the dataset.
+To prepare the data for modelling, pseudoabsences were generated for each year, randomly sampling the area and resampling points in the water or with no data.
 
 \subsection{Model building}
-For each year, the following Models were computed: General Linear (GLM), General Additive (GAM), Boosted Regression Trees (BRT) and Maximum Entropy (MAXENT).  
+For each year, the following Models were computed: General Linear (GLM), General Additive (GAM), Boosted Regression Trees (BRT) and Maximum Entropy (MAXENT).
 A model for a specific year always included all points from past years as well.
-The iterative models that were built use only data points from Europe, though there was one model created only with native occurrences and predicted for each year in Europe.
-For all used occurrence points prior to 2002 and after 2020, the land cover data of 2002 or 2020 was used as a substitute.
+The iterative models that were built only use data points from Europe, though there was one model created only with native occurrences and predicted for each year in Europe.
+For all used occurrence points after 2020, the land cover data of 2020 was used as a substitute.
 
-Variance inflation factors were used to select the variables used for model building. 
-For this, a GLM was computed only using Europe data from 2002.
+Variance inflation factors were used to select the variables used for model building.
+For this, a GLM was computed only using Europe data from 2022.
 This model included all 19 bioclim variables and their squared values as separate variables.
-For land cover variables, a PCA was computed from the 2002 data.
-PCA axes were included in the model until a cut off of 90\% of explained variance was reached.
-Variance inflation factors were computed for this GLM and the variable with the highest VIF was dropped until none of the remaining variables had a VIF greater than 10. Quadratic versions of bioclim variables were always dropped before their linear counterparts, even if their VIF was lower.
+For land cover variables, a PCA was computed on the relative area of all land cover classes in an 18 km radius around an occurrence point.
+The 18 km radius was chosen, since it is the average flight distance determined for \gls{harm} \autocite{jeffries2013flightharmonia}.
+PCA axes were included in the model until a cut-off of 80\% of explained variance was reached.
+Variance inflation factors were computed for this GLM and the variable with the highest VIF was dropped until none of the remaining variables had a VIF greater than 10. 
+Quadratic versions of bioclim variables were always dropped before their linear counterparts, even if their VIF was lower.
 
 \subsection{Analysis}
-All SDM models of each year were tested for their accuracy on predicting the occurrences of the following year and the final year of 2022. 
-For each year, the occupied niche was also computed by running a PCA analysis on the bioclim variables. The niche can then be visualized by plotting a dynamic occurrence density grid for the first two PCA axes(Broennimann et al. 2011).
+All SDM models of each year were evaluated for their accuracy on predicting the occurrences of the following year and the final year of 2022 using the True Skill Statistic (TSS).
+The TSS values were used to create a TSS-weighted ensemble of all model predictions, which was again evaluated for its accuracy.
+For each year, the occupied niche was computed by running a PCA analysis on the bioclim variables.
+The niche can then be visualized by plotting a dynamic occurrence density grid for the first two PCA axes \autocite{broennimann2012niche}.
+The overlap between each year for Europe and the respective following year was computed, as well as a niche similarity and niche equivalency test.
+Niche overlap for each year was also visualized in comparison to the total native niche.
+All mentioned niche analyses were conducted using the library \texttt{ecospat} \autocite{dicola2017ecospat}.
 
 
 
@@ -102,9 +109,9 @@ The Invasive Alien Species Regulation of the European Union from 2014 uses the f
 \end{quote}
 
 This already shows the main concerns associated with invasive species, non-native species that have an often negative impact on native ecosystems.
-Main goals in research are to find out which species have potential to become invasive, what habitat will be susceptible to invasion by those species, how fast the species will invade the new area and what impact its invasion will have on the native ecosystem \autocite{shigesada1997invasions}. 
+Main goals in research are to find out which species have potential to become invasive, what habitat will be susceptible to invasion by those species, how fast the species will invade the new area and what impact its invasion will have on the native ecosystem \autocite{shigesada1997invasions}.
 To this end, many theories have been created to describe invasion processes.
-The invasion of a species can  generally be described with four stages \autocite{blackburn2011invasionstages}: 
+The invasion of a species can  generally be described with four stages \autocite{blackburn2011invasionstages}:
 \begin{enumerate}
     \item Transport: Leaving the native range, arriving at a new location
     \item Introduction: Existing in specific locations (captivity / cultivation)
@@ -200,7 +207,7 @@ At first widely introduced as a control species against pest aphids, \gls{harm} 
 In America, the species was introduced as early as 1916 (California) and in 1988, first populations outside intended release were found \autocite{chapin1991harmoniaNA}.
 Usage of \gls{harm} for biological control in Europe dates back as far as 1990 (France) \autocite{coutanceau2006harmoniaFR}.
 First invasive occurrences were confirmed in multiple countries during the early 2000s, including Germany (2000), Belgium (2001), the Netherlands (2002) and the United Kingdom (2003) \autocite{roy2016harmonia}.
-The first confirmation in Austria, where it was never used for biological control, was 2006 \autocite{rabitsch2006harmoniaAT}.  
+The first confirmation in Austria, where it was never used for biological control, was 2006 \autocite{rabitsch2006harmoniaAT}.
 It has been shown that all established invasive populations outside of North America have their origin in the first established population in eastern North America, with the European populations being significantly influenced by the used biocontrol strain \autocite{lombaert2010harmoniabridgehead}.
 
 The impact of \gls{harm} on invaded areas is diverse.

@@ -272,3 +272,8 @@ TSS is even decreasing on average for all models after 2011.
 This indicates that either the model building or data processing is flawed, since its hardly believable that the species is impossible to predict.
 Plotting the presence and absence datapoints for europe showed that the density subdivision seems to significantly bias background, even with random selection in those areas.
 Absence generation will have to be revisited, as well as the exact process of ensemble calculation.
+
+### 03/10/2023
+Absence generation was changed to not use any density correction currently.
+After test model building, variable selection was changed to use data from 2022 only, since it seemed like the variables did not produce meaningful models.
+The methods chapter was updated to the current status.

@@ -166,14 +166,6 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
         return(ao)
     }
 
-    # create circles around each point
-    # maximum distance to presences of the year to generate for
-    circs_r <- buffer(pres_y, max_d)
-    # minimum distance to presences of all years
-    circs_d <- buffer(pres, min_d)
-    # remove min_d circles from all max_d circles
-    circs_rd <- erase(circs_r, circs_d)
-
     ## generate n_abs absence points per circle
     wc <- 0 # how often replacements had to be generated
 

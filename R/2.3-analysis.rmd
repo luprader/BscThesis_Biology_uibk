@@ -11,9 +11,9 @@ library(sf)
 
 ```{r, plot tss development for following year and 2022}
 # get tss for each year
-tss_fy = data.frame(year = 2002:2020) #initialize tss dataframe
+tss_fy = data.frame(year = 2002:2005) #initialize tss dataframe
 tss_22 = tss_fy
-for (y in 2002:2020) {
+for (y in 2002:2005) {
     eval = readRDS(paste0("R/data/modelling/eval_mod_", y, ".rds")) # read eval
     # if entry NA (no ensemble possible) compute tss = 0
     if (any(is.na(eval))) {
@@ -69,7 +69,7 @@ countries <- vect(countries)
 plot(crop(countries, ext(pa_v)))
 
 points(subset(pa_v, pa_v$Presence == "absent"), col = "grey")
-#points(subset(pa_v, pa_v$Presence == "present"), col = "green")
+points(subset(pa_v, pa_v$Presence == "present"), col = "green")
 # add subsexts
 subexts <- readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds")
 for (s in seq_len(nrow(subexts))) {

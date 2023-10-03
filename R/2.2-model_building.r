@@ -57,8 +57,8 @@ cat("native model built and evaluated, starting yearly iteration \n")
 
 # build and evaluate models built iteratively
 # prepare for parallelization
-years <- 2002:2020 # for iteration of foreach
-cl <- makeCluster(detectCores())
+years <- 2002:2005 # for iteration of foreach
+cl <- makeCluster(detectCores()-2)
 # load libraries in cl
 clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
     library,

@@ -16,8 +16,8 @@ pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 pa_ext <- data.frame()
 
 # prepare for parallelization
-years <- 2002:2022 # for iteration of foreach
-cl <- makeCluster(detectCores())
+years <- c(2002:2010, 2022) # for iteration of foreach
+cl <- makeCluster(detectCores() - 2)
 # load libraries in cl
 clusterEvalQ(cl, library(terra))
 registerDoParallel(cl)
@@ -34,7 +34,7 @@ for (area in unique(pa$Area)) {
         if (y <= 2010) { # 2002-2010
             y_clim <- "1981-2010"
             y_lc <- y
-        } else if (y > 2010 & y <= 2020) { # 2011-2020
+        } else if (y > 2010 && y <= 2020) { # 2011-2020
             y_clim <- "2011-2040"
             y_lc <- y
         } else { # 2021-2022

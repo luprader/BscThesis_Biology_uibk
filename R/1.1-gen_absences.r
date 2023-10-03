@@ -18,7 +18,7 @@ occs <- subset(occs, Year >= 2002) # remove insignificant historic presences
 ao <- data.frame() # initialize ao df
 # values for absence generation
 years <- c(2002:2022)
-n_abs <- 5
+n_abs <- 3
 min_d <- 1000
 max_d <- 18000
 # path for land cover rasters
@@ -60,35 +60,35 @@ t_ext <- c(-25, 65, 34.9916666666667, 72)
 subexts <- lp_subdiv_pts(pres_v, 20000, t_ext)
 
 # prepare for parallelization
-e_s <- seq_len(nrow(subexts)) # for iteration of foreach
-cl <- makeCluster(detectCores())
+#e_s <- seq_len(nrow(subexts)) # for iteration of foreach
+#cl <- makeCluster(detectCores())
 # load libraries in cl
-clusterEvalQ(cl, lapply(c("terra", "dplyr"), library, character.only = TRUE))
-registerDoParallel(cl)
+#clusterEvalQ(cl, lapply(c("terra", "dplyr"), library, character.only = TRUE))
+#registerDoParallel(cl)
 # parallelized for loop
-ao_eu <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
-    ext_e <- ext(subexts[e, ]) # get extent
-    pres_v_c <- crop(readRDS("R/data/occurrence_data/pres_v.rds"), ext_e)
+#ao_eu <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
+    #ext_e <- ext(subexts[e, ]) # get extent
+    #pres_v_c <- crop(readRDS("R/data/occurrence_data/pres_v.rds"), ext_e)
     ao_e <- data.frame() # initialize ao df
     for (y in years) {
         # choose correct lc reference
         if (y > 2020) {
-            lc_ref_c <- crop(rast(paste0(lc_p, 2020, "_eu.tif")), ext_e)
+            lc_ref_c <- rast(paste0(lc_p, 2020, "_eu.tif"))
         } else {
-            lc_ref_c <- crop(rast(paste0(lc_p, y, "_eu.tif")), ext_e)
+            lc_ref_c <- rast(paste0(lc_p, y, "_eu.tif"))
         }
         # generate absences
-        ao_y <- lp_gen_abs(pres_v_c, y, n_abs, min_d, max_d, lc_ref_c)
+        ao_y <- lp_gen_abs(pres_v, y, n_abs, min_d, max_d, lc_ref_c)
         ao_e <- rbind(ao_e, ao_y)
         rm(lc_ref_c)
         gc()
     }
-    return(ao_e)
-}
-stopCluster(cl)
+    #return(ao_e)
+#}
+#stopCluster(cl)
 unlink("R/data/occurrence_data/pres_v.rds") # remove saved pres_v again
 
-ao <- rbind(ao, ao_eu) # merge all ao
+ao <- rbind(ao, ao_e) # merge all ao
 
 # create pa dataframe
 po <- occs
