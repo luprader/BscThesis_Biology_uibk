@@ -17,7 +17,7 @@ Include all quadratic versions as options in selection? (so lc too)
 Use family binomial?
 Problem fitting "categorical" data with regression models?
 Model predicts suitability higher than 1?
-Absences in testing not misleading since generated?
+Absences in testing not misleading since generated? Boyce index?
 Give maxent different background?
 Which threshold method to use? (very low suitability, methods don't work?)
 Very bad model performance (TSS ensemble wrong?)

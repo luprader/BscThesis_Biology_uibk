@@ -33,6 +33,10 @@ for (y in 2002:2005) {
         colnames(tss_22)[m + 1] = ev[[m]]$model
     }
 }
+# save tss results for fy and 2022
+mod_tss_res = cbind(tss_fy, tss_22)
+saveRDS(mod_tss_res, file = "R/data/modelling/mod_tss_res.rds")
+
 # convert to long format
 long_fy = data.frame()
 long_22 = data.frame()
@@ -75,5 +79,44 @@ subexts <- readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds")
 for (s in seq_len(nrow(subexts))) {
     ext_s <- ext(subexts[s, ])
     lines(vect(ext_s, crs = "epsg:4326"), col = "blue")
+}
+```
+
+```{r, plot niche eq and sim results for a year}
+y = 2003 # starts with 2003, max 2022 (05)
+eq_test = readRDS("R/data/modelling/niche_y_eq_sim.rds")[y - 2002, 2]
+sim_test = readRDS("R/data/modelling/niche_y_eq_sim.rds")[y - 2002, 3]
+
+#fname <- paste0("R/plots/niche_comp/single_ys/eu_", y - 1, y, "_eq-sim.png")
+#png(width = 1200, height = 600, filename = fname)
+par(mfrow = c(1, 2))
+# plot eq_test
+ecospat.plot.overlap.test(eq_test, "D", paste("Equivalency", y - 1, "/", y))
+# plot sim_test
+ecospat.plot.overlap.test(sim_test, "D", paste("Similarity", y - 1, "/", y))
+# dev.off()
+
+```
+
+```{r, test correlation of accuracy with niche overlap or data amount}
+overlaps = readRDS("R/data/modelling/niche_y_overlap.rds")
+tss_fy = readRDS("R/data/modelling/mod_tss_res.rds")
+
+# get list of total pa points up to year in EU
+pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
+eu = subset(pa, Area == "eu")
+pcount = c()
+for (i in 2002:2022) {
+    pcount[i - 2001] = nrow(subset(eu, Year <= i))
+}
+# pcount for years used
+pcount = head(pcount, nrow(overlaps))
+
+# compute pearson correlation for ensemble tss
+for (i in 2:6) {
+    print(colnames(tss_fy)[i])
+    tss_mod = tss_fy[seq_along(overlaps), i]
+    print(cor.test(overlaps, tss_mod, method = "pearson"))
+    print(cor.test(pcount, tss_mod, method = "pearson"))
 }
 ```

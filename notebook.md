@@ -277,3 +277,8 @@ Absence generation will have to be revisited, as well as the exact process of en
 Absence generation was changed to not use any density correction currently.
 After test model building, variable selection was changed to use data from 2022 only, since it seemed like the variables did not produce meaningful models.
 The methods chapter was updated to the current status.
+
+### 06/10/2023
+Niche comparison was edited to save the niche overlap, equality and similarity results for further analysis.
+Equality and similarity tests were shifted to be optional.
+A pearson correlation test was implemented, trying to see if model accuracy is more dependent on data amount or state of invasion (niche overlap).
