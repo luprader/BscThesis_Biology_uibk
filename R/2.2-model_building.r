@@ -15,6 +15,16 @@ set.seed(4326) # consistent randomness
 
 # load modelling data
 pa <- readRDS("R/data/modelling/pa_mod_vars.rds")
+# thin data for testing
+pa_smpl <- c()
+for (y in unique(pa$Year)) {
+    y_sub <- subset(pa, Year == y)
+    # sample 10% of data
+    y_sub <- y_sub[sample(nrow(y_sub), as.integer(nrow(y_sub) * 0.5)), ]
+    pa_smpl <- rbind(pa_smpl, y_sub)
+}
+pa <- pa_smpl
+
 # model with native data
 pa_mod <- subset(pa, Area == "as")
 
@@ -51,14 +61,14 @@ m_max <- maxnet(data_sc$pres, select(data_sc, !pres), formula = f)
 pname <- "R/plots/response_curves/native_mod_resp.png"
 rnt <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, 2002:2022, sc, pname)
 saveRDS(rnt, file = "R/data/modelling/eval_mod_native.rds")
-rm(list=ls()[! ls() %in% c("tot_time", "years", "y", "lp_eval_mods")]) # memory
+rm(list = ls()[!ls() %in% c("tot_time", "years", "y", "lp_eval_mods")]) # memory
 gc()
 cat("native model built and evaluated, starting yearly iteration \n")
 
 # build and evaluate models built iteratively
 # prepare for parallelization
-years <- 2002:2005 # for iteration of foreach
-cl <- makeCluster(detectCores()-2)
+years <- 2002:2010 # for iteration of foreach
+cl <- makeCluster(detectCores() - 2)
 # load libraries in cl
 clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
     library,
@@ -105,10 +115,10 @@ foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
     ry <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, c(y + 1, 2022), sc, pnm)
 
     # save evaluation results separately as backup
-    fnm = paste0("R/data/modelling/eval_mod_", y, ".rds")
+    fnm <- paste0("R/data/modelling/eval_mod_", y, ".rds")
     saveRDS(ry, file = fnm)
     return(ry)
-    rm(list=ls()[! ls() %in% c("tot_time", "years", "y", "lp_eval_mods")])
+    rm(list = ls()[!ls() %in% c("tot_time", "years", "y", "lp_eval_mods")])
     gc()
 }
 stopCluster(cl)

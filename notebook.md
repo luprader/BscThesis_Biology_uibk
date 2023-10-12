@@ -282,3 +282,10 @@ The methods chapter was updated to the current status.
 Niche comparison was edited to save the niche overlap, equality and similarity results for further analysis.
 Equality and similarity tests were shifted to be optional.
 A pearson correlation test was implemented, trying to see if model accuracy is more dependent on data amount or state of invasion (niche overlap).
+
+### 12/10/2023
+After a meeting, some suggestions were implemented to try and find the underlying issues with the models.
+Variable selection now uses a gam instead of a glm to select variables, no quadratic versions are included anymore.
+A plot to visualize performance of the native model was implemented, it actually performs quite well, especially in predicting later years.
+Model building now uses fewer points, randomly sampled for each year to only use 1/2. (save time while testing)
+Using even less seemed to impact the results too much to be comparable to using all data.

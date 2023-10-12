@@ -5,6 +5,7 @@
 library(dplyr)
 library(car) # for vif
 library(FactoMineR) # for pca
+library(gam) # for gam
 source("R/0.0-functions.r", encoding = "UTF-8")
 
 tot_time <- Sys.time()
@@ -16,7 +17,7 @@ pa_mod <- subset(pa_ext, Year == 2022) # only take 2022 as reference
 # transform each present class into separate column
 lc <- select(pa_mod, starts_with("lc"))
 
-# calculate pca for binary lc values
+# calculate pca for relative class abundance
 lc_pca <- PCA(lc, ncp = 10, scale.unit = FALSE, graph = FALSE)
 
 # extract pca dims with cumulative variance closest to 80%
@@ -29,39 +30,35 @@ lc_pca <- PCA(lc, ncp = cutoff, scale.unit = FALSE, graph = FALSE)
 # save lc pca results
 saveRDS(lc_pca, file = "R/data/modelling/var_select_lc_pca_res.rds")
 
-# add squared bioclim values as variable columns
-bio <- select(pa_mod, starts_with("bio"))
-bio_sq <- bio^2
-names(bio_sq) <- paste0(names(bio), "_2")
-
 # all potential variables
-vars <- cbind(lc_pca_dims, bio, bio_sq)
+bio <- select(pa_mod, starts_with("bio"))
+vars <- cbind(lc_pca_dims, bio)
 # scale variables (-mean, /stdev)
 vars_sc <- data.frame(scale(vars)) # scale all variables (-mean, /stdev)
-vars_sc$Presence <- factor(pa_mod$Presence) # add factorized presence column
+vars_sc$Pres <- factor(pa_mod$Presence) # add factorized presence column
 
-# create full glm for all vars
-var_mod <- glm(Presence ~ ., data = vars_sc, family = "binomial")
+# create full gam for all vars
+t = Sys.time()
+f <- paste0("s(", names(select(vars_sc, !"Pres")), ")", collapse = " + ") # formula for gam
+f <- as.formula(paste0("Pres ~ ", f))
+var_mod <- gam(f, data = vars_sc, family = "binomial")
+print(difftime(Sys.time(), t, units = "secs")[[1]])
 # compute vifs for all variables
 vifs <- vif(var_mod)
 
 # drop components until no vif is > 10
 while (max(vifs) > 10) {
     # find variable with largest vif
-    highest <- names(which(vifs == max(vifs)))
+    highest <- gsub(".*s\\((.+)\\)*.", "\\1", names(which(vifs == max(vifs))))
 
-    # drop quadratic term before linear
-    if (!grepl("_2", highest) && paste0(highest, "_2") %in% names(vars_sc)) {
-        # drop quadratic variable from dataframe
-        vars_sc <- vars_sc[, -which(names(vars_sc) %in% paste0(highest, "_2"))]
-        cat("dropped", paste0(highest, "_2"), "\n")
-    } else {
-        # drop variable from dataframe
-        vars_sc <- vars_sc[, -which(names(vars_sc) %in% highest)]
-        cat("dropped", highest, "\n")
-    }
+    # drop variable from dataframe
+    vars_sc <- vars_sc[, -which(names(vars_sc) %in% highest)]
+    cat("dropped", highest, "\n")
+ 
     # calculate new model and vifs
-    var_mod <- glm(Presence ~ ., data = vars_sc, family = "binomial")
+    f <- paste0("s(", names(select(vars_sc, !"Pres")), ")", collapse = " + ") # formula for gam
+    f <- as.formula(paste0("Pres ~ ", f))
+    var_mod <- gam(f, data = vars_sc, family = "binomial")
     vifs <- vif(var_mod)
 }
 vifs <- as.data.frame(vifs)
@@ -71,11 +68,12 @@ saveRDS(vifs, file = "R/data/modelling/var_select_vifs.rds")
 # create dataframe with final variables for modelling
 lc <- data.matrix(select(pa_ext, starts_with("lc")))
 lc_proj <- as.data.frame(lp_pca_proj(lc, lc_pca))
+# get names of final variables used
+fin_vars = gsub(".*s\\((.+)\\)*.", "\\1", rownames(vifs))
 # subset selected lc vars
-lc_vars <- select(lc_proj, any_of(rownames(vifs)))
-
+lc_vars <- select(lc_proj, any_of(fin_vars))
 # subset selected bioclim variables
-bio_vars <- select(pa_ext, any_of(rownames(vifs)))
+bio_vars <- select(pa_ext, any_of(fin_vars))
 # add any present squared variables
 sq_names <- grep("_2", rownames(vifs), value = TRUE)
 bio_vars_sq <- select(bio_vars, sub("_2", "", sq_names))^2

@@ -449,6 +449,7 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
             spec <- ma[[m]]$specificity
             tss <- c(tss, sens + spec - 1)
         }
+        # tss[tss<0] = 0 # if tss is negative, exclude from weighting
         # get weighted average prediction with tss
         th_data$ens <- apply(th_data[, 3:6], 1, weighted.mean, w = tss)
         # compute performance of ensemble

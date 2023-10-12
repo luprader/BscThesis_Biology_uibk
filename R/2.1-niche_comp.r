@@ -110,7 +110,7 @@ grid_eu_y2 <- ecospat.grid.clim.dyn(
 eq_tests = c()
 sim_tests = c()
 overlap = c()
-for (y in 2003:2005) {
+for (y in 2003:2022) {
     # take subsets for both years
     pa_eu_y1 <- pa_eu_y2
     po_eu_y1 <- po_eu_y2
