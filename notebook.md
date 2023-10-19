@@ -289,3 +289,12 @@ Variable selection now uses a gam instead of a glm to select variables, no quadr
 A plot to visualize performance of the native model was implemented, it actually performs quite well, especially in predicting later years.
 Model building now uses fewer points, randomly sampled for each year to only use 1/2. (save time while testing)
 Using even less seemed to impact the results too much to be comparable to using all data.
+
+### 15/10/2023
+A test file was created to improve model building by using the native data.
+Current tests suggest that the issue lies in threshold selection, since different optimization methods all return similar model performance.
+
+### 19/10/2023
+The error was found to not be in threshold selection, but in predicting the evaluation dataset.
+The data was not scaled correctly, leading to completely wrong values.
+The correct model performance will be evaluated in the following days.

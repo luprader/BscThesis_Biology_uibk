@@ -22,3 +22,5 @@
 *.xml
 *.toc
 *.out
+
+/test/*

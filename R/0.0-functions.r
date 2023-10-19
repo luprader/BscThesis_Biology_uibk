@@ -171,7 +171,7 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
 
     # for (i in seq_along(circs_rd)) {
     cat("\r", "|", year, "|") # , i, "|") # print gen progress
-    c <- vect(ext(pres_y), crs = crs(pres_y)) # normal random extent sampling
+    c <- vect(ext(lc_ref), crs = crs(pres_y)) # normal random extent sampling
     c$Year <- year
     c$CoordUncert <- 0
     c$Area <- pres_y$Area[1]
@@ -417,17 +417,55 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
     }
     dev.off()
 
+    ## evaluate model accuracy for used training data
+    # data for evaluation
+    e_data <- select(m_data, matches("[[:digit:]]"))
+    for (v in colnames(e_data)) {
+        e_data[[v]] <- e_data[[v]] * sc["sd", v] + sc["mean", v]
+    }
+    # data frame for evaluation
+    th_data <- data.frame(id = seq_len(nrow(e_data)), pres = m_data$pres)
+    # model predictions for e_data
+    th_data$glm <- predict(m_glm, newdata = m_data, type = "response")
+    th_data$gam <- predict(m_gam, newdata = m_data, type = "response")
+    th_data$brt <- predict(m_brt, newdata = m_data, type = "response")
+    th_data$max <- predict(m_max, newdata = m_data, type = "logistic")
+    # threshhold optimising mean of sensitivity and specificity
+    ths <- optimal.thresholds(th_data, opt.methods = 3)
+    # compute accuracy measurements (PCC, sens, spec, Kappa) for each model
+    ma <- list()
+    for (m in 1:4) {
+        ma[[m]] <- presence.absence.accuracy(th_data, which.model = m, ths[[m + 1]])
+    }
+
+    # create TSS weighted ensemble
+    tss <- c()
+    # get tss for each model
+    for (m in 1:4) {
+        sens <- ma[[m]]$sensitivity
+        spec <- ma[[m]]$specificity
+        tss <- c(tss, sens + spec - 1)
+    }
+    # tss[tss<0] = 0 # if tss is negative, exclude from weighting
+    # get weighted average prediction with tss
+    th_data$ens <- apply(th_data[, 3:6], 1, weighted.mean, w = tss)
+    # compute performance of ensemble
+    th <- optimal.thresholds(th_data, which.model = 5, opt.methods = 3)
+    ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2])
+    res_t <- ma
+    print(res_t)
+
     ## evaluate model accuracies against European data of ys
-    res <- c() # initialize results vector
+    res_y <- c() # initialize results vector
     for (y in ys) {
         # data for evaluation
         data_y <- subset(data, Area == "eu" & Year == y)
         e_data <- select(data_y, matches("[[:digit:]]"))
-        for (v in colnames(e_data)) {
-            e_data[[v]] <- e_data[[v]] * sc["sd", v] + sc["mean", v]
+        for (v in colnames(e_data)) { # scale with scale from m_data
+            e_data[[v]] <- (e_data[[v]] - sc["mean", v]) / sc["sd", v]
         }
         # data frame for evaluation
-        th_data <- data.frame(id = 1:nrow(e_data), pres = data_y$Pres)
+        th_data <- data.frame(id = seq_len(nrow(e_data)), pres = data_y$Pres)
         # model predictions for e_data
         th_data$glm <- predict(m_glm, newdata = e_data, type = "response")
         th_data$gam <- predict(m_gam, newdata = e_data, type = "response")
@@ -438,7 +476,7 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
         # compute accuracy measurements (PCC, sens, spec, Kappa) for each model
         ma <- list()
         for (m in 1:4) {
-            ma[[m]] <- presence.absence.accuracy(th_data, which.model = m, ths[[m + 1]]) # , find.auc = FALSE)
+            ma[[m]] <- presence.absence.accuracy(th_data, which.model = m, ths[[m + 1]])
         }
 
         # create TSS weighted ensemble
@@ -454,11 +492,12 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
         th_data$ens <- apply(th_data[, 3:6], 1, weighted.mean, w = tss)
         # compute performance of ensemble
         th <- optimal.thresholds(th_data, which.model = 5, opt.methods = 3)
-        ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2]) # , find.auc = FALSE)
+        ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2])
 
         # merge to other ys
-        res <- rbind(res, ma)
+        res_y <- rbind(res_y, ma)
     }
-    rownames(res) <- ys
-    return(res)
+    res_y <- rbind(res_y, res_t) # add training tss results
+    rownames(res_y) <- c(ys, "trained")
+    return(res_y)
 }
