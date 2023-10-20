@@ -105,10 +105,10 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
     # data frame for evaluation
     th_data <- data.frame(id = seq_len(nrow(e_data)), pres = m_data$pres)
     # model predictions for e_data
-    th_data$glm <- predict(m_glm, newdata = e_data, type = "response")
-    th_data$gam <- predict(m_gam, newdata = e_data, type = "response")
-    th_data$brt <- predict(m_brt, newdata = e_data, type = "response")
-    th_data$max <- predict(m_max, newdata = e_data, type = "logistic")
+    th_data$glm <- predict(m_glm, newdata = m_data, type = "response")
+    th_data$gam <- predict(m_gam, newdata = m_data, type = "response")
+    th_data$brt <- predict(m_brt, newdata = m_data, type = "response")
+    th_data$max <- predict(m_max, newdata = m_data, type = "logistic")
     # threshhold optimising mean of sensitivity and specificity
     ths <- optimal.thresholds(th_data, opt.methods = 3)
     # compute accuracy measurements (PCC, sens, spec, Kappa) for each model
@@ -140,8 +140,8 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
         # data for evaluation
         data_y <- subset(data, Area == "eu" & Year == y)
         e_data <- select(data_y, matches("[[:digit:]]"))
-        for (v in colnames(e_data)) {
-            e_data[[v]] <- e_data[[v]] * sc["sd", v] + sc["mean", v]
+        for (v in colnames(e_data)) { # scale with scale from m_data
+            e_data[[v]] <- (e_data[[v]] - sc["mean", v]) / sc["sd", v]
         }
         # data frame for evaluation
         th_data <- data.frame(id = seq_len(nrow(e_data)), pres = data_y$Pres)
@@ -207,6 +207,16 @@ f <- paste0(names(data), collapse = " + ") # formula for glm
 f <- as.formula(paste0("pres ~ ", f))
 m_glm <- glm(f, data = data_sc, family = "binomial")
 
+mt_data = m_glm$data[ , -ncol(m_glm$data)]
+head(mt_data - data_sc[ , -ncol(data_sc)])
+
+for (v in colnames(mt_data)) {
+    glm_data_resc = mt_data[[v]] * sc["sd", v] + sc["mean", v]
+    print(head(data[[v]] - glm_data_resc)) # rescale
+}
+head(m_glm$data - data_sc)
+head(data[[v]] - data_sc[[v]] * sc["sd", v] + sc["mean", v])
+
 # fit gam
 f <- paste0("s(", names(data), ")", collapse = " + ") # formula for gam
 f <- as.formula(paste0("pres ~ ", f))
@@ -225,7 +235,7 @@ f <- maxnet.formula(data_sc$pres, select(data_sc, !pres), classes = "lqh")
 m_max <- maxnet(data_sc$pres, select(data_sc, !pres), formula = f)
 
 # evaluate native models for all years
-pname <- "test/test_responsecurves.png"
+pname <- "test/ensemble_response.png"
 rnt <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, c(2005), sc, pname)
 saveRDS(rnt, file = "test/eval_mod_native.rds")
 ```
@@ -258,6 +268,33 @@ print(tss_all)
 
 problem seems to be threshold selection
 
+```{r, convert generated pa to mod vars, eval = FALSE}
+library(FactoMineR) # for pca
+library(dplyr)
+
+pa_ext = readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
+lc_pca = readRDS("R/data/modelling/var_select_lc_pca_res.rds")
+vifs = readRDS("R/data/modelling/var_select_vifs.rds")
+
+# create dataframe with final variables for modelling
+lc <- data.matrix(select(pa_ext, starts_with("lc")))
+lc_proj <- as.data.frame(lp_pca_proj(lc, lc_pca))
+# get names of final variables used
+fin_vars = gsub(".*s\\((.+)\\)*.", "\\1", rownames(vifs))
+# subset selected lc vars
+lc_vars <- select(lc_proj, any_of(fin_vars))
+# subset selected bioclim variables
+bio_vars <- select(pa_ext, any_of(fin_vars))
+
+# merge all variables to pa and save
+pa_mod_vars <- cbind(
+    Area = pa_ext$Area, Year = pa_ext$Year,
+    Pres = as.numeric(pa_ext$Presence == "present"),
+    bio_vars, lc_vars
+)
+saveRDS(pa_mod_vars, file = "test/native_mod_vars.rds")
+```
+
 ```{r, example with gam}
 library(gam)
 library(dplyr)
@@ -265,9 +302,8 @@ library(PresenceAbsence)
 
 # load modelling data
 pa <- readRDS("R/data/modelling/pa_mod_vars.rds")
-
 # model with native data
-pa_mod <- subset(pa, Area == "as")
+pa_mod <- subset(pa, Area == "eu" & Year == 2005)
 
 # select model variables from df
 data <- select(pa_mod, matches("[[:digit:]]"))
@@ -283,7 +319,7 @@ m_gam <- gam(f, data = data_sc, family = "binomial")
 
 # evaluate gam tss
 # data for evaluation
-e_data <- data
+e_data <- data_sc
 # data frame for evaluation
 th_data <- data.frame(id = seq_len(nrow(e_data)), pres = pa_mod$Pres)
 # model predictions for e_data
@@ -293,5 +329,67 @@ ths <- optimal.thresholds(th_data, opt.methods = 3)
 # compute accuracy measurements (PCC, sens, spec, Kappa) for each model
 res = presence.absence.accuracy(th_data, ths[[2]])
 tss = res$sensitivity + res$specificity - 1
+
+# create a dummy data frame for predicting response curves
+m_data = data_sc[ , -ncol(data_sc)]
+pr_data <- data.frame(matrix(0, nrow = 100, ncol = ncol(m_data)))
+colnames(pr_data) <- colnames(m_data)[colnames(m_data) != "pres"]
+
+png_name = "test/gam_response.png"
+png(width = 600, height = 600 * ncol(pr_data), filename = png_name)
+par(mfrow = c(ncol(pr_data), 1), cex = 1.5)
+for (v in colnames(pr_data)) {
+    # plot data distribution histograms
+    x <- m_data[[v]] * sc["sd", v] + sc["mean", v] # rescaled for plot
+    b <- seq(min(x), max(x), length.out = 20) # breaks
+    hist(subset(x, m_data$pres == 0),
+        breaks = b, main = "training data distribution", xlab = v,
+        xlim = range(b), col = "grey"
+    )
+    hist(subset(x, m_data$pres == 1),
+        breaks = b, main = "training data distribution", xlab = v,
+        xlim = range(b), col = "grey35", add = TRUE
+    )
+    legend("topright", c("absent", "present"), fill = c("grey", "grey35"))
+
+    # plot model response curves
+    pr_data[[v]] <- seq(min(m_data[[v]]), max(m_data[[v]]), length.out = nrow(pr_data))
+    x <- pr_data[[v]] * sc["sd", v] + sc["mean", v] # rescaled for plot
+
+    # gam response
+    p <- predict(m_gam, newdata = pr_data, type = "response")
+    plot(x, p,
+        type = "l", ylim = c(0, 1), xlim = range(x),
+        xlab = v, ylab = "suitability", main = "gam response curve"
+    )
+    pr_data[[v]] <- 0 # set variable constant again
+}
+dev.off()
+cat("gam tss: ", tss, "\n")
+```
+
+```{r, test gam eval with lp_eval_mods}
+## plot data distribution compared to response curves
+m_data <- data_sc # data used to train the models
+# create a dummy data frame for predicting response curves
+pr_data <- data.frame(matrix(0, nrow = 100, ncol = ncol(m_data) - 1))
+colnames(pr_data) <- colnames(m_data)[colnames(m_data) != "pres"]
+
+## evaluate model accuracy for used training data
+# data for evaluation
+e_data <- select(m_data, matches("[[:digit:]]"))
+for (v in colnames(e_data)) {
+    e_data[[v]] <- e_data[[v]] * sc["sd", v] + sc["mean", v]
+}
+# data frame for evaluation
+th_data <- data.frame(id = seq_len(nrow(e_data)), pres = m_data$pres)
+# model predictions for e_data
+th_data$gam <- predict(m_gam, newdata = m_data, type = "response")
+# threshhold optimising mean of sensitivity and specificity
+ths <- optimal.thresholds(th_data, opt.methods = 3)
+# compute accuracy measurements (PCC, sens, spec, Kappa) for each model
+res = presence.absence.accuracy(th_data, ths[[2]])
+tss = res$sensitivity + res$specificity - 1
+
 print(tss)
 ```
