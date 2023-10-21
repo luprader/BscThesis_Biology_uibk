@@ -15,7 +15,7 @@ pa_eu <- subset(pa, Area == "eu")
 po_eu <- subset(pa_eu, Presence == "present")
 bio_tot <- select(pa, starts_with("bio")) # only use bioclim vars
 
-## compare total native to each invaded year
+## compare total native to total invaded
 # pca calibrated on all datapoints
 pca_tot <- dudi.pca(bio_tot, scannf = FALSE, nf = 2)
 # plot pca axis contribution
@@ -129,13 +129,13 @@ for (y in 2003:2022) {
     )
     # overlap
     ol <- ecospat.niche.overlap(grid_eu_y1, grid_eu_y2, cor = TRUE)$D
+    overlap = rbind(overlap, ol) # save in array
     # choose color for overlap
     if (ol == 0) {
         col_stab <- "green"
     } else {
         col_stab <- "blue"
     }
-    overlap = rbind(overlap, ol) # save in array
 
     # plot niche overlap
     fname <- paste0("R/plots/niche_comp/single_ys/eu_", y - 1, y, "_niche.png")

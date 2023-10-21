@@ -14,17 +14,7 @@ library(factoextra)
 ```{r, test plot pa from gen}
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 
-# thin data for testing
-pa_smpl <- c()
-for (y in unique(pa$Year)) {
-    y_sub <- subset(pa, Year == y)
-    # sample 10% of data
-    y_sub <- y_sub[sample(nrow(y_sub), as.integer(nrow(y_sub) * 0.1)), ]
-    pa_smpl <- rbind(pa_smpl, y_sub)
-}
-pa <- pa_smpl
-
-pa <- subset(pa, Area == "eu" & Year == 2008)
+pa <- subset(pa, Area == "eu" & Year == 2004)
 pa_v <- vect(pa, geom = c("Lon", "Lat"), crs = "epsg:4326")
 
 # countries map
@@ -42,6 +32,27 @@ for (s in seq_len(nrow(subexts))) {
     ext_s <- ext(subexts[s, ])
     lines(vect(ext_s, crs = "epsg:4326"), col = "blue")
 }
+```
+
+```{r, tss of native on training data}
+rnt <- readRDS("R/data/modelling/eval_mod_native.rds")
+# get tss for trained
+eval <- rnt["trained", ]
+
+# if entry NA (no ensemble possible) compute tss = 0
+if (any(is.na(eval))) {
+    na <- which(is.na(eval))
+    eval[[na]]$sensitivity <- 0.5
+    eval[[na]]$specificity <- 0.5
+    eval[[na]]$model <- "ens"
+}
+tss_t <- data.frame(data = "trained")
+for (m in 1:5) { # get tss for each model
+    # tss df
+    tss_t[1, m + 1] <- eval[[m]]$sensitivity + eval[[m]]$specificity - 1
+    colnames(tss_t)[m + 1] <- eval[[m]]$model
+}
+print(tss_t)
 ```
 
 ```{r, plot tss development of native model for eu years}
@@ -63,9 +74,8 @@ for (y in 2002:2022) {
         colnames(tss_fy)[m + 1] <- eval[[m]]$model
     }
 }
-# save tss results for fy and 2022
-mod_tss_res <- cbind(tss_fy)
-saveRDS(mod_tss_res, file = "R/data/modelling/mod_tss_res_nat.rds")
+# save tss results for fy
+saveRDS(tss_fy, file = "R/data/modelling/mod_tss_res_nat.rds")
 
 # convert to long format
 long_fy <- data.frame()
@@ -78,17 +88,22 @@ for (m in 1:5) {
 }
 
 # plot
+fname <- paste0("R/plots/.png")
+png(width = 1200, height = 600, filename = fname)
 ggplot(data = long_fy, aes(x = year, y = tss, color = model)) +
     geom_point() +
     geom_line() +
     ggtitle("tss for predicting following year (native data)")
 ```
 
-```{r, plot tss development for following year and 2022}
+```{r, plot all modelling results}
+years = 2002:2010
+
 # get tss for each year
-tss_fy <- data.frame(year = 2002:2005) # initialize tss dataframe
+tss_fy <- data.frame(year = years) # initialize tss dataframe
 tss_22 <- tss_fy
-for (y in 2002:2005) {
+tss_t <- tss_fy
+for (y in years) {
     eval <- readRDS(paste0("R/data/modelling/eval_mod_", y, ".rds")) # read eval
     # if entry NA (no ensemble possible) compute tss = 0
     if (any(is.na(eval))) {
@@ -106,15 +121,20 @@ for (y in 2002:2005) {
         ev <- eval[2, ]
         tss_22[y - 2001, m + 1] <- ev[[m]]$sensitivity + ev[[m]]$specificity - 1
         colnames(tss_22)[m + 1] <- ev[[m]]$model
+        # trained tss df
+        ev <- eval[3, ]
+        tss_t[y - 2001, m + 1] <- ev[[m]]$sensitivity + ev[[m]]$specificity - 1
+        colnames(tss_t)[m + 1] <- ev[[m]]$model
     }
 }
-# save tss results for fy and 2022
-mod_tss_res <- cbind(tss_fy, tss_22)
+# save tss results
+mod_tss_res <- cbind(tss_fy, tss_22, tss_t)
 saveRDS(mod_tss_res, file = "R/data/modelling/mod_tss_res.rds")
 
 # convert to long format
 long_fy <- data.frame()
 long_22 <- data.frame()
+long_t <- data.frame()
 for (m in 1:5) {
     # fy tss
     tss_m <- tss_fy[, c(1, m + 1)]
@@ -126,28 +146,98 @@ for (m in 1:5) {
     tss_m$model <- colnames(tss_m)[2]
     colnames(tss_m)[2] <- "tss"
     long_22 <- rbind(long_22, tss_m)
+    # trained tss
+    tss_m <- tss_t[, c(1, m + 1)]
+    tss_m$model <- colnames(tss_m)[2]
+    colnames(tss_m)[2] <- "tss"
+    long_t <- rbind(long_t, tss_m)
 }
 
-# plot
-ggplot(data = long_fy, aes(x = year, y = tss, color = model)) +
-    geom_point() +
-    geom_line() +
-    ggtitle("tss for predicting following year")
-ggplot(data = long_22, aes(x = year, y = tss, color = model)) +
-    geom_point() +
-    geom_line() +
-    ggtitle("tss for predicting 2022")
-```
+# get tss for each year with native model
+rnt <- readRDS("R/data/modelling/eval_mod_native.rds")
+# get tss for each year
+tss_nt <- data.frame(year = years) # initialize tss dataframe
+for (y in years) {
+    eval <- rnt[paste(y), ] # read eval
+    # if entry NA (no ensemble possible) compute tss = 0
+    if (any(is.na(eval))) {
+        na <- which(is.na(eval))
+        eval[[na]]$sensitivity <- 0.5
+        eval[[na]]$specificity <- 0.5
+        eval[[na]]$model <- "ens"
+    }
+    for (m in 1:5) { # get tss for each model
+        # fy tss df
+        tss_nt[y - 2001, m + 1] <- eval[[m]]$sensitivity + eval[[m]]$specificity - 1
+        colnames(tss_fy)[m + 1] <- eval[[m]]$model
+    }
+}
+# save tss results for fy
+saveRDS(tss_nt, file = "R/data/modelling/mod_tss_res_nat.rds")
 
-```{r, plot niche overlap development}
+# convert to long format
+long_nt <- data.frame()
+for (m in 1:5) {
+    # fy tss
+    tss_m <- tss_nt[, c(1, m + 1)]
+    tss_m$model <- colnames(tss_m)[2]
+    colnames(tss_m)[2] <- "tss"
+    long_nt <- rbind(long_nt, tss_m)
+}
+
+# get niche overlap development for years
 overlaps <- readRDS("R/data/modelling/niche_y_overlap.rds")
-ol_y <- data.frame(cbind(2002:2010, overlaps))
+ol_y <- data.frame(cbind(year = years, overlaps))
 colnames(ol_y) <- c("year", "D")
 
-ggplot(data = ol_y, aes(x = year, y = D)) +
+# get total pa points up to year in eu
+pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
+pa <- subset(pa, Year >= 2002)
+eu = subset(pa, Area == "eu")
+pa_count = data.frame()
+for (i in tss_fy$year) {
+    pa_y = c(i, nrow(subset(eu, Year <= i)))
+    pa_count = rbind(pa_count, pa_y)
+}
+colnames(pa_count) = c("year", "pa_count")
+
+# plot
+fname <- paste0("R/plots/model_performance_results_nosubdiv.png")
+png(width = 3*600, height = 2*300, filename = fname)
+
+p1 = ggplot(data = pa_count, aes(x = year, y = pa_count)) +
     geom_point() +
     geom_line() +
-    ggtitle("overlap of niche with following year")
+    coord_cartesian(xlim = c(2002, max(years))) +
+    ggtitle("Total pa-data count up to year in EU")
+p2 = ggplot(data = ol_y, aes(x = year, y = D)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    ggtitle("overlap of eu niche with following year")
+p3 = ggplot(data = long_nt, aes(x = year, y = tss, color = model)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    ggtitle("tss for predicting year (native data model)")
+p4 = ggplot(data = long_t, aes(x = year, y = tss, color = model)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    ggtitle("tss for predicting the trained dataset")
+p5 = ggplot(data = long_fy, aes(x = year, y = tss, color = model)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    ggtitle("tss for predicting following year")
+p6 = ggplot(data = long_22, aes(x = year, y = tss, color = model)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    ggtitle("tss for predicting 2022")
+
+ggarrange(p1, p2, p3, p4, p5, p6, nrow = 2, ncol = 3)
+dev.off()
 ```
 
 ```{r, test correlation of accuracy with niche overlap or data amount}
@@ -199,4 +289,22 @@ ecospat.plot.overlap.test(eq_test, "D", paste("Equivalency", y - 1, "/", y))
 # plot sim_test
 ecospat.plot.overlap.test(sim_test, "D", paste("Similarity", y - 1, "/", y))
 # dev.off()
+```
+
+```{r, compute mean lc heterogeneity}
+pa_vals = readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
+pa_vals = subset(pa_vals, Area == "eu")
+
+
+sh_ent = function(row) {
+    return(-sum(row * log(row), na.rm = TRUE)) # which log to use (values larger than one)
+}
+het_mean_ys = c()
+for (y in unique(pa_vals$Year)) { # unique(pa_vals$Year)
+    rlc_y = select(subset(pa_vals, Year == y), starts_with("lc"))
+    lc_het = apply(rlc_y, 1, sh_ent)
+    het_mean = mean(lc_het)
+    het_mean_ys = c(het_mean_ys, het_mean)
+}
+print(het_mean_ys)
 ```

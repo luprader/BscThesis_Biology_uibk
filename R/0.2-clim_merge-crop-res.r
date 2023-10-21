@@ -10,7 +10,7 @@
 library(terra)
 # file paths should be mnt to external (raw files)
 
-t_start = Sys.time()
+t_start <- Sys.time()
 ## merge all traditional bioclim layers for period 1981-2010
 filenames <- list.files(path = "R/data/CHELSA_bio_layers/1981-2010", full.names = TRUE)
 
@@ -38,8 +38,8 @@ writeRaster(clim_eu, filename = fname, filetype = "Gtiff", overwrite = TRUE)
 fname <- "R/data/cropped_rasters/CHELSA_bio_merged_1981-2010_as.tif"
 writeRaster(clim_as, filename = fname, filetype = "Gtiff", overwrite = TRUE)
 
-t_euend = Sys.time()
-cat('clim 1981-2010: ')
+t_euend <- Sys.time()
+cat("clim 1981-2010: ")
 print(t_euend - t_start)
 
 ## merge all traditional bioclim layers for period 2011-2040
@@ -66,6 +66,6 @@ writeRaster(clim_eu, filename = fname, filetype = "Gtiff", overwrite = TRUE)
 fname <- "R/data/cropped_rasters/CHELSA_bio_merged_2011-2040_as.tif"
 writeRaster(clim_as, filename = fname, filetype = "Gtiff", overwrite = TRUE)
 
-t_asend = Sys.time()
-cat('clim 2011-2040: ')
+t_asend <- Sys.time()
+cat("clim 2011-2040: ")
 print(t_asend - t_euend)

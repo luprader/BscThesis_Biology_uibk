@@ -1,6 +1,6 @@
 # this file creates an ensemble of sdm models for each year
 
-# libraries uesd
+# libraries used
 library(dplyr)
 library(gam) # for gam
 library(gbm) # for brt
@@ -15,15 +15,6 @@ set.seed(4326) # consistent randomness
 
 # load modelling data
 pa <- readRDS("R/data/modelling/pa_mod_vars.rds")
-# thin data for testing
-pa_smpl <- c()
-for (y in unique(pa$Year)) {
-    y_sub <- subset(pa, Year == y)
-    # sample 10% of data
-    y_sub <- y_sub[sample(nrow(y_sub), as.integer(nrow(y_sub) * 0.5)), ]
-    pa_smpl <- rbind(pa_smpl, y_sub)
-}
-pa <- pa_smpl
 
 # model with native data
 pa_mod <- subset(pa, Area == "as")
@@ -31,8 +22,9 @@ pa_mod <- subset(pa, Area == "as")
 # select model variables from df
 data <- select(pa_mod, matches("[[:digit:]]"))
 # scale data for modelling
-data_sc <- data.frame(scale(data)) # - mean, / stdev
-sc <- rbind("mean" = colMeans(data), "sd" = apply(data, 2, sd))
+data_sc <- scale(data) # - mean, / stdev
+sc <- rbind("mean" = attr(data_sc, "scaled:center"), "sd" = attr(data_sc, "scaled:scale"))
+data_sc = data.frame(data_sc) # convert to df for modelling
 data_sc$pres <- pa_mod$Pres # p/a to 1/0
 
 # fit glm
@@ -67,7 +59,7 @@ cat("native model built and evaluated, starting yearly iteration \n")
 
 # build and evaluate models built iteratively
 # prepare for parallelization
-years <- 2002:2010 # for iteration of foreach
+years <- 2002:2020 # for iteration of foreach
 cl <- makeCluster(detectCores() - 2)
 # load libraries in cl
 clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
@@ -76,7 +68,7 @@ clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
 ))
 registerDoParallel(cl)
 # parallelized for loop
-foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
+rys <- foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
     # load modelling data
     pa <- readRDS("R/data/modelling/pa_mod_vars.rds")
     # subset to eu data up to y
@@ -114,7 +106,7 @@ foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
     pnm <- paste0("R/plots/response_curves/", y, "_mod_resp.png")
     ry <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, c(y + 1, 2022), sc, pnm)
 
-    # save evaluation results separately as backup
+    # save evaluation results separately
     fnm <- paste0("R/data/modelling/eval_mod_", y, ".rds")
     saveRDS(ry, file = fnm)
     return(ry)

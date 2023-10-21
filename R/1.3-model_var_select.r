@@ -11,7 +11,7 @@ source("R/0.0-functions.r", encoding = "UTF-8")
 tot_time <- Sys.time()
 # load pa data
 pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-pa_mod <- subset(pa_ext, Year == 2022) # only take 2022 as reference
+pa_mod <- subset(pa_ext, Year == 2002) # only take 2022 as reference
 
 ## compute pca for lccs_class
 # transform each present class into separate column
@@ -42,7 +42,6 @@ t = Sys.time()
 f <- paste0("s(", names(select(vars_sc, !"Pres")), ")", collapse = " + ") # formula for gam
 f <- as.formula(paste0("Pres ~ ", f))
 var_mod <- gam(f, data = vars_sc, family = "binomial")
-print(difftime(Sys.time(), t, units = "secs")[[1]])
 # compute vifs for all variables
 vifs <- vif(var_mod)
 
@@ -74,16 +73,12 @@ fin_vars = gsub(".*s\\((.+)\\)*.", "\\1", rownames(vifs))
 lc_vars <- select(lc_proj, any_of(fin_vars))
 # subset selected bioclim variables
 bio_vars <- select(pa_ext, any_of(fin_vars))
-# add any present squared variables
-sq_names <- grep("_2", rownames(vifs), value = TRUE)
-bio_vars_sq <- select(bio_vars, sub("_2", "", sq_names))^2
-colnames(bio_vars_sq) <- sq_names
 
 # merge all variables to pa and save
 pa_mod_vars <- cbind(
     Area = pa_ext$Area, Year = pa_ext$Year,
     Pres = as.numeric(pa_ext$Presence == "present"),
-    bio_vars, bio_vars_sq, lc_vars
+    bio_vars, lc_vars
 )
 saveRDS(pa_mod_vars, file = "R/data/modelling/pa_mod_vars.rds")
 

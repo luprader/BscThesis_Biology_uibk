@@ -12,11 +12,19 @@ tot_time <- Sys.time()
 # load generated absences
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 
+# only use half the data
+pa_thin = c()
+for (y in unique(pa$Year)) {
+    sub = subset(pa, Year == y)
+    pa_thin = rbind(pa_thin, sub[sample(nrow(sub), as.integer(nrow(sub)/2)), ])
+}
+pa = pa_thin
+
 # initialize extracted pa dataframe
 pa_ext <- data.frame()
 
 # prepare for parallelization
-years <- c(2002:2010, 2022) # for iteration of foreach
+years <- 2002:2022 # for iteration of foreach
 cl <- makeCluster(detectCores() - 2)
 # load libraries in cl
 clusterEvalQ(cl, library(terra))

@@ -60,32 +60,31 @@ axyridis_fin <- data.frame() # initialize final df
 
 # for < 2002
 axyridis_y <- subset(axyridis_clean, Year < 2002 & Area == "eu")
-lc_clean = lp_clean_lc(axyridis_y, 2002, 'eu')
-axyridis_fin = rbind(axyridis_fin, lc_clean)
+lc_clean <- lp_clean_lc(axyridis_y, 2002, "eu")
+axyridis_fin <- rbind(axyridis_fin, lc_clean)
 
 axyridis_y <- subset(axyridis_clean, Year < 2002 & Area == "as")
-lc_clean = lp_clean_lc(axyridis_y, 2002, 'as')
-axyridis_fin = rbind(axyridis_fin, lc_clean)
+lc_clean <- lp_clean_lc(axyridis_y, 2002, "as")
+axyridis_fin <- rbind(axyridis_fin, lc_clean)
 
 for (i in 2002:2020) {
-
     axyridis_y <- subset(axyridis_clean, Year == i & Area == "eu")
-    lc_clean = lp_clean_lc(axyridis_y, i, 'eu')
-    axyridis_fin = rbind(axyridis_fin, lc_clean)
+    lc_clean <- lp_clean_lc(axyridis_y, i, "eu")
+    axyridis_fin <- rbind(axyridis_fin, lc_clean)
 
     axyridis_y <- subset(axyridis_clean, Year == i & Area == "as")
-    lc_clean = lp_clean_lc(axyridis_y, i, 'as')
-    axyridis_fin = rbind(axyridis_fin, lc_clean)
+    lc_clean <- lp_clean_lc(axyridis_y, i, "as")
+    axyridis_fin <- rbind(axyridis_fin, lc_clean)
 }
 
 # for > 2020
 axyridis_y <- subset(axyridis_clean, Year > 2020 & Area == "eu")
-lc_clean = lp_clean_lc(axyridis_y, 2020, 'eu')
-axyridis_fin = rbind(axyridis_fin, lc_clean)
+lc_clean <- lp_clean_lc(axyridis_y, 2020, "eu")
+axyridis_fin <- rbind(axyridis_fin, lc_clean)
 
 axyridis_y <- subset(axyridis_clean, Year < 2020 & Area == "as")
-lc_clean = lp_clean_lc(axyridis_y, 2020, 'as')
-axyridis_fin = rbind(axyridis_fin, lc_clean)
+lc_clean <- lp_clean_lc(axyridis_y, 2020, "as")
+axyridis_fin <- rbind(axyridis_fin, lc_clean)
 
 cat(length(axyridis_clean$Year) - length(axyridis_fin$Year), "points removed with lc", "\n")
 cat(length(axyridis_fin$Year), "cleaned points remaining in total", "\n")
