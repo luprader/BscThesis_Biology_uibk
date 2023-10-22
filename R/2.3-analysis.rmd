@@ -14,7 +14,7 @@ library(factoextra)
 ```{r, test plot pa from gen}
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 
-pa <- subset(pa, Area == "eu" & Year == 2004)
+pa <- subset(pa, Area == "eu" & Year == 2015)
 pa_v <- vect(pa, geom = c("Lon", "Lat"), crs = "epsg:4326")
 
 # countries map
@@ -22,6 +22,7 @@ countries <- ne_countries(scale = "medium", returnclass = "sf")
 countries <- st_transform(countries, crs = 4326)
 countries <- vect(countries)
 
+png(width = 600, height = 600, filename = "R/plots/abs_gen_subdiv_example.png")
 plot(crop(countries, ext(pa_v)))
 
 points(subset(pa_v, pa_v$Presence == "absent"), col = "grey")
@@ -32,6 +33,7 @@ for (s in seq_len(nrow(subexts))) {
     ext_s <- ext(subexts[s, ])
     lines(vect(ext_s, crs = "epsg:4326"), col = "blue")
 }
+dev.off()
 ```
 
 ```{r, tss of native on training data}

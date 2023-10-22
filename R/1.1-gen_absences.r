@@ -59,10 +59,9 @@ pres_v <- subset(occs_v, occs_v$Area == "eu")
 saveRDS(pres_v, file = "R/data/occurrence_data/pres_v.rds")
 rm(occs_v)
 # subset europe
-# ext() for eu returns:
-# SpatExtent : -25, 65, 34.9916666666667, 72 (xmin, xmax, ymin, ymax)
-# t_ref extent as vector for subdiv function
-t_ext <- c(-25, 65, 34.9916666666667, 72)
+# t_ref extent for subdiv function
+t_ref = ext(rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif"))
+t_ext <- as.integer(c(t_ref$xmin, t_ref$xmax, t_ref$ymin, t_ref$ymax))
 subexts <- lp_subdiv_pts(pres_v, 20000, t_ext)
 
 # prepare for parallelization
