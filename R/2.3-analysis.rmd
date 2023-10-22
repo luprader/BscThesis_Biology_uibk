@@ -97,7 +97,7 @@ ggplot(data = long_fy, aes(x = year, y = tss, color = model)) +
 ```
 
 ```{r, plot all modelling results}
-years = 2002:2010
+years <- 2002:2010
 
 # get tss for each year
 tss_fy <- data.frame(year = years) # initialize tss dataframe
@@ -187,50 +187,51 @@ for (m in 1:5) {
 
 # get niche overlap development for years
 overlaps <- readRDS("R/data/modelling/niche_y_overlap.rds")
+overlaps <- head(overlaps, 9)
 ol_y <- data.frame(cbind(year = years, overlaps))
 colnames(ol_y) <- c("year", "D")
 
 # get total pa points up to year in eu
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 pa <- subset(pa, Year >= 2002)
-eu = subset(pa, Area == "eu")
-pa_count = data.frame()
+eu <- subset(pa, Area == "eu")
+pa_count <- data.frame()
 for (i in tss_fy$year) {
-    pa_y = c(i, nrow(subset(eu, Year <= i)))
-    pa_count = rbind(pa_count, pa_y)
+    pa_y <- c(i, nrow(subset(eu, Year <= i)))
+    pa_count <- rbind(pa_count, pa_y)
 }
-colnames(pa_count) = c("year", "pa_count")
+colnames(pa_count) <- c("year", "pa_count")
 
 # plot
-fname <- paste0("R/plots/model_performance_results_nosubdiv.png")
-png(width = 3*600, height = 2*300, filename = fname)
+fname <- paste0("R/plots/model_performance_results_subdiv.png")
+png(width = 3 * 600, height = 2 * 300, filename = fname)
 
-p1 = ggplot(data = pa_count, aes(x = year, y = pa_count)) +
+p1 <- ggplot(data = pa_count, aes(x = year, y = pa_count)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years))) +
     ggtitle("Total pa-data count up to year in EU")
-p2 = ggplot(data = ol_y, aes(x = year, y = D)) +
+p2 <- ggplot(data = ol_y, aes(x = year, y = D)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     ggtitle("overlap of eu niche with following year")
-p3 = ggplot(data = long_nt, aes(x = year, y = tss, color = model)) +
+p3 <- ggplot(data = long_nt, aes(x = year, y = tss, color = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     ggtitle("tss for predicting year (native data model)")
-p4 = ggplot(data = long_t, aes(x = year, y = tss, color = model)) +
+p4 <- ggplot(data = long_t, aes(x = year, y = tss, color = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     ggtitle("tss for predicting the trained dataset")
-p5 = ggplot(data = long_fy, aes(x = year, y = tss, color = model)) +
+p5 <- ggplot(data = long_fy, aes(x = year, y = tss, color = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     ggtitle("tss for predicting following year")
-p6 = ggplot(data = long_22, aes(x = year, y = tss, color = model)) +
+p6 <- ggplot(data = long_22, aes(x = year, y = tss, color = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
@@ -292,19 +293,19 @@ ecospat.plot.overlap.test(sim_test, "D", paste("Similarity", y - 1, "/", y))
 ```
 
 ```{r, compute mean lc heterogeneity}
-pa_vals = readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-pa_vals = subset(pa_vals, Area == "eu")
+pa_vals <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
+pa_vals <- subset(pa_vals, Area == "eu")
 
 
-sh_ent = function(row) {
+sh_ent <- function(row) {
     return(-sum(row * log(row), na.rm = TRUE)) # which log to use (values larger than one)
 }
-het_mean_ys = c()
+het_mean_ys <- c()
 for (y in unique(pa_vals$Year)) { # unique(pa_vals$Year)
-    rlc_y = select(subset(pa_vals, Year == y), starts_with("lc"))
-    lc_het = apply(rlc_y, 1, sh_ent)
-    het_mean = mean(lc_het)
-    het_mean_ys = c(het_mean_ys, het_mean)
+    rlc_y <- select(subset(pa_vals, Year == y), starts_with("lc"))
+    lc_het <- apply(rlc_y, 1, sh_ent)
+    het_mean <- mean(lc_het)
+    het_mean_ys <- c(het_mean_ys, het_mean)
 }
 print(het_mean_ys)
 ```
