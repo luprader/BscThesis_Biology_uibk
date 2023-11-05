@@ -298,3 +298,21 @@ Current tests suggest that the issue lies in threshold selection, since differen
 The error was found to not be in threshold selection, but in predicting the evaluation dataset.
 The data was not scaled correctly, leading to completely wrong values.
 The correct model performance will be evaluated in the following days.
+
+### 20/10/2023
+some final tests were conducted to ensure a working model building.
+
+### 21/10/2023
+A test run with no subdivision was conducted, leading to very well performing models.
+The next step will be to try and re-implement subdivision, since the models right now are surely very biased.
+
+### 22/10/2023
+A test with subdivision was run, showing huge losses in performance. 
+A possible reason could be, that land cover PCA used in variable selection right now uses the presence/absence data to compute the PCA dimensions. 
+With the data heavily biased, the PCA dimensions are very biased too.
+Variable selection will be rewritten to use random points in Europe, since that would be equivalent to reducing the dimensionality of Europe in total.
+
+### 05/11/2023
+Variable selection was rewritten to use random points in Europe to compute land cover PCA.
+A test run will be done overnight. If the result is not much better, it also seems sufficient to use a rougher subdivision, if the goal is to increase tss.
+This implies a trade-off between tss and (hypothetically) more accurate models, which is hard to estimate, since it is hard to speculate the true niche distribution.

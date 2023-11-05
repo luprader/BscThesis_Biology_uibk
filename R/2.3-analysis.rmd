@@ -13,17 +13,18 @@ library(factoextra)
 
 ```{r, test plot pa from gen}
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
+lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
 
-pa <- subset(pa, Area == "eu" & Year == 2015)
-pa_v <- vect(pa, geom = c("Lon", "Lat"), crs = "epsg:4326")
+pa <- subset(pa, Area == "eu" & Year == 2008)
+pa_v <- vect(pa, geom = c("Lon", "Lat"), crs = crs(lc_ref))
 
 # countries map
 countries <- ne_countries(scale = "medium", returnclass = "sf")
-countries <- st_transform(countries, crs = 4326)
+countries <- st_transform(countries, crs = crs(lc_ref))
 countries <- vect(countries)
 
 png(width = 600, height = 600, filename = "R/plots/abs_gen_subdiv_example.png")
-plot(crop(countries, ext(pa_v)))
+plot(crop(countries, ext(lc_ref) + 1))
 
 points(subset(pa_v, pa_v$Presence == "absent"), col = "grey")
 points(subset(pa_v, pa_v$Presence == "present"), col = "green")
@@ -99,7 +100,7 @@ ggplot(data = long_fy, aes(x = year, y = tss, color = model)) +
 ```
 
 ```{r, plot all modelling results}
-years <- 2002:2010
+years <- 2002:2020
 
 # get tss for each year
 tss_fy <- data.frame(year = years) # initialize tss dataframe
@@ -189,7 +190,7 @@ for (m in 1:5) {
 
 # get niche overlap development for years
 overlaps <- readRDS("R/data/modelling/niche_y_overlap.rds")
-overlaps <- head(overlaps, 9)
+overlaps <- head(overlaps, length(years))
 ol_y <- data.frame(cbind(year = years, overlaps))
 colnames(ol_y) <- c("year", "D")
 
@@ -245,7 +246,7 @@ dev.off()
 
 ```{r, test correlation of accuracy with niche overlap or data amount}
 overlaps <- readRDS("R/data/modelling/niche_y_overlap.rds")
-tss_fy <- readRDS("R/data/modelling/mod_tss_res.rds")
+tss_res <- readRDS("R/data/modelling/mod_tss_res.rds")
 
 # get list of total pa points up to year in EU
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
@@ -257,26 +258,29 @@ for (i in 2002:2022) {
 # pcount for years used
 pcount <- head(pcount, nrow(overlaps))
 
-# compute pearson correlation for ensemble tss
+# compute pearson correlation for tss_fy
+cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
 for (i in 2:6) {
-    print(colnames(tss_fy)[i])
-    tss_mod <- tss_fy[seq_along(overlaps), i]
-    print(cor.test(overlaps, tss_mod, method = "pearson"))
-    print(cor.test(pcount, tss_mod, method = "pearson"))
+    tss_mod <- tss_res[seq_along(overlaps), i]
+    c_ol <- cor.test(overlaps, tss_mod, method = "pearson")
+    c_pc <- cor.test(pcount, tss_mod, method = "pearson")
+    c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
+    cor_res <- cbind(cor_res, c_res_mod)
 }
+colnames(cor_res) <- colnames(tss_res)[2:6]
 ```
 
 ```{r, plot var select pca results}
 lc_pca <- readRDS("R/data/modelling/var_select_lc_pca_res.rds")
 # plot pca results
-png(width = 1800, height = 600, filename = "R/plots/var_select_lc_pca.png")
+# png(width = 1800, height = 600, filename = "R/plots/var_select_lc_pca.png")
 p1 <- fviz_pca(lc_pca)
 p2 <- fviz_screeplot(lc_pca)
 # p3 <- ggplot(pa_ext, aes(x = lccs_class)) +
 #    geom_histogram() +
 #    scale_x_continuous(breaks = sort(unique(pa_ext$lccs_class)))
 ggarrange(p1, p2, nrow = 1)
-dev.off()
+# dev.off()
 ```
 
 ```{r, plot niche eq and sim results for a year}
@@ -310,4 +314,6 @@ for (y in unique(pa_vals$Year)) { # unique(pa_vals$Year)
     het_mean_ys <- c(het_mean_ys, het_mean)
 }
 print(het_mean_ys)
+print(-log(1 / ncol(rlc_y))) # max value for heterogeneity
+print(het_mean_ys / (-log(1 / ncol(rlc_y)))) # heterogeneity as value relative to max
 ```

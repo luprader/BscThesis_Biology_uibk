@@ -16,10 +16,10 @@ occs <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
 occs <- subset(occs, Year >= 2002) # remove insignificant historic presences
 
 
-#use half the eu data
-eu_sub = subset(occs, Area == "eu")
-eu_sub = eu_sub[sample(nrow(eu_sub), as.integer(nrow(eu_sub) / 2)), ]
-occs = rbind(subset(occs, Area == "as"), eu_sub)
+# use half the eu data
+eu_sub <- subset(occs, Area == "eu")
+eu_sub <- eu_sub[sample(nrow(eu_sub), as.integer(nrow(eu_sub) / 2)), ]
+occs <- rbind(subset(occs, Area == "as"), eu_sub)
 
 ao <- data.frame() # initialize ao df
 # values for absence generation
@@ -60,9 +60,9 @@ saveRDS(pres_v, file = "R/data/occurrence_data/pres_v.rds")
 rm(occs_v)
 # subset europe
 # t_ref extent for subdiv function
-t_ref = ext(rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif"))
+t_ref <- ext(rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif"))
 t_ext <- as.integer(c(t_ref$xmin, t_ref$xmax, t_ref$ymin, t_ref$ymax))
-subexts <- lp_subdiv_pts(pres_v, 20000, t_ext)
+subexts <- lp_subdiv_pts(pres_v, 50000, t_ext)
 
 # prepare for parallelization
 e_s <- seq_len(nrow(subexts)) # for iteration of foreach
@@ -78,9 +78,9 @@ ao_eu <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
     for (y in years) {
         # choose correct lc reference
         if (y > 2020) {
-            lc_ref_c <- crop(rast(paste0(lc_p, 2020, "_eu.tif")), ext_e)
+            lc_ref_c <- crop(rast(paste0(lc_p, 2020, "_eu.tif")), ext_e, snap = "near")
         } else {
-            lc_ref_c <- crop(rast(paste0(lc_p, y, "_eu.tif")), ext_e)
+            lc_ref_c <- crop(rast(paste0(lc_p, y, "_eu.tif")), ext_e, snap = "near")
         }
 
         # generate absences

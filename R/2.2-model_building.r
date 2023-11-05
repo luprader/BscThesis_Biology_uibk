@@ -24,7 +24,7 @@ data <- select(pa_mod, matches("[[:digit:]]"))
 # scale data for modelling
 data_sc <- scale(data) # - mean, / stdev
 sc <- rbind("mean" = attr(data_sc, "scaled:center"), "sd" = attr(data_sc, "scaled:scale"))
-data_sc = data.frame(data_sc) # convert to df for modelling
+data_sc <- data.frame(data_sc) # convert to df for modelling
 data_sc$pres <- pa_mod$Pres # p/a to 1/0
 
 # fit glm
@@ -59,7 +59,7 @@ cat("native model built and evaluated, starting yearly iteration \n")
 
 # build and evaluate models built iteratively
 # prepare for parallelization
-years <- 2002:2020 # for iteration of foreach
+years <- 2011:2020 # for iteration of foreach
 cl <- makeCluster(detectCores() - 2)
 # load libraries in cl
 clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),

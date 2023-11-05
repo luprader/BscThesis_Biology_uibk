@@ -171,7 +171,7 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
 
     # for (i in seq_along(circs_rd)) {
     cat("\r", "|", year, "|") # , i, "|") # print gen progress
-    c <- vect(ext(pres), crs = crs(pres_y)) # normal random extent sampling
+    c <- vect(ext(lc_ref), crs = crs(lc_ref)) # normal random extent sampling
     c$Year <- year
     c$CoordUncert <- 0
     c$Area <- pres_y$Area[1]
