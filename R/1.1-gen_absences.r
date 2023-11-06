@@ -60,9 +60,9 @@ saveRDS(pres_v, file = "R/data/occurrence_data/pres_v.rds")
 rm(occs_v)
 # subset europe
 # t_ref extent for subdiv function
-t_ref <- ext(rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif"))
+t_ref <- ext(pres_v)
 t_ext <- as.integer(c(t_ref$xmin, t_ref$xmax, t_ref$ymin, t_ref$ymax))
-subexts <- lp_subdiv_pts(pres_v, 50000, t_ext)
+subexts <- lp_subdiv_grd(3, t_ext)
 
 # prepare for parallelization
 e_s <- seq_len(nrow(subexts)) # for iteration of foreach

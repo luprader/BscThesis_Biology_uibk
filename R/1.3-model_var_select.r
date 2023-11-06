@@ -11,7 +11,7 @@ source("R/0.0-functions.r", encoding = "UTF-8")
 tot_time <- Sys.time()
 # load pa data
 pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-pa_mod <- subset(pa_ext, Year == 2002) # only take 2002 as reference
+pa_mod <- subset(pa_ext, Year == 2022) # only take 2022 as reference
 
 ## compute pca for lccs_class
 

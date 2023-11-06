@@ -316,3 +316,8 @@ Variable selection will be rewritten to use random points in Europe, since that 
 Variable selection was rewritten to use random points in Europe to compute land cover PCA.
 A test run will be done overnight. If the result is not much better, it also seems sufficient to use a rougher subdivision, if the goal is to increase tss.
 This implies a trade-off between tss and (hypothetically) more accurate models, which is hard to estimate, since it is hard to speculate the true niche distribution.
+
+### 06/11/2023
+Using separate points for PCA did not seem to improve model performance at all.
+A new subdivision function was written, splitting the extent of presences into n x n sub extents.
+Hopefully, this can create better absences and not decrease performance as much.

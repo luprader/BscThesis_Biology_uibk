@@ -123,6 +123,26 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
 }
 
 ################################################################################
+# function evenly splitting an extent into a grid of extents.
+# n -> amount of subdivisions per side (n = 1 => one split in x & y => 4 cells)
+# s_ext -> the initial extent to start off of
+# has to be a vector in the form of c(xmin, xmax, ymin, ymax)
+
+# returns a vector containing the needed extents in the form of init_ext
+
+lp_subdiv_grd <- function(n, s_ext) {
+    x_step = (s_ext[2] - s_ext[1]) / n
+    y_step = (s_ext[4] - s_ext[3]) / n
+    grid_exts = c()
+    for (i in 1:n) {
+        for (j in 1:n) {
+            n_ext = c(s_ext[1] + (j-1) * x_step, s_ext[1] + j * x_step, s_ext[3] + (i - 1) * y_step, s_ext[3] + i * y_step)
+            grid_exts = rbind(grid_exts, n_ext)
+        }
+    }
+    return(grid_exts)
+}
+################################################################################
 # function generating pseudoabsence/background points with a minimum and maximum
 # distance away from other presences.
 # The absences are generated for a specific year but distance to all years is
