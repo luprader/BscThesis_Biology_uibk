@@ -59,7 +59,7 @@ cat("native model built and evaluated, starting yearly iteration \n")
 
 # build and evaluate models built iteratively
 # prepare for parallelization
-years <- 2011:2020 # for iteration of foreach
+years <- 2002:2020 # for iteration of foreach
 cl <- makeCluster(detectCores() - 2)
 # load libraries in cl
 clusterEvalQ(cl, lapply(c("dplyr", "gam", "gbm", "maxnet", "PresenceAbsence"),
@@ -107,7 +107,7 @@ rys <- foreach(y = years, .inorder = FALSE, .maxcombine = 5) %dopar% {
     ry <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, c(y + 1, 2022), sc, pnm)
 
     # save evaluation results separately
-    fnm <- paste0("R/data/modelling/eval_mod_", y, ".rds")
+    fnm <- paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds")
     saveRDS(ry, file = fnm)
     return(ry)
     rm(list = ls()[!ls() %in% c("tot_time", "years", "y", "lp_eval_mods")])

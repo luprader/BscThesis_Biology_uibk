@@ -131,13 +131,13 @@ lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
 # returns a vector containing the needed extents in the form of init_ext
 
 lp_subdiv_grd <- function(n, s_ext) {
-    x_step = (s_ext[2] - s_ext[1]) / n
-    y_step = (s_ext[4] - s_ext[3]) / n
-    grid_exts = c()
+    x_step <- (s_ext[2] - s_ext[1]) / n
+    y_step <- (s_ext[4] - s_ext[3]) / n
+    grid_exts <- c()
     for (i in 1:n) {
         for (j in 1:n) {
-            n_ext = c(s_ext[1] + (j-1) * x_step, s_ext[1] + j * x_step, s_ext[3] + (i - 1) * y_step, s_ext[3] + i * y_step)
-            grid_exts = rbind(grid_exts, n_ext)
+            n_ext <- c(s_ext[1] + (j - 1) * x_step, s_ext[1] + j * x_step, s_ext[3] + (i - 1) * y_step, s_ext[3] + i * y_step)
+            grid_exts <- rbind(grid_exts, n_ext)
         }
     }
     return(grid_exts)
@@ -516,6 +516,14 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
 
         # merge to other ys
         res_y <- rbind(res_y, ma)
+
+        # save th_data for re examination
+        if (length(ys) == 1) {
+            fname <- paste0("R/data/modelling/th_data_mods/th_data_y_", y, ".rds")
+        } else {
+            fname <- paste0("R/data/modelling/th_data_mods/th_data_nt_", y, ".rds")
+        }
+        saveRDS(th_data, file = fname)
     }
     res_y <- rbind(res_y, res_t) # add training tss results
     rownames(res_y) <- c(ys, "trained")

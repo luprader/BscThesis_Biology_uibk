@@ -321,3 +321,10 @@ This implies a trade-off between tss and (hypothetically) more accurate models, 
 Using separate points for PCA did not seem to improve model performance at all.
 A new subdivision function was written, splitting the extent of presences into n x n sub extents.
 Hopefully, this can create better absences and not decrease performance as much.
+
+### 10/11/2023
+Subdivision with a grid did not have a large difference to the previous density subdivision.
+An issue with a weird "jump" in accuracy was found.
+In model building, only the years of 2011 to 2020 were computed for the recent, so testing was done wrong.
+New tests will be done, and maybe an implementation to somehow visualize the performance in geographical space without needing to compute new rasters.
+The tests will be no subdivision, and depending on results iterations of the different subdivision approaches.

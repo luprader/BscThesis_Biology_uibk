@@ -11,12 +11,13 @@ source("R/0.0-functions.r", encoding = "UTF-8")
 tot_time <- Sys.time()
 # load pa data
 pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-pa_mod <- subset(pa_ext, Year == 2022) # only take 2022 as reference
+y_ref <- 2002
+pa_mod <- subset(pa_ext, Year == y_ref) # only take y_ref as reference
 
 ## compute pca for lccs_class
 
-# generate independent points for pca, using 2002 as reference year
-lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
+# generate independent points for pca, using y_ref
+lc_ref <- rast(paste0("R/data/cropped_rasters/Cop_LC_", y_ref, "_eu.tif"))
 
 ## generate random points in eu extent
 ptsmax <- 5000 # desired pointcount
@@ -29,14 +30,14 @@ while (nrow(pts) < ptsmax) {
     pts <- rbind(pts, pts_n)
 }
 # (Lon, Lat, Year, CoordUncert, Area, Presence)
-pts$lccs_class <- 2002
+pts$lccs_class <- y_ref
 pts$Coord <- 0
 pts$Area <- "eu"
 pts$Presence <- "present"
 colnames(pts) <- c("Lon", "Lat", "Year", "CoordUncert", "Area", "Presence")
 
 # get relative lc class abundance for generated points
-lc <- select(lp_ext_vals(pts, "1981-2010", 2002, "eu"), starts_with("lc"))
+lc <- select(lp_ext_vals(pts, "1981-2010", y_ref, "eu"), starts_with("lc"))
 
 # calculate pca for relative class abundance
 lc_pca <- PCA(lc, ncp = 10, scale.unit = FALSE, graph = FALSE)
@@ -51,7 +52,7 @@ lc_pca <- PCA(lc, ncp = cutoff, scale.unit = FALSE, graph = FALSE)
 # save lc pca results
 saveRDS(lc_pca, file = "R/data/modelling/var_select_lc_pca_res.rds")
 
-# project lc for pa from 2002
+# project lc for used pa data
 pa_mod_lc <- select(pa_mod, starts_with("lc"))
 pa_lc_proj <- as.data.frame(lp_pca_proj(pa_mod_lc, lc_pca))
 
