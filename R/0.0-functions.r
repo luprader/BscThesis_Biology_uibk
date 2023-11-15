@@ -28,19 +28,20 @@ library(maxnet)
 # returns a vector containing the needed extents in the form of init_ext
 
 lp_subdiv_pts <- function(points, end_ptcount, init_ext) {
-    # check if points can be subdivided (goal smaller than given)
-    ext_v_init <- vect(ext(init_ext), crs = "epsg:4326")
-    ptcount_init <- nrow(crop(points, ext(ext_v_init)))
-    if (ptcount_init <= end_ptcount) {
-        cat("Error(lp_subdiv_pts): points \u2265 end_ptcount", "\n")
-        return(init_ext) # subsetting will not help, init_ext is "the best"
-    }
-
     print("starting subdivision")
     starting_time <- Sys.time()
     # initialize result lists
     good_exts <- c()
     bad_exts <- c()
+
+    # check if points can be subdivided (goal smaller than given)
+    ext_v_init <- vect(ext(init_ext), crs = "epsg:4326")
+    ptcount_init <- nrow(crop(points, ext(ext_v_init)))
+    if (ptcount_init <= end_ptcount) {
+        cat("Warning(lp_subdiv_pts): points \u2265 end_ptcount", "\n")
+        good_exts = rbind(good_exts, init_ext)
+        return(good_exts) # subsetting will not help, init_ext is "the best"
+    }
 
     # set init_ext as current extent to investigate
     n_ext <- init_ext
@@ -518,10 +519,10 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
         res_y <- rbind(res_y, ma)
 
         # save th_data for re examination
-        if (length(ys) == 1) {
-            fname <- paste0("R/data/modelling/th_data_mods/th_data_y_", y, ".rds")
-        } else {
+        if (grepl( "native", png_name, fixed = TRUE)) {
             fname <- paste0("R/data/modelling/th_data_mods/th_data_nt_", y, ".rds")
+        } else {
+            fname <- paste0("R/data/modelling/th_data_mods/th_data_m", ys[1] - 1, "_", y, ".rds")
         }
         saveRDS(th_data, file = fname)
     }

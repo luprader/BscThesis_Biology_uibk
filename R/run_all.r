@@ -13,7 +13,7 @@
 #source("R/1.1-gen_absences.r", encoding = "UTF-8")
 
 # extract raster values of the pa-data for modelling
-#source("R/1.2-pa_extract_vals.r", encoding = "UTF-8")
+source("R/1.2-pa_extract_vals.r", encoding = "UTF-8")
 
 # select variables for modelling
 source("R/1.3-model_var_select.r", encoding = "UTF-8")

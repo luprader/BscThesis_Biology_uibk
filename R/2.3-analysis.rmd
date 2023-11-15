@@ -6,6 +6,7 @@ library(ggplot2)
 library(ggpubr)
 library(dplyr)
 library(terra)
+library(tidyterra)
 library(rnaturalearth)
 library(sf)
 library(factoextra)
@@ -24,7 +25,7 @@ countries <- st_transform(countries, crs = crs(lc_ref))
 countries <- vect(countries)
 
 png(width = 600, height = 600, filename = "R/plots/abs_gen_subdiv_example.png")
-plot(crop(countries, ext(lc_ref) + 1))
+plot(crop(countries, ext(lc_ref)))
 
 points(subset(pa_v, pa_v$Presence == "absent"), col = "grey")
 points(subset(pa_v, pa_v$Presence == "present"), col = "green")
@@ -165,7 +166,7 @@ for (i in tss_fy$year) {
 colnames(pa_count) <- c("year", "pa_count")
 
 # plot
-fname <- paste0("R/plots/model_performance_results_subdiv.png")
+fname <- paste0("R/plots/model_performance_results.png")
 png(width = 3 * 600, height = 2 * 300, filename = fname)
 
 p1 <- ggplot(data = pa_count, aes(x = year, y = pa_count)) +
@@ -182,7 +183,7 @@ p3 <- ggplot(data = long_nt, aes(x = year, y = tss, color = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting year (native data model)")
+    ggtitle("tss for predicting the following year (native data model)")
 p4 <- ggplot(data = long_t, aes(x = year, y = tss, color = model)) +
     geom_point() +
     geom_line() +
@@ -192,14 +193,45 @@ p5 <- ggplot(data = long_fy, aes(x = year, y = tss, color = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting following year")
+    ggtitle("tss for predicting year (invasive data model)")
 p6 <- ggplot(data = long_22, aes(x = year, y = tss, color = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting 2022")
+    ggtitle("tss for predicting 2022 (invasive data model)")
 
 ggarrange(p1, p2, p3, p4, p5, p6, nrow = 2, ncol = 3)
+dev.off()
+```
+
+```{r, plot ens prediction right/wrong on pts}
+y <- 2018 # year cutoff for model data
+th_data <- readRDS(paste0("R/data/modelling/th_data_mods/th_data_m", y, "_", y + 1, ".rds"))
+eval <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds"))
+ens_08 <- eval[1, ] # only look at ens from 08
+
+pa <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
+lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
+po <- subset(pa, Area == "eu" & Year == y + 1 & Presence == "present")
+po$Presence <- as.numeric(po$Presence == "present")
+th_data <- subset(th_data, pres == 1)
+po$Pred <- as.numeric(th_data$ens > ens_08[[5]]$threshold)
+
+po_v <- vect(po, geom = c("Lon", "Lat"), crs = crs(lc_ref))
+
+# countries map
+countries <- ne_countries(scale = "medium", returnclass = "sf")
+countries <- st_transform(countries, crs = crs(lc_ref))
+countries <- vect(countries)
+
+# plot
+fname <- paste0("R/plots/ens_18pred19.png")
+png(width = 800, height = 600, filename = fname)
+ggplot(crop(countries, ext(lc_ref))) +
+geom_spatvector(colour='black', fill='white') +
+geom_spatvector(data = subset(po_v, po_v$Presence == po_v$Pred), color = "green") +
+geom_spatvector(data = subset(po_v, po_v$Presence != po_v$Pred), color = "red") +
+ggtitle("2018 ens prediction for 2019 pts correct vs wrong")
 dev.off()
 ```
 
@@ -227,6 +259,9 @@ for (i in 2:6) {
     cor_res <- cbind(cor_res, c_res_mod)
 }
 colnames(cor_res) <- colnames(tss_res)[2:6]
+
+p = ggtexttable(signif(cor_res, digits = 4))
+ggexport(p, filename = "R/plots/cor_ol-pc_res.png")
 ```
 
 ```{r, plot var select pca results}

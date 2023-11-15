@@ -328,3 +328,13 @@ An issue with a weird "jump" in accuracy was found.
 In model building, only the years of 2011 to 2020 were computed for the recent, so testing was done wrong.
 New tests will be done, and maybe an implementation to somehow visualize the performance in geographical space without needing to compute new rasters.
 The tests will be no subdivision, and depending on results iterations of the different subdivision approaches.
+
+### 16/11/2023
+Tests have been conducted to see the influence of absence density subdivision on model performance.
+A plot was implemented to show the prediction for presences of a given year by the model of the previous year.
+As expected, density subdivision lead to a decrease in overall performance.
+Surprisingly, the performance loss was in the areas with low amounts of presences, so even further biasing the models.
+This has in part to do with the fact, that almost no reference absences are generated in those areas, if all absences are generated relaticve to the density subdivision (plot ens_18pred19_subdiv_pts_50pc.png).
+Because of this, the generation was modified to first generate a base background of random points, and then add a layer of density corrected absences as well.
+This improved accuracy again, though still it seems like the spacial bias remains.
+Some further tests will be done, trying different ratios of background to density correction.

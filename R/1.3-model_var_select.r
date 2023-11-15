@@ -11,7 +11,7 @@ source("R/0.0-functions.r", encoding = "UTF-8")
 tot_time <- Sys.time()
 # load pa data
 pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-y_ref <- 2002
+y_ref <- 2003
 pa_mod <- subset(pa_ext, Year == y_ref) # only take y_ref as reference
 
 ## compute pca for lccs_class
@@ -20,6 +20,7 @@ pa_mod <- subset(pa_ext, Year == y_ref) # only take y_ref as reference
 lc_ref <- rast(paste0("R/data/cropped_rasters/Cop_LC_", y_ref, "_eu.tif"))
 
 ## generate random points in eu extent
+set.seed(4326) # consistent randomness
 ptsmax <- 5000 # desired pointcount
 pts <- spatSample(lc_ref, ptsmax, xy = TRUE) # generate random points inside
 pts <- subset(pts, lccs_class != 210 & !is.na(pts$lccs_class))

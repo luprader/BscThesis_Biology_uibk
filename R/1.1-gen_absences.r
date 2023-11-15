@@ -58,11 +58,32 @@ pres_v <- subset(occs_v, occs_v$Area == "eu")
 # save to access in foreach
 saveRDS(pres_v, file = "R/data/occurrence_data/pres_v.rds")
 rm(occs_v)
+
+# generate basic absence part with no subdiv
+cat("base absences with no subdiv: \n")
+ao_eu = data.frame()
+for (y in years) {
+    # choose correct lc reference
+    if (y > 2020) {
+        lc_ref <- rast(paste0(lc_p, 2020, "_eu.tif"))
+    } else {
+        lc_ref <- rast(paste0(lc_p, y, "_eu.tif"))
+    }
+
+    # generate absences
+    n_bg = n_abs - 2
+    ao_y <- lp_gen_abs(pres_v, y, n_bg, min_d, max_d, lc_ref)
+    ao_eu <- rbind(ao_eu, ao_y)
+    rm(lc_ref)
+    gc()
+}
+
 # subset europe
+cat("subdiv for bias correction: \n")
 # t_ref extent for subdiv function
 t_ref <- ext(rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif"))
-t_ext <- as.integer(c(t_ref$xmin, t_ref$xmax, t_ref$ymin, t_ref$ymax))
-subexts <- lp_subdiv_grd(1, t_ext)
+t_ext <- as.vector(c(t_ref$xmin, t_ref$xmax, t_ref$ymin, t_ref$ymax))
+subexts <- lp_subdiv_pts(pres_v, round(0.2 * nrow(pres_v)), t_ext)
 
 # prepare for parallelization
 e_s <- seq_len(nrow(subexts)) # for iteration of foreach
@@ -71,7 +92,7 @@ cl <- makeCluster(detectCores() - 2)
 clusterEvalQ(cl, lapply(c("terra", "dplyr"), library, character.only = TRUE))
 registerDoParallel(cl)
 # parallelized for loop
-ao_eu <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
+ao_eu_sd <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
     ext_e <- ext(subexts[e, ]) # get extent
     pres_v_c <- crop(readRDS("R/data/occurrence_data/pres_v.rds"), ext_e)
     ao_e <- data.frame() # initialize ao df
@@ -84,7 +105,7 @@ ao_eu <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
         }
 
         # generate absences
-        ao_y <- lp_gen_abs(pres_v_c, y, n_abs, min_d, max_d, lc_ref_c)
+        ao_y <- lp_gen_abs(pres_v_c, y, n_abs - n_bg, min_d, max_d, lc_ref_c)
         ao_e <- rbind(ao_e, ao_y)
         rm(lc_ref_c)
         gc()
@@ -94,7 +115,7 @@ ao_eu <- foreach(e = e_s, .combine = rbind, .inorder = FALSE) %dopar% {
 stopCluster(cl)
 unlink("R/data/occurrence_data/pres_v.rds") # remove saved pres_v again
 
-ao <- rbind(ao, ao_eu) # merge all ao
+ao <- rbind(ao, ao_eu, ao_eu_sd) # merge all ao
 
 # create pa dataframe
 po <- occs
