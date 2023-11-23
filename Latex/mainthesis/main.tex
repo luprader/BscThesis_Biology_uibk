@@ -9,6 +9,7 @@
 \usepackage[UKenglish]{babel}
 \usepackage[textsize=tiny]{todonotes}
 \usepackage[acronym]{glossaries}
+\usepackage{soul} % for command \hl
 
 \AtBeginBibliography{\small}
 \addbibresource{main_sources.bib}
@@ -38,25 +39,28 @@
 \newpage
 
 \section{Introduction}
-When modelling invasive species, it is of particular interest to be able to predict the further development and spread in the invaded range.
+When \todoleft{studying?}\hl{modelling} invasive species, it is of particular interest to be able to predict the further development and spread in the invaded range.
 The problem of predicting into the unknown is a challenge widespread in the modelling community, and thus an active area of research.
+\todo{A bit of jargon you might look up in the SDM literature: ``model transferability''}
+\todoleft{If this is the context you want to put your work in, perhaps a little bit more detail here would be useful. Why is this challenging, and in particular for invasive species?}
 Species Distribution Models (SDMs), are also being applied to predict the further development of species occurrences in many contexts, also for invasions.
 
 % SDM Theory
-They have been shown to generate substantial insight into the ecological requirements of species and, as niche models, can be used to predict the potential habitat of a species \autocite{araujo2006sdmchallenges}.
+\todoleft{who is ``They?'' This reference is unclear}\hl{They} have been shown to generate substantial insight into the ecological requirements of species and, as niche models, can be used to predict the potential habitat of a species \autocite{araujo2006sdmchallenges}.
 There has been considerable debate on the capabilities and limitations of SDMs, especially when used for prediction outside the data domain.
 In general, SDMs are made with the (ideal) assumption that the species is in environmental equilibrium \autocite{elith2009sdmtheory}, implying that its ecological niche is not currently changing.
-If these models are now used to predict new, unsampled areas, there actually is no measure to assess their accuracy, since no data is presently available for that area \autocite{araujo2006sdmchallenges}.
+If these models are now used to predict new, unsampled areas, there actually is no measure to assess their accuracy, since no data is presently available for that area \autocite{araujo2006sdmchallenges}. \todo{more jargon: calibration and validation}
 There is also no guarantee that the biotic interactions sampled in the study area will reflect the final interactions in the new area \autocite{elith2009sdmtheory}.
 All of these issues apply especially to the prediction of invasive species, since there might be limited data in the invaded range, the species is often not currently at equilibrium and interactions with native species are completely new \autocite{mainali2015sdmprojecting}.
 Despite all these challenges, SDMs have been used numerous times to provide insight into the invasive potential and the invasion dynamics of alien species \autocite{zimmermann2010sdmtrends}.
 One way of gaining more insight into the invasion process is to create models with data from different time periods during the invasion \autocite{briscoe2019palmerisdm}.
-For example, data from a time period early in the invasion process can be used to build models which then are evaluated against data from a later time period \autocite{barbet2018nigrithoraxsdm}.
+\hl{For example, data from a time period early in the invasion process can be used to build models which then are evaluated against data from a later time period} \autocite{barbet2018nigrithoraxsdm}.
+\todoleft{Nice framing thus far. It's just not quite clear to me by this point *why* this is useful. Could you elaborate?}
 
 % Invasion Theory
 Invasive species are of special interest in ecological research due to their impact on native ecosystems.
 Main goals in this area are to find out which species have potential to become invasive, what habitat will be susceptible to invasion by those species, how fast the species will invade the new area and what impact its invasion will have on the native ecosystem \autocite{shigesada1997invasions}.
-To this end, many theories have been created to describe invasion processes.
+\todoleft{I think, in terms of general background information, this paragraph fits better as the first paragraph. You state why invasion is interesting and important, then get into why we might model invasive species and how. This transitions perfectly into what is now your first paragraph, where you introduce modelling challenges.}To this end, many theories have been created to describe invasion processes.
 The invasion of a species can  generally be described with four stages \autocite{blackburn2011invasionstages}:
 \begin{enumerate} % just have keywords in a sentence instead of enumeration?
     \item Transport: Leaving the native range, arriving at a new location
@@ -72,7 +76,8 @@ For this, creating models which are able to predict the invasion is one current 
 Since invasion theory already uses niche theory, it is quite appropriate to think about applying niche models to the problem.
 
 % Modelling Method
-A multitude of Modelling approaches have been developed to model ecological processes.
+\todoleft{Hmm. This paragraph doesn't really fit here. In fact, maybe this can just go in the methods, as a justification for why you choose ensemble methods.}
+\hl{A multitude of Modelling approaches have been developed to model ecological processes.}
 In SDMs, methods range from regression methods to machine learning and each feature various strengths and weaknesses, possibly leading to vastly different results for the same dataset.
 Due to those differences, a possible approach is to create an ensemble of multiple models \autocite{araujo2007ensemble}.
 The way of combining model predictions can vary, but the goal is to improve total performance by combining the results of all computed models.
@@ -95,9 +100,11 @@ This results in a large potential for \gls{harm} to be a significant threat for 
 It has also been shown that the species feeds on a variety of damaged fruit crops, for example grapes, apples, stone fruit and berry crops, making it a pest in these scenarios \autocite{koch2004harmoniafoodcrop}.
 The aggregating behaviour of \gls{harm}, mostly as a strategy for overwintering, is also a cause of disturbance, since private homes and facilities are invaded by large amounts of beetles at a given time \autocite{nalepa2005harmoniahomes}.
 In general, \gls{harm} can be concluded to be a species with high impact as an invader, and thus of interest for active research questions.
+\todoleft{I think this is a fine introduction to the species. But you start in the previous paragraph by stating that you need a species with sufficient data. Is this the case? It might be obvious, but you never state so.}
 
 %existing SDMs for H. axyridis
 There have been several publications which model and predict the distribution of \gls{harm}, constrained to certain geographical ranges (i.e. Spain \autocite{ameixa2019harmSDMSpain}, Chile \autocite{alaniz2018harmSDMChile}) or even on global scales \autocite{bidinger2012harmSDMglobalMaxent, poutsma2008harmSDMglobalClimex}.
+\todo{combine these two paragraphs}
 
 There has not yet been any model iteration in form of a time series, which is what this thesis aims to add as new insight.
 Another goal of this thesis is to look into the limitations of models built early in the invasion process of a species.
