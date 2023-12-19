@@ -338,3 +338,9 @@ This has in part to do with the fact, that almost no reference absences are gene
 Because of this, the generation was modified to first generate a base background of random points, and then add a layer of density corrected absences as well.
 This improved accuracy again, though still it seems like the spacial bias remains.
 Some further tests will be done, trying different ratios of background to density correction.
+
+### 19/12/2023
+Further tests have been done, suggesting that the best absence generation is to generate a completely random base background accounting for one third of the total absences, and then use a subdivision cutoff of 0.3*total presence count for the density correction.
+There could probably be more tests to really get the sensitivity (true positive rate) to max, since the tests have only been conducted on a visual basis.
+
+For niche overlap, a test will be done, comparing the results using Schoener's D to using Warren's I, maybe giving a better result for overlap, since I is closer to the stability measure from `ecospat.niche.dyn.index`, showing the true overlap of current year presences with the prior year for example.

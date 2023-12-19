@@ -45,7 +45,7 @@ grid_eu <- ecospat.grid.clim.dyn(
 )
 
 # compute niche overlap (Schoeners overlap metric)
-ol <- ecospat.niche.overlap(grid_as, grid_eu, cor = TRUE)$D
+ol <- ecospat.niche.overlap(grid_as, grid_eu, cor = TRUE)$I
 
 # plot niche overlap
 fname <- "R/plots/niche_comp/as_eu_niche.png"
@@ -107,9 +107,9 @@ grid_eu_y2 <- ecospat.grid.clim.dyn(
 )
 
 # calculate overlap between total native and each EU year
-eq_tests = c()
-sim_tests = c()
-overlap = c()
+eq_tests <- c()
+sim_tests <- c()
+overlap <- c()
 for (y in 2003:2022) {
     # take subsets for both years
     pa_eu_y1 <- pa_eu_y2
@@ -128,8 +128,8 @@ for (y in 2003:2022) {
         glob1 = scores_pa_eu_y2, sp = scores_po_eu_y2, R = 100, th.sp = 0
     )
     # overlap
-    ol <- ecospat.niche.overlap(grid_eu_y1, grid_eu_y2, cor = TRUE)$D
-    overlap = rbind(overlap, ol) # save in array
+    ol <- ecospat.niche.overlap(grid_eu_y1, grid_eu_y2, cor = TRUE)$I
+    overlap <- rbind(overlap, ol) # save in array
     # choose color for overlap
     if (ol == 0) {
         col_stab <- "green"
@@ -153,13 +153,13 @@ for (y in 2003:2022) {
     eq_test <- ecospat.niche.equivalency.test(grid_eu_y1, grid_eu_y2,
         rep = 100, ncores = 2 # , alternative = "greater"
     )
-    eq_tests = rbind(eq_tests, eq_test) # save in array
+    eq_tests <- rbind(eq_tests, eq_test) # save in array
 
     # niche similarity test
     sim_test <- ecospat.niche.similarity.test(grid_eu_y1, grid_eu_y2,
         rep = 100, rand.type = 2, ncores = 2 # , alternative
     )
-    sim_tests = rbind(sim_tests, sim_test) # save in array
+    sim_tests <- rbind(sim_tests, sim_test) # save in array
 
     rm(grid_eu_y1)
     gc()
@@ -167,7 +167,7 @@ for (y in 2003:2022) {
 cat("compared each year to following year \n")
 
 # save niche sim and eq results
-eq_sim = cbind(eq_tests, sim_tests)
+eq_sim <- cbind(eq_tests, sim_tests)
 saveRDS(overlap, file = "R/data/modelling/niche_y_overlap.rds")
 saveRDS(eq_sim, file = "R/data/modelling/niche_y_eq_sim.rds")
 
