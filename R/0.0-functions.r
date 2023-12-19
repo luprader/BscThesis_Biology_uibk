@@ -196,7 +196,8 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
     c$Year <- year
     c$CoordUncert <- 0
     c$Area <- pres_y$Area[1]
-    pts <- spatSample(c, n_abs * nrow(pres_y)) # generate random points inside
+    abs_fin = round(n_abs * nrow(pres_y)) # desired total amount of absences
+    pts <- spatSample(c, abs_fin) # generate random points inside
     # extract lc values
     pts <- cbind(pts, extract(lc_ref, pts, ID = FALSE))
     # test for lc = water or NA (out of cropped area)
@@ -204,9 +205,9 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
     pts$lccs_class <- NULL # remove lc column
 
     # generate replacements if needed
-    while (nrow(pts) < (n_abs * nrow(pres_y))) {
+    while (nrow(pts) < abs_fin) {
         wc <- wc + 1
-        n <- n_abs * nrow(pres_y) - nrow(pts)
+        n <- abs_fin - nrow(pts)
         pts_n <- spatSample(c, n)
         pts_n <- cbind(pts_n, extract(lc_ref, pts_n, ID = FALSE))
         pts_n <- pts_n[pts_n$lccs_class != 210 & !is.na(pts_n$lccs_class), ]

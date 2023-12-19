@@ -60,8 +60,9 @@ saveRDS(pres_v, file = "R/data/occurrence_data/pres_v.rds")
 rm(occs_v)
 
 # generate basic absence part with no subdiv
+n_bg <- n_abs * 1 / 3 # relative amount of random backgrount wanted
 cat("base absences with no subdiv: \n")
-ao_eu = data.frame()
+ao_eu <- data.frame()
 for (y in years) {
     # choose correct lc reference
     if (y > 2020) {
@@ -71,7 +72,6 @@ for (y in years) {
     }
 
     # generate absences
-    n_bg = n_abs - 2
     ao_y <- lp_gen_abs(pres_v, y, n_bg, min_d, max_d, lc_ref)
     ao_eu <- rbind(ao_eu, ao_y)
     rm(lc_ref)
@@ -83,7 +83,7 @@ cat("subdiv for bias correction: \n")
 # t_ref extent for subdiv function
 t_ref <- ext(rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif"))
 t_ext <- as.vector(c(t_ref$xmin, t_ref$xmax, t_ref$ymin, t_ref$ymax))
-subexts <- lp_subdiv_pts(pres_v, round(0.2 * nrow(pres_v)), t_ext)
+subexts <- lp_subdiv_pts(pres_v, round(0.3 * nrow(pres_v)), t_ext)
 
 # prepare for parallelization
 e_s <- seq_len(nrow(subexts)) # for iteration of foreach

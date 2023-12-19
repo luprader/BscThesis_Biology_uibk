@@ -4,6 +4,7 @@ of the projects results.
 ```{r, libraries}
 library(ggplot2)
 library(ggpubr)
+library(viridis)
 library(dplyr)
 library(terra)
 library(tidyterra)
@@ -204,18 +205,18 @@ ggarrange(p1, p2, p3, p4, p5, p6, nrow = 2, ncol = 3)
 dev.off()
 ```
 
-```{r, plot ens prediction right/wrong on pts}
+```{r, plot ens prediction right/wrong on pts for presence}
 y <- 2018 # year cutoff for model data
 th_data <- readRDS(paste0("R/data/modelling/th_data_mods/th_data_m", y, "_", y + 1, ".rds"))
 eval <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds"))
-ens_08 <- eval[1, ] # only look at ens from 08
+ens_res <- eval[1, ] # only look at ens results
 
 pa <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
 lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
 po <- subset(pa, Area == "eu" & Year == y + 1 & Presence == "present")
 po$Presence <- as.numeric(po$Presence == "present")
 th_data <- subset(th_data, pres == 1)
-po$Pred <- as.numeric(th_data$ens > ens_08[[5]]$threshold)
+po$Pred <- as.numeric(th_data$ens > ens_res[[5]]$threshold)
 
 po_v <- vect(po, geom = c("Lon", "Lat"), crs = crs(lc_ref))
 
@@ -228,10 +229,50 @@ countries <- vect(countries)
 fname <- paste0("R/plots/ens_18pred19.png")
 png(width = 800, height = 600, filename = fname)
 ggplot(crop(countries, ext(lc_ref))) +
-geom_spatvector(colour='black', fill='white') +
-geom_spatvector(data = subset(po_v, po_v$Presence == po_v$Pred), color = "green") +
-geom_spatvector(data = subset(po_v, po_v$Presence != po_v$Pred), color = "red") +
-ggtitle("2018 ens prediction for 2019 pts correct vs wrong")
+    geom_spatvector(colour = "black", fill = "white") +
+    geom_spatvector(data = subset(po_v, po_v$Presence == po_v$Pred), color = "green") +
+    geom_spatvector(data = subset(po_v, po_v$Presence != po_v$Pred), color = "red") +
+    ggtitle("2018 ens prediction for 2019 pts correct vs wrong")
+dev.off()
+```
+
+```{r, plot ens prediction suitability}
+y <- 2020 # year cutoff for model data
+y_pred <- 2022 # year to predict for
+th_data <- readRDS(paste0("R/data/modelling/th_data_mods/th_data_m", y, "_", y_pred, ".rds"))
+eval <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds"))
+ens_res <- eval[1, ] # only look at ens results
+
+pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
+pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
+po <- subset(pa, Area == "eu" & Year == y_pred & Presence == "present")
+pa <- subset(pa, Area == "eu" & Year == y_pred & Presence == "absent")
+lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
+pa_ext <- subset(pa_ext, Area == "eu" & Year == y_pred & Presence == "absent")
+th_data <- subset(th_data, pres == 0)
+ext_join <- data.frame(Lon = pa_ext$Lon, Lat = pa_ext$Lat, Prob_ens = th_data$ens)
+
+pa_m <- left_join(pa, ext_join)
+pa_m <- slice_head(pa_m, n = round(nrow(pa_m) / 3))
+pa_m <- pa_m[complete.cases(pa_m), ]
+pa_v <- vect(pa_m, geom = c("Lon", "Lat"), crs = crs(lc_ref))
+po_v <- vect(po, geom = c("Lon", "Lat"), crs = crs(lc_ref))
+
+# countries map
+countries <- ne_countries(scale = "medium", returnclass = "sf")
+countries <- st_transform(countries, crs = crs(lc_ref))
+countries <- vect(countries)
+
+# plot with suitability value
+fname <- paste0("R/plots/ens_20suitability22.png")
+png(width = 800, height = 600, filename = fname)
+ggplot(crop(countries, ext(lc_ref))) +
+    geom_spatvector(colour = "black", fill = "white") +
+    geom_spatvector(data = pa_v, aes(color = Prob_ens)) +
+    scale_color_viridis() +
+    #geom_spatvector(data = po_v) +
+    labs(color = "suitability") +
+    ggtitle(paste0(y, " ens prediction for ", y_pred, " suitability values"))
 dev.off()
 ```
 
@@ -254,13 +295,15 @@ cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
 for (i in 2:6) {
     tss_mod <- tss_res[seq_along(overlaps), i]
     c_ol <- cor.test(overlaps, tss_mod, method = "pearson")
+    # plot(tss_mod, overlaps, main = colnames(tss_res)[i])
     c_pc <- cor.test(pcount, tss_mod, method = "pearson")
+    # plot(tss_mod, pcount,  main = colnames(tss_res)[i])
     c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
     cor_res <- cbind(cor_res, c_res_mod)
 }
 colnames(cor_res) <- colnames(tss_res)[2:6]
 
-p = ggtexttable(signif(cor_res, digits = 4))
+p <- ggtexttable(signif(cor_res, digits = 4))
 ggexport(p, filename = "R/plots/cor_ol-pc_res.png")
 ```
 
