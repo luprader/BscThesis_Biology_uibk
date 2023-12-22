@@ -11,6 +11,7 @@ library(tidyterra)
 library(rnaturalearth)
 library(sf)
 library(factoextra)
+library(magick)
 ```
 
 ```{r, test plot pa from gen}
@@ -270,7 +271,7 @@ ggplot(crop(countries, ext(lc_ref))) +
     geom_spatvector(colour = "black", fill = "white") +
     geom_spatvector(data = pa_v, aes(color = Prob_ens)) +
     scale_color_viridis() +
-    #geom_spatvector(data = po_v) +
+    # geom_spatvector(data = po_v) +
     labs(color = "suitability") +
     ggtitle(paste0(y, " ens prediction for ", y_pred, " suitability values"))
 dev.off()
@@ -307,6 +308,34 @@ p <- ggtexttable(signif(cor_res, digits = 4))
 ggexport(p, filename = "R/plots/cor_ol-pc_res.png")
 ```
 
+```{r, create niche gif for invaded range}
+# list file names and read in
+imgs <- list.files("R/plots/niche_comp/single_ys/", full.names = TRUE)
+img_list <- lapply(imgs, image_read)
+img_joined <- image_join(img_list)
+img_animated <- image_animate(img_joined, fps = 2)
+
+# save gif
+image_write(
+    image = img_animated,
+    path = "R/plots/niche_comp/eu_years_niche.gif"
+)
+```
+
+```{r, plot niche dynamic results}
+library(ggplot2)
+dyn <- as.data.frame(readRDS("R/data/modelling/niche_y_dynamic.rds"))
+years <- 2002:2022
+
+ggplot(dyn, aes(x = years)) +
+    geom_point(aes(y = expansion), colour = "red", show.legend = TRUE) +
+    geom_line(aes(y = expansion), colour = "red") +
+    geom_point(aes(y = stability), colour = "blue", show.legend = TRUE) +
+    geom_line(aes(y = stability), colour = "blue") +
+    geom_point(aes(y = unfilling), colour = "green", show.legend = TRUE) +
+    geom_line(aes(y = unfilling), colour = "green")
+```
+
 ```{r, plot var select pca results}
 lc_pca <- readRDS("R/data/modelling/var_select_lc_pca_res.rds")
 # plot pca results
@@ -337,7 +366,7 @@ ecospat.plot.overlap.test(sim_test, "D", paste("Similarity", y - 1, "/", y))
 
 ```{r, compute mean lc heterogeneity}
 pa_vals <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-pa_vals <- subset(pa_vals, Area == "eu")
+pa_vals <- subset(pa_vals, Area == "eu" & Presence == "present")
 
 
 sh_ent <- function(row) {

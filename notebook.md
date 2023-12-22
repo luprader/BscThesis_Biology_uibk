@@ -344,3 +344,14 @@ Further tests have been done, suggesting that the best absence generation is to 
 There could probably be more tests to really get the sensitivity (true positive rate) to max, since the tests have only been conducted on a visual basis.
 
 For niche overlap, a test will be done, comparing the results using Schoener's D to using Warren's I, maybe giving a better result for overlap, since I is closer to the stability measure from `ecospat.niche.dyn.index`, showing the true overlap of current year presences with the prior year for example.
+
+### 20/12/2023
+Niche overlap was switched back to Schoener's D since it is consistent with the proposed `ecospat` workflow in the paper.
+The three niche dynamic indices were also added for the yearly calculations, but are not used in analysis for now.
+Niche comparison for each year in Europe was shifted to compare each year to the native niche, which gives a more stable base for interpretation of the overlap and especially the dynamic indices.
+Also, code was implemented to create an animated gif from all year niche plots.
+
+### 22/12/2023
+A plot was made visualizing the niche dynamic index development for all three indices.
+To be able to really compare correlation, regression analysis might also be a valid method.
+An implementation might be tried in the following days.
