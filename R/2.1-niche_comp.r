@@ -110,11 +110,12 @@ for (y in 2002:2022) {
     di <- round(ecospat.niche.dyn.index(grid_as, grid_eu_y, intersection = 0.1)$dynamic.index.w, digits = 3)
     dynamic <- rbind(dynamic, di)
 
+
     # plot niche overlap
     if (ol == 0) { # correct color for case of no stable overlap
-        col_stab <- "green"
+        col_stab <- "#00BA38"
     } else {
-        col_stab <- "blue"
+        col_stab <- "#619CFF"
     }
 
     fname <- paste0("R/plots/niche_comp/single_ys/eu_", y, "_niche.png")
@@ -122,7 +123,7 @@ for (y in 2002:2022) {
     text <- paste("Niche Overlap native / EU ", y, " | D:", ol, "\n expansion stability unfilling :", di[[1]], di[[2]], di[[3]])
     ecospat.plot.niche.dyn(grid_as, grid_eu_y,
         quant = 0.1,
-        col.unf = "green", col.exp = "red", col.stab = "blue",
+        col.unf = "#00ba38", col.exp = "#f8766d", col.stab = "#3f80f1", 
         interest = 2, title = text, name.axis1 = "PC1",
         name.axis2 = "PC2"
     )

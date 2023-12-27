@@ -355,3 +355,8 @@ Also, code was implemented to create an animated gif from all year niche plots.
 A plot was made visualizing the niche dynamic index development for all three indices.
 To be able to really compare correlation, regression analysis might also be a valid method.
 An implementation might be tried in the following days.
+
+### 27/12/23
+A plot showing the results of the niche dynamic indices has been made, as well as some minor tweaks for other plots.
+
+An attempt was made to use regression in order to measure the correlation between tss and the niche values, though it seems like this might need some additional thought.

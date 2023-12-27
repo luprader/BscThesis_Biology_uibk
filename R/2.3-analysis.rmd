@@ -168,9 +168,6 @@ for (i in tss_fy$year) {
 colnames(pa_count) <- c("year", "pa_count")
 
 # plot
-fname <- paste0("R/plots/model_performance_results.png")
-png(width = 3 * 600, height = 2 * 300, filename = fname)
-
 p1 <- ggplot(data = pa_count, aes(x = year, y = pa_count)) +
     geom_point() +
     geom_line() +
@@ -181,29 +178,30 @@ p2 <- ggplot(data = ol_y, aes(x = year, y = D)) +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     ggtitle("overlap of eu niche with following year")
-p3 <- ggplot(data = long_nt, aes(x = year, y = tss, color = model)) +
+p3 <- ggplot(data = long_nt, aes(x = year, y = tss, color = model, shape = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     ggtitle("tss for predicting the following year (native data model)")
-p4 <- ggplot(data = long_t, aes(x = year, y = tss, color = model)) +
+p4 <- ggplot(data = long_t, aes(x = year, y = tss, color = model, shape = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     ggtitle("tss for predicting the trained dataset")
-p5 <- ggplot(data = long_fy, aes(x = year, y = tss, color = model)) +
+p5 <- ggplot(data = long_fy, aes(x = year, y = tss, color = model, shape = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     ggtitle("tss for predicting year (invasive data model)")
-p6 <- ggplot(data = long_22, aes(x = year, y = tss, color = model)) +
+p6 <- ggplot(data = long_22, aes(x = year, y = tss, color = model, shape = model)) +
     geom_point() +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     ggtitle("tss for predicting 2022 (invasive data model)")
 
-ggarrange(p1, p2, p3, p4, p5, p6, nrow = 2, ncol = 3)
-dev.off()
+p <- ggarrange(p1, p2, p3, p4, p5, p6, nrow = 2, ncol = 3, common.legend = TRUE, legend = "bottom")
+fname <- paste0("R/plots/model_performance_results.png")
+ggexport(p, width = 3 * 500, height = 2 * 300, filename = fname)
 ```
 
 ```{r, plot ens prediction right/wrong on pts for presence}
@@ -227,14 +225,13 @@ countries <- st_transform(countries, crs = crs(lc_ref))
 countries <- vect(countries)
 
 # plot
-fname <- paste0("R/plots/ens_18pred19.png")
-png(width = 800, height = 600, filename = fname)
-ggplot(crop(countries, ext(lc_ref))) +
+p <- ggplot(crop(countries, ext(lc_ref))) +
     geom_spatvector(colour = "black", fill = "white") +
     geom_spatvector(data = subset(po_v, po_v$Presence == po_v$Pred), color = "green") +
     geom_spatvector(data = subset(po_v, po_v$Presence != po_v$Pred), color = "red") +
     ggtitle("2018 ens prediction for 2019 pts correct vs wrong")
-dev.off()
+fname <- paste0("R/plots/ens_18pred19.png")
+ggexport(p, width = 800, height = 600, filename = fname)
 ```
 
 ```{r, plot ens prediction suitability}
@@ -265,19 +262,18 @@ countries <- st_transform(countries, crs = crs(lc_ref))
 countries <- vect(countries)
 
 # plot with suitability value
-fname <- paste0("R/plots/ens_20suitability22.png")
-png(width = 800, height = 600, filename = fname)
-ggplot(crop(countries, ext(lc_ref))) +
+p <- ggplot(crop(countries, ext(lc_ref))) +
     geom_spatvector(colour = "black", fill = "white") +
     geom_spatvector(data = pa_v, aes(color = Prob_ens)) +
     scale_color_viridis() +
     # geom_spatvector(data = po_v) +
     labs(color = "suitability") +
     ggtitle(paste0(y, " ens prediction for ", y_pred, " suitability values"))
-dev.off()
+fname <- paste0("R/plots/ens_20suitability22.png")
+ggexport(width = 800, height = 600, filename = fname)
 ```
 
-```{r, test correlation of accuracy with niche overlap or data amount}
+```{r, test correlation tss ol and pc pearson}
 overlaps <- readRDS("R/data/modelling/niche_y_overlap.rds")
 tss_res <- readRDS("R/data/modelling/mod_tss_res.rds")
 
@@ -322,18 +318,54 @@ image_write(
 )
 ```
 
-```{r, plot niche dynamic results}
-library(ggplot2)
+```{r, plot niche dynamic results per year}
 dyn <- as.data.frame(readRDS("R/data/modelling/niche_y_dynamic.rds"))
-years <- 2002:2022
+year <- 2002:2022
+dyn = cbind(year, dyn)
+# convert to long format
+long_dyn <- data.frame()
+for (i in 1:3) {
+    di <- dyn[, c(1, i + 1)]
+    di$index <- colnames(dyn)[i + 1]
+    colnames(di)[2] <- "value"
+    long_dyn <- rbind(long_dyn, di)
+}
 
-ggplot(dyn, aes(x = years)) +
-    geom_point(aes(y = expansion), colour = "red", show.legend = TRUE) +
-    geom_line(aes(y = expansion), colour = "red") +
-    geom_point(aes(y = stability), colour = "blue", show.legend = TRUE) +
-    geom_line(aes(y = stability), colour = "blue") +
-    geom_point(aes(y = unfilling), colour = "green", show.legend = TRUE) +
-    geom_line(aes(y = unfilling), colour = "green")
+ggplot(data = long_dyn, aes(x = year, y = value, color = index, shape = index)) +
+    geom_point() +
+    geom_line() +
+    scale_color_manual(values = c("#F8766D", "#619CFF", "#00BA38")) +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    ggtitle("niche dynamic indices")
+
+```
+
+```{r, correlation tests using regression}
+dyn <- as.data.frame(readRDS("R/data/modelling/niche_y_dynamic.rds"))
+ol <- readRDS("R/data/modelling/niche_y_overlap.rds")
+tss_res <- readRDS("R/data/modelling/mod_tss_res.rds")
+
+# get list of total pa points up to year in EU
+pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
+eu <- subset(pa, Area == "eu")
+pcount <- c()
+for (i in 2002:2022) {
+    pcount[i - 2001] <- nrow(subset(eu, Year <= i))
+}
+
+tss_ens = tss_res[seq_along(ol), 6]
+data = data.frame(tss_ens, pcount, ol, dyn)
+data = head(data, 19) # due to NA after 2019
+
+# fit glm
+glm <- glm(tss_ens ~ ., data = data, family = gaussian)
+summary(glm)
+
+glm <- glm(tss_ens ~ pcount, data = data, family = gaussian)
+summary(glm)
+
+glm <- glm(tss_ens ~ stability, data = data, family = gaussian)
+summary(glm)
 ```
 
 ```{r, plot var select pca results}
