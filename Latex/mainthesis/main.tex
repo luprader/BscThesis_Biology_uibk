@@ -10,6 +10,7 @@
 \usepackage[textsize=tiny]{todonotes}
 \usepackage[acronym]{glossaries}
 \usepackage{soul} % for command \hl
+\usepackage{pdfpages} % to insert pdf docs
 
 \AtBeginBibliography{\small}
 \addbibresource{main_sources.bib}
@@ -21,46 +22,69 @@
 \newacronym[first = {\textit{Harmonia axyridis}}]{harm}{\textit{H. axyridis}}{\textit{Harmonia axyridis}}
 \glsdisablehyper % no hyperref for \gls
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
+\def\findate{\today}
 
-\title{Driving factors in SDM performance through time series: A case study using the invasive Harmonia axyridis}
-\author{Lukas Prader}
-\date{\today}
-\maketitle
+%einreichung-der-bachelorarbeit
+\includepdf[pages=-]{deckblatt_einreichung-der-bachelorarbeit.pdf}
+%Einverstaendnis mit Veroeffentlichung der Bachelorarbeit
+\thispagestyle{empty}
+I, Lukas Prader, agree that my bachelor's thesis ("Title"), supervised by Dr. Matthew Talluto, will be digitally archived in a repository of Leopold Franzens University Innsbruck and made available for further academic use. \\
 
-%\newpage
+Innsbruck, \findate					\hfill Signature
+
+%title page
+\newpage
+\thispagestyle{empty}
+\begin{center}
+    \Large{University of Innsbruck \\ Faculty of Biology} \\
+    \vspace{3mm}
+    \large{Department of Ecology}
+    \vspace{10mm}
+
+    \includegraphics[width = 0.6 \linewidth]{universitaet-innsbruck-logo-cmyk-farbe.jpg}
+
+    \vspace{10mm}
+    \Large{Bachelor Thesis} \\
+    \large{submitted for the degree of} \\
+    \Large{Bachelor of Science} \\
+    \vspace{10mm}
+    \LARGE{\textbf{Driving factors in SDM performance through time series: A case study using the invasive species \textit{Harmonia axyridis}}} \\
+    \vspace{10mm}
+
+    \large{by \\ Lukas Prader \\ Matriculation Nr.: 12115058 \\ SE Biological Seminar: Ecology}
+\end{center}
+
+\vspace{30mm}
+\begin{tabular}{ll}
+    \large{Submission Date:} & \large{\findate} \\
+    \large{Supervisor:} & \large{Dr. Matthew Talluto} \\
+\end{tabular}
+
+\newpage
+\thispagestyle{empty}
 \begin{abstract}
     Lorem ipsum
 \end{abstract}
 
 \newpage
 \tableofcontents
+\thispagestyle{empty}
 \newpage
+\pagenumbering{arabic}
 
 \section{Introduction}
-When \todoleft{studying?}\hl{modelling} invasive species, it is of particular interest to be able to predict the further development and spread in the invaded range.
+When studying invasive species, it is of particular interest to be able to predict the further development and spread in the invaded range.
 The problem of predicting into the unknown is a challenge widespread in the modelling community, and thus an active area of research.
 \todo{A bit of jargon you might look up in the SDM literature: ``model transferability''}
 \todoleft{If this is the context you want to put your work in, perhaps a little bit more detail here would be useful. Why is this challenging, and in particular for invasive species?}
-Species Distribution Models (SDMs), are also being applied to predict the further development of species occurrences in many contexts, also for invasions.
-
-% SDM Theory
-\todoleft{who is ``They?'' This reference is unclear}\hl{They} have been shown to generate substantial insight into the ecological requirements of species and, as niche models, can be used to predict the potential habitat of a species \autocite{araujo2006sdmchallenges}.
-There has been considerable debate on the capabilities and limitations of SDMs, especially when used for prediction outside the data domain.
-In general, SDMs are made with the (ideal) assumption that the species is in environmental equilibrium \autocite{elith2009sdmtheory}, implying that its ecological niche is not currently changing.
-If these models are now used to predict new, unsampled areas, there actually is no measure to assess their accuracy, since no data is presently available for that area \autocite{araujo2006sdmchallenges}. \todo{more jargon: calibration and validation}
-There is also no guarantee that the biotic interactions sampled in the study area will reflect the final interactions in the new area \autocite{elith2009sdmtheory}.
-All of these issues apply especially to the prediction of invasive species, since there might be limited data in the invaded range, the species is often not currently at equilibrium and interactions with native species are completely new \autocite{mainali2015sdmprojecting}.
-Despite all these challenges, SDMs have been used numerous times to provide insight into the invasive potential and the invasion dynamics of alien species \autocite{zimmermann2010sdmtrends}.
-One way of gaining more insight into the invasion process is to create models with data from different time periods during the invasion \autocite{briscoe2019palmerisdm}.
-\hl{For example, data from a time period early in the invasion process can be used to build models which then are evaluated against data from a later time period} \autocite{barbet2018nigrithoraxsdm}.
-\todoleft{Nice framing thus far. It's just not quite clear to me by this point *why* this is useful. Could you elaborate?}
 
 % Invasion Theory
 Invasive species are of special interest in ecological research due to their impact on native ecosystems.
 Main goals in this area are to find out which species have potential to become invasive, what habitat will be susceptible to invasion by those species, how fast the species will invade the new area and what impact its invasion will have on the native ecosystem \autocite{shigesada1997invasions}.
-\todoleft{I think, in terms of general background information, this paragraph fits better as the first paragraph. You state why invasion is interesting and important, then get into why we might model invasive species and how. This transitions perfectly into what is now your first paragraph, where you introduce modelling challenges.}To this end, many theories have been created to describe invasion processes.
+To this end, many theories have been created to describe invasion processes.
 The invasion of a species can  generally be described with four stages \autocite{blackburn2011invasionstages}:
 \begin{enumerate} % just have keywords in a sentence instead of enumeration?
     \item Transport: Leaving the native range, arriving at a new location
@@ -74,6 +98,19 @@ For example intraguild predation, the predation of species using similar resourc
 Fully understanding the dynamics at play during the invasion process would open more possibilities to actively influence the invasion of threatening species.
 For this, creating models which are able to predict the invasion is one current focus of research.
 Since invasion theory already uses niche theory, it is quite appropriate to think about applying niche models to the problem.
+
+% SDM Theory
+Species Distribution Models (SDMs), are being applied to predict the further development of species occurrences in many contexts, also for invasions.
+These types of models have been shown to generate substantial insight into the ecological requirements of species and, as niche models, can be used to predict the potential habitat of a species \autocite{araujo2006sdmchallenges}.
+There has been considerable debate on the capabilities and limitations of SDMs, especially when used for prediction outside the data domain.
+In general, SDMs are made with the (ideal) assumption that the species is in environmental equilibrium \autocite{elith2009sdmtheory}, implying that its ecological niche is not currently changing.
+If these models are now used to predict new, unsampled areas, there actually is no measure to assess their accuracy, since no data is presently available for that area \autocite{araujo2006sdmchallenges}. \todo{more jargon: calibration and validation}
+There is also no guarantee that the biotic interactions sampled in the study area will reflect the final interactions in the new area \autocite{elith2009sdmtheory}.
+All of these issues apply especially to the prediction of invasive species, since there might be limited data in the invaded range, the species is often not currently at equilibrium and interactions with native species are completely new \autocite{mainali2015sdmprojecting}.
+Despite all these challenges, SDMs have been used numerous times to provide insight into the invasive potential and the invasion dynamics of alien species \autocite{zimmermann2010sdmtrends}.
+One way of gaining more insight into the invasion process is to create models with data from different time periods during the invasion \autocite{briscoe2019palmerisdm}.
+\hl{For example, data from a time period early in the invasion process can be used to build models which then are evaluated against data from a later time period} \autocite{barbet2018nigrithoraxsdm}.
+\todoleft{Nice framing thus far. It's just not quite clear to me by this point *why* this is useful. Could you elaborate?}
 
 % Modelling Method
 \todoleft{Hmm. This paragraph doesn't really fit here. In fact, maybe this can just go in the methods, as a justification for why you choose ensemble methods.}
@@ -104,8 +141,6 @@ In general, \gls{harm} can be concluded to be a species with high impact as an i
 
 %existing SDMs for H. axyridis
 There have been several publications which model and predict the distribution of \gls{harm}, constrained to certain geographical ranges (i.e. Spain \autocite{ameixa2019harmSDMSpain}, Chile \autocite{alaniz2018harmSDMChile}) or even on global scales \autocite{bidinger2012harmSDMglobalMaxent, poutsma2008harmSDMglobalClimex}.
-\todo{combine these two paragraphs}
-
 There has not yet been any model iteration in form of a time series, which is what this thesis aims to add as new insight.
 Another goal of this thesis is to look into the limitations of models built early in the invasion process of a species.
 By iterating over the years of the invasion, model performance can be evaluated with consideration to the current state of invasion.
@@ -114,7 +149,7 @@ In the end, a better understanding of the invasion process of \gls{harm} in Euro
 
 
 \newpage
-\section{Methods}
+\section{Materials and Methods}
 This section elaborates on the Methods used to conduct this research.
 
 \subsection{Datasets}
@@ -157,6 +192,15 @@ Niche overlap for the total EU data was also visualized in comparison to the tot
 All mentioned niche analyses were conducted using the library \texttt{ecospat} \autocite{dicola2017ecospat}.
 The development of TSS over time was tested for correlation with the amount of training data and the niche overlap for a given year, using the pearson correlation test.
 
+\newpage
+
+\section{Results}
+
+\section{Discussion}
+
+\section{Conclusion}
+
+\section{Acknowledgements}
 
 
 \newpage
