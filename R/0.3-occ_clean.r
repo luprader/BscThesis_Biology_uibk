@@ -82,7 +82,7 @@ axyridis_y <- subset(axyridis_clean, Year > 2020 & Area == "eu")
 lc_clean <- lp_clean_lc(axyridis_y, 2020, "eu")
 axyridis_fin <- rbind(axyridis_fin, lc_clean)
 
-axyridis_y <- subset(axyridis_clean, Year < 2020 & Area == "as")
+axyridis_y <- subset(axyridis_clean, Year > 2020 & Area == "as")
 lc_clean <- lp_clean_lc(axyridis_y, 2020, "as")
 axyridis_fin <- rbind(axyridis_fin, lc_clean)
 

@@ -26,7 +26,7 @@ as_box <- st_as_sfc(as_box)
 as_box <- st_as_sf(as_box, crs = 4326)
 
 
-# load gobal LCC .tif files and crop them to native and europe extent
+# load gobal LCC .nc files and crop them to native and europe extent
 filenames <- list.files(path = "R/data/Cop_LC_raw", full.names = TRUE)
 stime_tot <- Sys.time()
 for (f in filenames) {
