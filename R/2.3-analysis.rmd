@@ -14,6 +14,70 @@ library(factoextra)
 library(magick)
 ```
 
+```{r}
+# used colour hex codes:
+c("#00ba38", "#f8766d", "#3f80f1")
+```
+
+```{r, Presence yearly count 2002-2022}
+occs <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
+cat("presences before 2002:", nrow(subset(occs, Year < 2002)), "\n")
+occs <- subset(occs, Year >= 2002)
+data_eu <- as.data.frame(table(subset(occs, Area == "eu")$Year))
+data_eu$Area <- "eu"
+data_as <- as.data.frame(table(subset(occs, Area == "as")$Year))
+data_as$Area <- "as"
+data <- merge(data_eu, data_as, by = "Var1", all.x = TRUE)
+data[is.na(data)] <- 0
+data$Area.y <- "as"
+data_eu <- data[, c(1, 2, 3)]
+data_as <- data[, c(1, 4, 5)]
+names(data_eu) <- c("Year", "Freq", "Area")
+names(data_as) <- names(data_eu)
+data <- rbind(data_eu, data_as)
+
+p <- ggplot(data, aes(x = Year, y = Freq, fill = Area)) +
+    geom_point(aes(colour = Area), size = 2.5) +
+    scale_y_log10() +
+    scale_x_discrete(breaks = seq(2002, 2022, by = 4)) +
+    labs(x = "Year", y = "Count of Observations") +
+    theme_pubr()
+ggsave(p, width = 8, height = 5, filename = "R/figures/pres-per-year-log.png")
+```
+
+```{r, comparison raw dataset to cleaned}
+# use equal earth crs? greyscale?
+raw <- read.csv("R/data/occurrence_data/Harmonia-axyridis_gbif_raw.csv",
+    header = TRUE,
+    sep = "\t"
+)
+clean <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
+cat("raw:", nrow(raw), "|clean:", nrow(clean), "\n")
+raw <- raw[!(raw$decimalLongitude %in% clean$Lon) & !(raw$decimalLatitude %in% clean$Lat), ]
+lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
+
+raw_v <- vect(raw, geom = c("decimalLongitude", "decimalLatitude"), crs = crs(lc_ref))
+clean_v <- vect(clean, geom = c("Lon", "Lat"), crs = crs(lc_ref))
+exts_v <- vect(ext(lc_ref), crs = crs(lc_ref))
+lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_as.tif")
+exts_v <- rbind(exts_v, vect(ext(lc_ref), crs = crs(lc_ref)))
+# countries map
+countries <- ne_countries(scale = "medium", returnclass = "sf")
+countries <- st_transform(countries, crs = crs(lc_ref))
+countries <- vect(countries)
+
+# plot
+p <- ggplot(countries) +
+    geom_spatvector(colour = "black", fill = "white") +
+    geom_spatvector(data = raw_v, colour = "#3f80f1") +
+    geom_spatvector(data = clean_v, colour = "#00ba38") +
+    geom_spatvector(data = exts_v, colour = "#00ba38", fill = NA, linetype = "solid", linewidth = 1.5) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    theme_pubr()
+ggsave(p, width = 8, height = 5, filename = "R/figures/raw-vs-cleaned-glob.png")
+```
+
 ```{r, test plot pa from gen}
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
@@ -314,30 +378,32 @@ img_animated <- image_animate(img_joined, fps = 2)
 # save gif
 image_write(
     image = img_animated,
-    path = "R/plots/niche_comp/eu_years_niche.gif"
+    path = "R/plots/niche_comp/eu_yearstoprev_niche.gif"
 )
 ```
 
-```{r, plot niche dynamic results per year}
+```{r, plot niche dynamic results + overlap per year}
 dyn <- as.data.frame(readRDS("R/data/modelling/niche_y_dynamic.rds"))
-year <- 2002:2022
-dyn = cbind(year, dyn)
+ol <- readRDS("R/data/modelling/niche_y_overlap.rds")
+colnames(ol) <- "overlap"
+year <- 2002:2021
+dyn <- cbind(year, dyn, ol)
 # convert to long format
 long_dyn <- data.frame()
-for (i in 1:3) {
+for (i in 1:4) {
     di <- dyn[, c(1, i + 1)]
     di$index <- colnames(dyn)[i + 1]
     colnames(di)[2] <- "value"
     long_dyn <- rbind(long_dyn, di)
 }
+long_dyn$index <- factor(long_dyn$index, levels = colnames(dyn)[2:5]) # fix order
 
 ggplot(data = long_dyn, aes(x = year, y = value, color = index, shape = index)) +
     geom_point() +
     geom_line() +
-    scale_color_manual(values = c("#F8766D", "#619CFF", "#00BA38")) +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    scale_color_manual(values = c("#F8766D", "#619CFF", "#00BA38", "black")) +
+    coord_cartesian(xlim = c(2002, max(year)), ylim = c(0, 1)) +
     ggtitle("niche dynamic indices")
-
 ```
 
 ```{r, correlation tests using regression}
@@ -353,9 +419,9 @@ for (i in 2002:2022) {
     pcount[i - 2001] <- nrow(subset(eu, Year <= i))
 }
 
-tss_ens = tss_res[seq_along(ol), 6]
-data = data.frame(tss_ens, pcount, ol, dyn)
-data = head(data, 19) # due to NA after 2019
+tss_ens <- tss_res[seq_along(ol), 6]
+data <- data.frame(tss_ens, pcount, ol, dyn)
+data <- head(data, 19) # due to NA after 2019
 
 # fit glm
 glm <- glm(tss_ens ~ ., data = data, family = gaussian)
