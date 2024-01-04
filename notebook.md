@@ -360,3 +360,8 @@ An implementation might be tried in the following days.
 A plot showing the results of the niche dynamic indices has been made, as well as some minor tweaks for other plots.
 
 An attempt was made to use regression in order to measure the correlation between tss and the niche values, though it seems like this might need some additional thought.
+
+### 04/01/24
+The main thesis document was improved with a part of the pending supervisor suggestions, also adding most of the formatting requirements.
+Niche comparison was switched back to compare between the years of invasion in Europe, since that way the niche change can be seen relative to the niche size, which can be impacted by the data amount.
+Two figures were created in order to be used in the thesis later on, one showing the amount of cleaned presences for each year on a log scale, distinguishing Europe and Asia. And the other showing the difference between the raw and cleaned dataset.
