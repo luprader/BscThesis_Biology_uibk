@@ -12,6 +12,7 @@ library(rnaturalearth)
 library(sf)
 library(factoextra)
 library(magick)
+source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 ```
 
 ```{r}
@@ -19,7 +20,7 @@ library(magick)
 c("#00ba38", "#f8766d", "#3f80f1")
 ```
 
-```{r, Presence yearly count 2002-2022}
+```{r, plot presence yearly count 2002-2022}
 occs <- readRDS("R/data/occurrence_data/axyridis_clean.rds")
 cat("presences before 2002:", nrow(subset(occs, Year < 2002)), "\n")
 occs <- subset(occs, Year >= 2002)
@@ -37,15 +38,16 @@ names(data_as) <- names(data_eu)
 data <- rbind(data_eu, data_as)
 
 p <- ggplot(data, aes(x = Year, y = Freq, fill = Area)) +
-    geom_point(aes(colour = Area), size = 2.5) +
-    scale_y_log10() +
+    geom_point(aes(colour = Area, shape = Area), size = 2.5) +
+    geom_line(aes(colour = Area, group = Area)) +
+    scale_y_log10() + scale_color_manual(values = c("#00ba38", "#f8766d")) +
     scale_x_discrete(breaks = seq(2002, 2022, by = 4)) +
-    labs(x = "Year", y = "Count of Observations") +
+    labs(x = "Year", y = "Number of Observations") +
     theme_pubr()
 ggsave(p, width = 8, height = 5, filename = "R/figures/pres-per-year-log.png")
 ```
 
-```{r, comparison raw dataset to cleaned}
+```{r, plot comparison raw dataset to cleaned}
 # use equal earth crs? greyscale?
 raw <- read.csv("R/data/occurrence_data/Harmonia-axyridis_gbif_raw.csv",
     header = TRUE,
@@ -71,14 +73,29 @@ p <- ggplot(countries) +
     geom_spatvector(colour = "black", fill = "white") +
     geom_spatvector(data = raw_v, colour = "#3f80f1") +
     geom_spatvector(data = clean_v, colour = "#00ba38") +
-    geom_spatvector(data = exts_v, colour = "#00ba38", fill = NA, linetype = "solid", linewidth = 1.5) +
+    geom_spatvector(data = exts_v, colour = "#00ba38", fill = NA, linetype = "solid", linewidth = 1) +
     scale_x_continuous(expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
     theme_pubr()
 ggsave(p, width = 8, height = 5, filename = "R/figures/raw-vs-cleaned-glob.png")
 ```
 
-```{r, test plot pa from gen}
+```{r, plot extent subdiv example methods}
+ext0 = c(0, 15, 0, 10)
+set.seed(4326)
+pts = vect(spatSample(ext(ext0), 20, lonlat = TRUE))
+subexts = lp_subdiv_pts(pts, 5, ext0)
+
+#plot
+p <- ggplot() + geom_spatvector(data = pts) + theme_pubr() +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.line.x.bottom = element_blank(), axis.line.y.left = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
+for (i in seq_len(nrow(subexts))){
+    p <- p + geom_spatvector(data = vect(ext(subexts[i, ])), colour ="#3f80f1", fill = NA)
+}
+ggsave(p, width = 8, height = 5, filename = "R/figures/ext-subdiv-method.png")
+```
+
+```{r, plot extent subdiv example data}
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
 
@@ -90,18 +107,16 @@ countries <- ne_countries(scale = "medium", returnclass = "sf")
 countries <- st_transform(countries, crs = crs(lc_ref))
 countries <- vect(countries)
 
-png(width = 600, height = 600, filename = "R/plots/abs_gen_subdiv_example.png")
-plot(crop(countries, ext(lc_ref)))
-
-points(subset(pa_v, pa_v$Presence == "absent"), col = "grey")
-points(subset(pa_v, pa_v$Presence == "present"), col = "green")
-# add subsexts
+p <- ggplot(crop(countries, ext(lc_ref))) +
+    geom_spatvector(colour = "black", fill = "white") +
+    geom_spatvector(data = subset(pa_v, pa_v$Presence == "absent"), colour = "grey") +
+    geom_spatvector(data = subset(pa_v, pa_v$Presence == "present"), colour = "#00ba38") + 
+    theme_pubr()
 subexts <- readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds")
-for (s in seq_len(nrow(subexts))) {
-    ext_s <- ext(subexts[s, ])
-    lines(vect(ext_s, crs = "epsg:4326"), col = "blue")
+for (i in seq_len(nrow(subexts))){
+    p <- p + geom_spatvector(data = vect(ext(subexts[i, ]), crs = crs(lc_ref)), colour ="#3f80f1", fill = NA, linetype = "solid", linewidth = 0.8)
 }
-dev.off()
+ggsave(p, width = 8, height = 5, filename = "R/figures/ext-subdiv-res.png")
 ```
 
 ```{r, tss of native on training data}
