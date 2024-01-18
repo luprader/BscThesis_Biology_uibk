@@ -59,8 +59,8 @@ Innsbruck, \findate					\hfill Signature
 
 \vspace{30mm}
 \begin{tabular}{ll}
-    \large{Submission Date:} & \large{\findate} \\
-    \large{Supervisor:} & \large{Dr. Matthew Talluto} \\
+    \large{Submission Date:} & \large{\findate}            \\
+    \large{Supervisor:}      & \large{Dr. Matthew Talluto} \\
 \end{tabular}
 
 \newpage
@@ -167,7 +167,20 @@ Afterwards, using the library \texttt{CoordinateCleaner}, all remaining data poi
 In addition, all occurrences were checked for their land cover class values in their respective year, removing points in the water or with no data.
 In the end, remaining data points prior to 2002 were deemed insignificant and removed from the dataset.
 To prepare the data for modelling, pseudoabsences were generated for each year, randomly sampling the area and resampling points in the water or with no data.
-To correct for sampling bias in the data, the European extent was split into sub extents until a relative point count of $\leq$ 20\% of all European occurrences was reached for each respective sub extent.
+
+To correct for sampling bias in the data, the European extent was split into sub extents in order to add additional absences to denser sampled regions.
+For this, an algorithm was written which splits a given extent in half and continues to do so with the created sub-extents until the amount of points in the extents is at most some chosen number.
+For the first part of absence generation completely random absences are drawn from the original extent in order to ensure at least some coverage of the whole study area.
+In the second step, additional absences are generated for each subextent separately and in relation to the amount of presences inside the respective subextent.
+This results in more absences in regions with more presences as well (visual representation in figure \ref{fig:ext_subdiv} A).
+The subdivision of the dataset was carried out using all presences in Europe over all years and setting the threshold to be $\leq$ 30\%, leading to sub-extents converging around the United Kingdom and the Netherlands, which seem to have been sampled very intensely (fig. \ref{fig:ext_subdiv} B).
+For the first and second step of absence generation, absences equal to and twice the amount of presences were generated respectively, resulting in three absences per presence in total.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width = 0.8\linewidth]{"../../R/figures/ext-subdiv.png"}
+    \caption{\label{fig:ext_subdiv} Visualization of the subdivision algorithm and absence generation. Subfigure A shows an example of 30 generated presences(green), subdivided with a threshold of $\leq$ 10 points per subextent. The generated absences are shown in black, with circles indicating the first 30 completely random absences, and asterisks indicating absences generated relative to the amount of presences in a subextent. Subfigure B shows the calculated subextents for the total presences of the dataset, with presences(green) and absences(grey) for 2008 plotted as an example.}
+\end{figure}
 
 \subsection{Model building}
 For each year, the following Models were computed: General Linear (GLM) \autocite{guisan2002glm-gam}, General Additive (GAM) \autocite{guisan2002glm-gam}, Boosted Regression Trees (BRT) \autocite{elith2008brt} and Maximum Entropy (MAXENT) \autocite{phillips2017maxnet}.

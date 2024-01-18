@@ -3,3 +3,7 @@ SDMs
 bioclim
 CHELSA
 GBIF
+subfigure
+subextents
+subextent
+Subfigure
