@@ -83,13 +83,34 @@ ggsave(p, width = 8, height = 5, filename = "R/figures/raw-vs-cleaned-glob.png")
 
 ```{r, plot extent subdiv method and pa example}
 ext0 <- c(0, 15, 0, 10)
-set.seed(4326)
-pts <- vect(spatSample(ext(ext0), 20, lonlat = TRUE))
+set.seed(4236)
+# sample 20 random points to subdivide
+pts <- vect(spatSample(ext(ext0), 30, lonlat = TRUE))
 subexts <- lp_subdiv_pts(pts, 5, ext0)
+# bias by resampling a bit in one sub extent
+for (i in 1:2) {
+    pts <- rbind(pts[-5, ], vect(spatSample(ext(subexts[nrow(subexts) - 1, ]), 5, lonlat = TRUE)))
+    subexts <- lp_subdiv_pts(pts, 10, ext0) # subdivide with 30% threshold
+}
+
+# generate 3 absences per presence
+n <- 3
+# one third without subdivision
+pts_gen1 <- vect(spatSample(ext(ext0), 1 * nrow(pts), lonlat = TRUE))
+# two thirds with subdivision for bias correction
+pts_gen2 <- vect(spatSample(ext(ext0), 1, lonlat = TRUE)) # initialize
+for (e in seq_len(nrow(subexts))) {
+    pts_in <- crop(pts, ext(subexts[e, ]))
+    pts_g <- vect(spatSample(ext(subexts[e, ]), 2 * nrow(pts_in), lonlat = TRUE))
+    pts_gen2 <- rbind(pts_gen2, pts_g)
+}
+pts_gen2 <- pts_gen2[-1, ]
 
 # plot
 p1 <- ggplot() +
-    geom_spatvector(data = pts, size = 1) +
+    geom_spatvector(data = pts_gen1, size = 2, shape = 1) +
+    geom_spatvector(data = pts_gen2, size = 2, shape = 8) +
+    geom_spatvector(data = pts, size = 2, colour = "#00ba38") +
     theme_pubr() +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.line.x.bottom = element_blank(), axis.line.y.left = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
 for (i in seq_len(nrow(subexts))) {
@@ -117,8 +138,8 @@ subexts <- readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds")
 for (i in seq_len(nrow(subexts))) {
     p2 <- p2 + geom_spatvector(data = vect(ext(subexts[i, ]), crs = crs(lc_ref)), colour = "#3f80f1", fill = NA, linetype = "solid", linewidth = 0.5)
 }
-p <- ggarrange(p1, p2, nrow = 1, ncol = 2, labels = c("A", "B")) + bgcolor("white")
-ggsave(p, width = 10, height = 4, filename = "R/figures/ext-subdiv.png")
+p <- ggarrange(p1, p2, ncol = 1, labels = c("A", "B"))
+ggsave(p, width = 6, height = 7, bg = "white", filename = "R/figures/ext-subdiv.png")
 ```
 
 ```{r, tss of native on training data}
