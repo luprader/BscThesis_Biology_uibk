@@ -252,12 +252,6 @@ for (m in 1:5) {
     long_nt <- rbind(long_nt, tss_m)
 }
 
-# get niche overlap development for years
-overlaps <- readRDS("R/data/modelling/niche_y_overlap.rds")
-overlaps <- head(overlaps, length(years))
-ol_y <- data.frame(cbind(year = years, overlaps))
-colnames(ol_y) <- c("year", "D")
-
 # get total pa points up to year in eu
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 pa <- subset(pa, Year >= 2002)
@@ -269,49 +263,11 @@ for (i in tss_fy$year) {
 }
 colnames(pa_count) <- c("year", "pa_count")
 
-# plot
-p1 <- ggplot(data = pa_count, aes(x = year, y = pa_count)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years))) +
-    ggtitle("Total pa-data count up to year in EU")
-p2 <- ggplot(data = ol_y, aes(x = year, y = D)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("overlap of eu niche with following year")
-p3 <- ggplot(data = long_nt, aes(x = year, y = tss, color = model, shape = model)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting the following year (native data model)")
-p4 <- ggplot(data = long_t, aes(x = year, y = tss, color = model, shape = model)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting the trained dataset")
-p5 <- ggplot(data = long_fy, aes(x = year, y = tss, color = model, shape = model)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting year (invasive data model)")
-p6 <- ggplot(data = long_22, aes(x = year, y = tss, color = model, shape = model)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting 2022 (invasive data model)")
-
-p <- ggarrange(p1, p2, p3, p4, p5, p6, nrow = 2, ncol = 3, common.legend = TRUE, legend = "bottom")
-fname <- paste0("R/plots/model_performance_results.png")
-ggexport(p, width = 3 * 500, height = 2 * 300, filename = fname)
-```
-
-```{r, plot niche dynamic results + overlap per year}
+# get niche dynamic results + overlap per year
 dyn <- as.data.frame(readRDS("R/data/modelling/niche_y_dynamic.rds"))
 ol <- readRDS("R/data/modelling/niche_y_overlap.rds")
 colnames(ol) <- "overlap"
-year <- 2003:2022
-dyn <- cbind(year, dyn, ol)
+dyn <- cbind(years, head(dyn, length(years)), head(ol, length(years)))
 # convert to long format
 long_dyn <- data.frame()
 for (i in 1:4) {
@@ -322,14 +278,47 @@ for (i in 1:4) {
 }
 long_dyn$index <- factor(long_dyn$index, levels = colnames(dyn)[2:5]) # fix order
 
-p <- ggplot(data = long_dyn, aes(x = year, y = value, color = index, shape = index)) +
+# plot
+p1 <- ggplot(data = pa_count, aes(x = years, y = pa_count)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years))) +
+    ggtitle("Total pa-data count up to year in EU") +
+    theme_pubr()
+p2 <- ggplot(data = long_dyn, aes(x = years, y = value, color = index, shape = index)) +
     geom_point() +
     geom_line() +
     scale_color_manual(values = c("#f8766d", "#619cff", "#00ba38", "black")) +
     coord_cartesian(xlim = c(2002, max(year)), ylim = c(0, 1)) +
     ggtitle("niche dynamic indices for invasive niche (year compared to previous)") +
     theme_pubr()
-ggsave(p, width = 8, height = 5, filename = "R/figures/niche-dyn-ol-res.png")
+p3 <- ggplot(data = long_nt, aes(x = year, y = tss, color = model, shape = model)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    ggtitle("tss for predicting the following year (native data model)") +
+    theme_pubr()
+p4 <- ggplot(data = long_t, aes(x = year, y = tss, color = model, shape = model)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    ggtitle("tss for predicting the trained dataset") +
+    theme_pubr()
+p5 <- ggplot(data = long_fy, aes(x = year, y = tss, color = model, shape = model)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    ggtitle("tss for predicting year (invasive data model)") +
+    theme_pubr()
+p6 <- ggplot(data = long_22, aes(x = year, y = tss, color = model, shape = model)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    ggtitle("tss for predicting 2022 (invasive data model)") +
+    theme_pubr()
+
+p <- ggarrange(p1, p2, p3, p4, p5, p6, nrow = 2, ncol = 3, labels = "AUTO")
+ggsave(p, width = 15, height = 6, bg = "white", filename = "R/figures/modelling-res.png")
 ```
 
 ```{r, plot ens prediction suitability viridis}
