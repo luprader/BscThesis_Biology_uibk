@@ -239,7 +239,7 @@ for (y in years) {
         colnames(tss_nt)[m + 1] <- eval[[m]]$model
     }
 }
-# save tss results for fy
+# save tss results for native
 saveRDS(tss_nt, file = "R/data/modelling/mod_tss_res_nat.rds")
 
 # convert to long format
@@ -289,7 +289,7 @@ p2 <- ggplot(data = long_dyn, aes(x = years, y = value, color = index, shape = i
     geom_point() +
     geom_line() +
     scale_color_manual(values = c("#f8766d", "#619cff", "#00ba38", "black")) +
-    coord_cartesian(xlim = c(2002, max(year)), ylim = c(0, 1)) +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     ggtitle("niche dynamic indices for invasive niche (year compared to previous)") +
     theme_pubr()
 p3 <- ggplot(data = long_nt, aes(x = year, y = tss, color = model, shape = model)) +
@@ -321,12 +321,42 @@ p <- ggarrange(p1, p2, p3, p4, p5, p6, nrow = 2, ncol = 3, labels = "AUTO")
 ggsave(p, width = 15, height = 6, bg = "white", filename = "R/figures/modelling-res.png")
 ```
 
+```{r, plot detailed model results for all years}
+library(PresenceAbsence)
+
+# print confusion matrix for 2005, 2010, 2015, 2020 ensemble predicting fy
+res <- data.frame()
+for (y in 2002:2020) {
+    th_data <- readRDS(paste0("R/data/modelling/th_data_mods/th_data_m", y, "_", y + 1, ".rds"))
+    eval <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds"))
+    ens_res <- eval[1, 5][[1]] # look at ensemble results
+    cmat <- cmx(th_data, threshold = ens_res$threshold, which.model = 5)
+    tss <- ens_res$sensitivity + ens_res$specificity - 1
+    n <- nrow(th_data) # for relative amount
+    res_y <- c(y, cmat[1, 1] / n, cmat[1, 2] / n, cmat[2, 1] / n, cmat[2, 2] / n, ens_res$sensitivity, ens_res$specificity, tss)
+    res <- rbind(res, res_y)
+}
+colnames(res) <- c("year", "tpos", "fpos", "fneg", "tneg", "sens", "spec", "tss")
+
+res_long <- data.frame()
+for (i in seq_len(ncol(res) - 1)) {
+    rlong <- res[, c(1, i + 1)]
+    rlong$measure <- colnames(res)[i + 1]
+    colnames(rlong)[2] <- "value"
+    res_long <- rbind(res_long, rlong)
+}
+
+p <- ggplot(data = res_long, aes(x = year, y = value, colour = measure, shape = measure)) +
+    geom_point() +
+    geom_line() +
+    theme_pubr()
+ggsave(p, filename = "R/plots/model_performance_detail.png")
+```
+
 ```{r, plot ens prediction suitability viridis}
 y <- 2020 # year cutoff for model data
 y_pred <- 2022 # year to predict for
 th_data <- readRDS(paste0("R/data/modelling/th_data_mods/th_data_m", y, "_", y_pred, ".rds"))
-eval <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds"))
-ens_res <- eval[1, ] # only look at ens results
 
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
