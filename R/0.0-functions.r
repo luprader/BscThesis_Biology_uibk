@@ -155,10 +155,6 @@ lp_subdiv_grd <- function(n, s_ext) {
 # has to be a value present in pres$Year
 # n_abs -> number of absences to compute per presence in m
 # has to be an integer
-# min_d -> minimum distance of absences to presences in m
-# has to be a number
-# max_d -> maximum distance of absences to presences
-# has to be a number
 # lc_ref -> land cover raster to test for water/NA
 # has to be a SpatRaster object (terra) with numerical values, water = 210
 
@@ -166,7 +162,7 @@ lp_subdiv_grd <- function(n, s_ext) {
 # (Lon, Lat, Year, CoordUncert, Area, Presence)
 # contains the absences generated for year
 
-lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
+lp_gen_abs <- function(pres, year, n_abs, lc_ref) {
     starting_time <- Sys.time()
 
     # check if pres is empty
@@ -187,10 +183,9 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
         return(ao)
     }
 
-    ## generate n_abs absence points per circle
+    ## generate n_abs absence points
     wc <- 0 # how often replacements had to be generated
 
-    # for (i in seq_along(circs_rd)) {
     cat("\r", "|", year, "|") # , i, "|") # print gen progress
     c <- vect(ext(lc_ref), crs = crs(lc_ref)) # normal random extent sampling
     c$Year <- year
@@ -218,7 +213,6 @@ lp_gen_abs <- function(pres, year, n_abs, min_d, max_d, lc_ref) {
     pts_df <- rename(pts_df, c("Lon" = "x", "Lat" = "y"))
     # add generated points to total dataframe
     ao <- rbind(ao, pts_df)
-    # }
 
     ao$Presence <- "absent"
     n_pres <- length(pres_y)
@@ -382,7 +376,7 @@ lp_pca_proj_lc <- function(pca_res, year, cont_eu) {
 # png_name -> filename of the response curve png
 
 # returns a list containing the presence.absence.accuracy() results for each
-# model and each value of ys as well as an ensemble prediction weighted with TSS
+# model and each value of ys as well as an ensemble prediction weighted with sensitivity
 # generates a png with response curves for all variables in the trained range
 
 lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
@@ -460,17 +454,15 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
         ma[[m]] <- presence.absence.accuracy(th_data, which.model = m, ths[[m + 1]])
     }
 
-    # create TSS weighted ensemble
-    tss <- c()
-    # get tss for each model
+    # create sensitivity weighted ensemble
+    sens <- c()
+    # get sens for each model
     for (m in 1:4) {
-        sens <- ma[[m]]$sensitivity
-        spec <- ma[[m]]$specificity
-        tss <- c(tss, sens + spec - 1)
+        sens <- c(sens, ma[[m]]$sensitivity)
     }
-    # tss[tss<0] = 0 # if tss is negative, exclude from weighting
-    # get weighted average prediction with tss
-    th_data$ens <- apply(th_data[, 3:6], 1, weighted.mean, w = tss)
+
+    # get weighted average prediction with sens
+    th_data$ens <- apply(th_data[, 3:6], 1, weighted.mean, w = sens)
     # compute performance of ensemble
     th <- optimal.thresholds(th_data, which.model = 5, opt.methods = 3)
     ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2])
@@ -501,17 +493,15 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
             ma[[m]] <- presence.absence.accuracy(th_data, which.model = m, ths[[m + 1]])
         }
 
-        # create TSS weighted ensemble
-        tss <- c()
-        # get tss for each model
+        # create sensitivity weighted ensemble
+        sens <- c()
+        # get sens for each model
         for (m in 1:4) {
-            sens <- ma[[m]]$sensitivity
-            spec <- ma[[m]]$specificity
-            tss <- c(tss, sens + spec - 1)
+            sens <- c(sens, ma[[m]]$sensitivity)
         }
-        # tss[tss<0] = 0 # if tss is negative, exclude from weighting
-        # get weighted average prediction with tss
-        th_data$ens <- apply(th_data[, 3:6], 1, weighted.mean, w = tss)
+
+        # get weighted average prediction with sens
+        th_data$ens <- apply(th_data[, 3:6], 1, weighted.mean, w = sens)
         # compute performance of ensemble
         th <- optimal.thresholds(th_data, which.model = 5, opt.methods = 3)
         ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2])
@@ -527,7 +517,7 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
         }
         saveRDS(th_data, file = fname)
     }
-    res_y <- rbind(res_y, res_t) # add training tss results
+    res_y <- rbind(res_y, res_t) # add training sens results
     rownames(res_y) <- c(ys, "trained")
     return(res_y)
 }
