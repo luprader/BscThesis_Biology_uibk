@@ -184,15 +184,15 @@ for (y in years) {
     for (m in 1:5) { # get tss for each model
         # fy tss df
         ev <- eval[1, ]
-        tss_fy[y - 2001, m + 1] <- ev[[m]]$sensitivity + ev[[m]]$specificity - 1
+        tss_fy[y - 2001, m + 1] <- ev[[m]]$sensitivity #+ ev[[m]]$specificity - 1
         colnames(tss_fy)[m + 1] <- ev[[m]]$model
         # 2022 tss df
         ev <- eval[2, ]
-        tss_22[y - 2001, m + 1] <- ev[[m]]$sensitivity + ev[[m]]$specificity - 1
+        tss_22[y - 2001, m + 1] <- ev[[m]]$sensitivity #+ ev[[m]]$specificity - 1
         colnames(tss_22)[m + 1] <- ev[[m]]$model
         # trained tss df
         ev <- eval[3, ]
-        tss_t[y - 2001, m + 1] <- ev[[m]]$sensitivity + ev[[m]]$specificity - 1
+        tss_t[y - 2001, m + 1] <- ev[[m]]$sensitivity #+ ev[[m]]$specificity - 1
         colnames(tss_t)[m + 1] <- ev[[m]]$model
     }
 }
@@ -237,7 +237,7 @@ for (y in years) {
     }
     for (m in 1:5) { # get tss for each model
         # fy tss df
-        tss_nt[y - 2001, m + 1] <- eval[[m]]$sensitivity + eval[[m]]$specificity - 1
+        tss_nt[y - 2001, m + 1] <- eval[[m]]$sensitivity #+ eval[[m]]$specificity - 1
         colnames(tss_nt)[m + 1] <- eval[[m]]$model
     }
 }
@@ -332,7 +332,8 @@ for (y in 2002:2020) {
     th_data <- readRDS(paste0("R/data/modelling/th_data_mods/th_data_m", y, "_", y + 1, ".rds"))
     eval <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds"))
     ens_res <- eval[1, 5][[1]] # look at ensemble results
-    cmat <- cmx(th_data, threshold = ens_res$threshold, which.model = 5)
+    cmx <- cmx(th_data, threshold = ens_res$threshold, which.model = 5)
+    eval = 
     tss <- ens_res$sensitivity + ens_res$specificity - 1
     n <- nrow(th_data) # for relative amount
     res_y <- c(y, cmat[1, 1] / n, cmat[1, 2] / n, cmat[2, 1] / n, cmat[2, 2] / n, ens_res$sensitivity, ens_res$specificity, tss)
@@ -389,13 +390,14 @@ p <- ggplot(crop(countries, ext(lc_ref))) +
     labs(color = "suitability") +
     ggtitle(paste0(y, " ens prediction for ", y_pred, " suitability values"))
 fname <- paste0("R/plots/ens_20suitability22.png")
-ggexport(width = 800, height = 600, filename = fname)
+ggexport(p, width = 800, height = 600, filename = fname)
 ```
 
-```{r, test correlation tss ol and pc pearson}
+```{r, test correlation tss ol and pc}
 tss_res <- readRDS("R/data/modelling/mod_tss_res.rds")
-overlaps <- readRDS("R/data/modelling/niche_y_overlap.rds")
-overlaps <- head(overlaps, nrow(tss_res))
+dyn <- readRDS("R/data/modelling/niche_y_dynamic.rds")
+overlaps <- as.data.frame(dyn)$stability
+overlaps = overlaps[1:19]
 
 # get list of total pa points up to year in EU
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
@@ -405,15 +407,15 @@ for (i in 2002:2022) {
     pcount[i - 2001] <- nrow(subset(eu, Year <= i))
 }
 # pcount for years used
-pcount <- head(pcount, nrow(overlaps))
+pcount <- head(pcount, length(overlaps))
 
 # compute pearson correlation for tss_fy
 cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
 for (i in 2:6) {
-    tss_mod <- tss_res[seq_along(overlaps) + 1, i]
-    c_ol <- cor.test(overlaps, tss_mod, method = "pearson")
+    tss_mod <- tss_res[, i]
+    c_ol <- cor.test(overlaps, tss_mod, method = "spearman")
     # plot(tss_mod, overlaps, main = colnames(tss_res)[i])
-    c_pc <- cor.test(pcount, tss_mod, method = "pearson")
+    c_pc <- cor.test(pcount, tss_mod, method = "spearman")
     # plot(tss_mod, pcount,  main = colnames(tss_res)[i])
     c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
     cor_res <- cbind(cor_res, c_res_mod)
@@ -421,7 +423,7 @@ for (i in 2:6) {
 colnames(cor_res) <- colnames(tss_res)[2:6]
 # correlate pcount and ol
 cor_pc_ol <- data.frame(row.names = c("02-20", "02-07", "08-20"))
-c_pc_ol <- cor.test(pcount, overlaps, method = "pearson")
+c_pc_ol <- cor.test(pcount, overlaps, method = "spearman")
 res_pc_ol <- c(c_pc_ol$estimate, c_pc_ol$p.value)
 cor_pc_ol <- rbind(cor_pc_ol, res_pc_ol)
 colnames(cor_pc_ol) <- c("corr.", "p value")
@@ -434,16 +436,16 @@ cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
 for (i in 2:6) {
     tss_mod <- tss_res[seq_along(overlaps) + 1, i]
     tss_mod2 <- head(tss_mod, 6)
-    c_ol <- cor.test(overlaps2, tss_mod2, method = "pearson")
+    c_ol <- cor.test(overlaps2, tss_mod2, method = "spearman")
     # plot(tss_mod, overlaps, main = colnames(tss_res)[i])
-    c_pc <- cor.test(pcount2, tss_mod2, method = "pearson")
+    c_pc <- cor.test(pcount2, tss_mod2, method = "spearman")
     # plot(tss_mod, pcount,  main = colnames(tss_res)[i])
     c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
     cor_res <- cbind(cor_res, c_res_mod)
 }
 colnames(cor_res) <- colnames(tss_res)[2:6]
 # correlate pcount and ol
-c_pc_ol <- cor.test(pcount2, overlaps2, method = "pearson")
+c_pc_ol <- cor.test(pcount2, overlaps2, method = "spearman")
 res_pc_ol <- c(c_pc_ol$estimate, c_pc_ol$p.value)
 cor_pc_ol <- rbind(cor_pc_ol, res_pc_ol)
 colnames(cor_pc_ol) <- c("corr.", "p value")
@@ -456,16 +458,16 @@ cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
 for (i in 2:6) {
     tss_mod <- tss_res[seq_along(overlaps) + 1, i]
     tss_mod2 <- tail(tss_mod, -6)
-    c_ol <- cor.test(overlaps2, tss_mod2, method = "pearson")
+    c_ol <- cor.test(overlaps2, tss_mod2, method = "spearman")
     # plot(tss_mod, overlaps, main = colnames(tss_res)[i])
-    c_pc <- cor.test(pcount2, tss_mod2, method = "pearson")
+    c_pc <- cor.test(pcount2, tss_mod2, method = "spearman")
     # plot(tss_mod, pcount,  main = colnames(tss_res)[i])
     c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
     cor_res <- cbind(cor_res, c_res_mod)
 }
 colnames(cor_res) <- colnames(tss_res)[2:6]
 # correlate pcount and ol
-c_pc_ol <- cor.test(pcount2, overlaps2, method = "pearson")
+c_pc_ol <- cor.test(pcount2, overlaps2, method = "spearman")
 res_pc_ol <- c(c_pc_ol$estimate, c_pc_ol$p.value)
 cor_pc_ol <- rbind(cor_pc_ol, res_pc_ol)
 colnames(cor_pc_ol) <- c("pc to ol corr.", "p value")
