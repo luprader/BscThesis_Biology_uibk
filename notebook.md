@@ -365,3 +365,13 @@ An attempt was made to use regression in order to measure the correlation betwee
 The main thesis document was improved with a part of the pending supervisor suggestions, also adding most of the formatting requirements.
 Niche comparison was switched back to compare between the years of invasion in Europe, since that way the niche change can be seen relative to the niche size, which can be impacted by the data amount.
 Two figures were created in order to be used in the thesis later on, one showing the amount of cleaned presences for each year on a log scale, distinguishing Europe and Asia. And the other showing the difference between the raw and cleaned dataset.
+
+### 07/02/24
+Since the last entry, a bit of progress was made.
+A figure explaining the subdivision algorithm in more detail was made as well as a detailed plot showing the niche dynamic indices.
+Another plot was made, showing that the reason for decreasing tss over the years is definitely linked to increasing false positives, maybe caused in part due to the bias correction.
+After a meeting, it was decided to use sensitivity as a measure for model performance instead.
+
+### 14/02/24
+More writing was done, improving the introduction and methods section, as well as starting the results section by showing the progression of data availability over time.
+Over the next few days, a full run of the project code without thinning the data will be done, just to get the current total results as a guide for writing. The results should not change much anymore, since no future parameter changes are planned (currently).
