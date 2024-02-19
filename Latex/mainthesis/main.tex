@@ -11,6 +11,7 @@
 \usepackage[acronym]{glossaries}
 \usepackage{soul} % for command \hl
 \usepackage{pdfpages} % to insert pdf docs
+\usepackage{csvsimple} % to import .csv files as tables
 
 \AtBeginBibliography{\small}
 \addbibresource{main_sources.bib}
@@ -222,6 +223,19 @@ The exponential increase in observations over time also suggests rapid populatio
 The lack of presence points in early years in the native range was the reason why it was decided to only create one SDM with the native data of all years combined, since it is more likely to provide a complete evaluation of the native niche.
 
 \subsection{Niche dynamic analysis} \label{ssec:niche_dyn_analysis}
+
+\begin{figure}
+    \centering
+    \includegraphics[width = 0.6\linewidth]{"../../R/figures/as-eu-tot-niche.png"}
+    \caption{\label{fig:as_eu_niche} Native (green) and invaded (red) niche of \gls{harm}, shown along the first two axes of a PCA using all bioclim variables (Supplementary Fig. \ref{fig:as_eu_niche_pca}). The blue area indicates overlap between the occupied niches. Dashed and solid lines indicate 50\% and 100\% of the potentially available environment in each area (from background). Grey shading shows the density distribution of the invaded niche.}
+\end{figure}
+
+When comparing the total native and invaded niches (so all years included), the niches are clearly different (Fig. \ref{fig:as_eu_niche}).
+A niche similarity test produced a p value of $p = 0.32$, leading to an accepted null hypothesis meaning the two niches are not more similar than random (Supplementary Fig. \ref{fig:as_eu_eq_sim}).
+Conducting a niche equivalency test, the result was $p = 0.01$ implying highly significant differences between the two niches (Supplementary Fig. \ref{fig:as_eu_eq_sim}).
+
+Looking at the niche only in the invaded range, one can visualize the shift and expansion throughout the years.
+
 
 
 \section{Discussion} \label{sec:discussion}

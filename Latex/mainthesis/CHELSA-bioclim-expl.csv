@@ -1,0 +1,20 @@
+shortname,longname,unit,scale,offset,explanation
+bio1,mean annual air temperature,°C,0.1,-273.15,mean annual daily mean air temperatures averaged over 1 year
+bio2,mean diurnal air temperature range,°C,0.1,0,mean diurnal range of temperatures averaged over 1 year
+bio3,isothermality,°C,0.1,0,ratio of diurnal variation to annual variation in temperatures
+bio4,temperature seasonality,°C/100,0.1,0,standard deviation of the monthly mean temperatures
+bio5,mean daily maximum air temperature of the warmest month,°C,0.1,-273.15,The highest temperature of any monthly daily mean maximum temperature
+bio6,mean daily minimum air temperature of the coldest month,°C,0.1,-273.15,The lowest temperature of any monthly daily mean maximum temperature
+bio7,annual range of air temperature,°C,0.1,0,The difference between the Maximum Temperature of Warmest month and the Minimum Temperature of Coldest month
+bio8,mean daily mean air temperatures of the wettest quarter,°C,0.1,-273.15,The wettest quarter of the year is determined (to the nearest month)
+bio9,mean daily mean air temperatures of the driest quarter,°C,0.1,-273.15,The driest quarter of the year is determined (to the nearest month)
+bio10,mean daily mean air temperatures of the warmest quarter,°C,0.1,-273.15,The warmest quarter of the year is determined (to the nearest month)
+bio11,mean daily mean air temperatures of the coldest quarter,°C,0.1,-273.15,The coldest quarter of the year is determined (to the nearest month)
+bio12,annual precipitation amount,kg m-2,0.1,0,Accumulated precipitation amount over 1 year
+bio13,precipitation amount of the wettest month,kg m-2,0.1,0,The precipitation of the wettest month.
+bio14,precipitation amount of the driest month,kg m-2,0.1,0,The precipitation of the driest month.
+bio15,precipitation seasonality,kg m-2,0.1,0,The Coefficient of Variation is the standard deviation of the monthly precipitation estimates expressed as a percentage of the mean of those estimates (i.e. the annual mean)
+bio16,mean monthly precipitation amount of the wettest quarter,kg m-2,0.1,0,The wettest quarter of the year is determined (to the nearest month)
+bio17,mean monthly precipitation amount of the driest quarter,kg m-2,0.1,0,The driest quarter of the year is determined (to the nearest month)
+bio18,mean monthly precipitation amount of the warmest quarter,kg m-2,0.1,0,The warmest quarter of the year is determined (to the nearest month)
+bio19,mean monthly precipitation amount of the coldest quarter,kg m-2,0.1,0,The coldest quarter of the year is determined (to the nearest month)

@@ -12,6 +12,8 @@ library(rnaturalearth)
 library(sf)
 library(factoextra)
 library(magick)
+library(png)
+library(gridExtra)
 source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 ```
 
@@ -142,6 +144,16 @@ for (i in seq_len(nrow(subexts))) {
 }
 p <- ggarrange(p1, p2, ncol = 1, labels = c("A", "B"))
 ggsave(p, width = 6, height = 7, bg = "white", filename = "R/figures/ext-subdiv.png")
+```
+
+```{r, combine some niche year plots}
+years = c("20022003", "20062007", "20102011", "20142015", "20181019", "20212022")
+p = list()
+for (i in 1:6) {
+    p[[i]] <- readPNG(paste0("eu_", years[i], "_niche.png"))
+}
+layout(matrix(1:12,nr=4,byr=T))
+for (j in 1:12) plot(p[[j]])
 ```
 
 ```{r, tss of native on training data}
@@ -413,9 +425,9 @@ pcount <- head(pcount, length(overlaps))
 cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
 for (i in 2:6) {
     tss_mod <- tss_res[, i]
-    c_ol <- cor.test(overlaps, tss_mod, method = "spearman")
+    c_ol <- cor.test(overlaps, tss_mod, method = "pearson")
     # plot(tss_mod, overlaps, main = colnames(tss_res)[i])
-    c_pc <- cor.test(pcount, tss_mod, method = "spearman")
+    c_pc <- cor.test(pcount, tss_mod, method = "pearson")
     # plot(tss_mod, pcount,  main = colnames(tss_res)[i])
     c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
     cor_res <- cbind(cor_res, c_res_mod)
@@ -423,7 +435,7 @@ for (i in 2:6) {
 colnames(cor_res) <- colnames(tss_res)[2:6]
 # correlate pcount and ol
 cor_pc_ol <- data.frame(row.names = c("02-20", "02-07", "08-20"))
-c_pc_ol <- cor.test(pcount, overlaps, method = "spearman")
+c_pc_ol <- cor.test(pcount, overlaps, method = "pearson")
 res_pc_ol <- c(c_pc_ol$estimate, c_pc_ol$p.value)
 cor_pc_ol <- rbind(cor_pc_ol, res_pc_ol)
 colnames(cor_pc_ol) <- c("corr.", "p value")
@@ -436,16 +448,16 @@ cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
 for (i in 2:6) {
     tss_mod <- tss_res[seq_along(overlaps) + 1, i]
     tss_mod2 <- head(tss_mod, 6)
-    c_ol <- cor.test(overlaps2, tss_mod2, method = "spearman")
+    c_ol <- cor.test(overlaps2, tss_mod2, method = "pearson")
     # plot(tss_mod, overlaps, main = colnames(tss_res)[i])
-    c_pc <- cor.test(pcount2, tss_mod2, method = "spearman")
+    c_pc <- cor.test(pcount2, tss_mod2, method = "pearson")
     # plot(tss_mod, pcount,  main = colnames(tss_res)[i])
     c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
     cor_res <- cbind(cor_res, c_res_mod)
 }
 colnames(cor_res) <- colnames(tss_res)[2:6]
 # correlate pcount and ol
-c_pc_ol <- cor.test(pcount2, overlaps2, method = "spearman")
+c_pc_ol <- cor.test(pcount2, overlaps2, method = "pearson")
 res_pc_ol <- c(c_pc_ol$estimate, c_pc_ol$p.value)
 cor_pc_ol <- rbind(cor_pc_ol, res_pc_ol)
 colnames(cor_pc_ol) <- c("corr.", "p value")
@@ -458,16 +470,16 @@ cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
 for (i in 2:6) {
     tss_mod <- tss_res[seq_along(overlaps) + 1, i]
     tss_mod2 <- tail(tss_mod, -6)
-    c_ol <- cor.test(overlaps2, tss_mod2, method = "spearman")
+    c_ol <- cor.test(overlaps2, tss_mod2, method = "pearson")
     # plot(tss_mod, overlaps, main = colnames(tss_res)[i])
-    c_pc <- cor.test(pcount2, tss_mod2, method = "spearman")
+    c_pc <- cor.test(pcount2, tss_mod2, method = "pearson")
     # plot(tss_mod, pcount,  main = colnames(tss_res)[i])
     c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
     cor_res <- cbind(cor_res, c_res_mod)
 }
 colnames(cor_res) <- colnames(tss_res)[2:6]
 # correlate pcount and ol
-c_pc_ol <- cor.test(pcount2, overlaps2, method = "spearman")
+c_pc_ol <- cor.test(pcount2, overlaps2, method = "pearson")
 res_pc_ol <- c(c_pc_ol$estimate, c_pc_ol$p.value)
 cor_pc_ol <- rbind(cor_pc_ol, res_pc_ol)
 colnames(cor_pc_ol) <- c("pc to ol corr.", "p value")

@@ -375,3 +375,6 @@ After a meeting, it was decided to use sensitivity as a measure for model perfor
 ### 14/02/24
 More writing was done, improving the introduction and methods section, as well as starting the results section by showing the progression of data availability over time.
 Over the next few days, a full run of the project code without thinning the data will be done, just to get the current total results as a guide for writing. The results should not change much anymore, since no future parameter changes are planned (currently).
+
+### 20/02/24
+A section reporting the results of niche analysis was started, additionally some supplementary figures and tables were added.
