@@ -8,6 +8,7 @@ library(dplyr)
 library(parallel)
 
 tot_time <- Sys.time()
+set.seed(4326) # consistent randmoness
 # load extracted pa data
 pa <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
 pa_as <- subset(pa, Area == "as")
@@ -20,7 +21,7 @@ bio_tot <- select(pa, starts_with("bio")) # only use bioclim vars
 # pca calibrated on all datapoints
 pca_tot <- dudi.pca(bio_tot, scannf = FALSE, nf = 2)
 # plot pca axis contribution
-fname <- "R/plots/niche_comp/as_eu_pca.png"
+fname <- "R/figures/as-eu-pca.png"
 png(width = 600, height = 600, filename = fname)
 ecospat.plot.contrib(contrib = pca_tot$co, eigen = pca_tot$eig)
 dev.off()
@@ -51,18 +52,17 @@ ol <- round(ecospat.niche.overlap(grid_as, grid_eu, cor = TRUE)$D, digits = 3)
 di <- round(ecospat.niche.dyn.index(grid_as, grid_eu)$dynamic.index.w, digits = 3)
 
 # plot niche overlap
-fname <- "R/plots/niche_comp/as_eu_tot_niche.png"
+fname <- "R/figures/as-eu-tot-niche.png"
 png(width = 600, height = 600, filename = fname)
-text <- paste("Niche Overlap native / EU | D:", ol, "\n expansion stability unfilling :", di[[1]], di[[2]], di[[3]])
 ecospat.plot.niche.dyn(grid_as, grid_eu,
-    quant = 0.1,
+    quant = 0.5,
     col.unf = "#00ba38", col.exp = "#f8766d", col.stab = "#3f80f1",
-    interest = 2, title = text, name.axis1 = "PC1",
+    interest = 2, name.axis1 = "PC1",
     name.axis2 = "PC2"
 )
 dev.off()
-
-fname <- "R/plots/niche_comp/as_eu_tot_eq-sim.png"
+ 
+fname <- "R/figures/as-eu-tot-eq-sim.png"
 png(width = 1200, height = 600, filename = fname)
 par(mfrow = c(1, 2))
 # niche equivalency test
@@ -76,7 +76,7 @@ ecospat.plot.overlap.test(eq_test, "D", "Equivalency Native / EU")
 rm(eq_test)
 # niche similarity test
 sim_test <- ecospat.niche.similarity.test(grid_as, grid_eu,
-    rep = 100, rand.type = 1, ncores = nc, overlap.alternative = "higher",
+    rep = 100, rand.type = 2, ncores = nc, overlap.alternative = "higher",
     expansion.alternative = "lower", stability.alternative = "higher", unfilling.alternative = "lower"
 ) # alternatives set to test for niche conservatism, i.e. niche overlap more similar than random
 # plot sim_test
@@ -94,7 +94,7 @@ bio_eu <- select(pa_eu, starts_with("bio"))
 # pca calibrated on eu datapoints
 pca_eu <- dudi.pca(bio_eu, scannf = FALSE, nf = 2)
 # plot pca axis contribution
-fname <- "R/plots/niche_comp/eu_years_pca.png"
+fname <- "R/figures/eu-years-pca.png"
 png(width = 600, height = 600, filename = fname)
 ecospat.plot.contrib(contrib = pca_eu$co, eigen = pca_eu$eig)
 dev.off()
@@ -149,11 +149,10 @@ for (y in 2003:2022) {
 
     fname <- paste0("R/plots/niche_comp/single_ys/eu_", y - 1, y, "_niche.png")
     png(width = 600, height = 600, filename = fname)
-    text <- paste("Niche Overlap native / EU ", y, " | D:", ol, "\n expansion stability unfilling :", di[[1]], di[[2]], di[[3]])
     ecospat.plot.niche.dyn(grid_eu_y1, grid_eu_y2,
-        quant = 0.1,
+        quant = 0.5,
         col.unf = "#00ba38", col.exp = "#f8766d", col.stab = col_stab,
-        interest = 2, title = text, name.axis1 = "PC1",
+        interest = 2, name.axis1 = "PC1",
         name.axis2 = "PC2"
     )
     dev.off()
@@ -172,7 +171,7 @@ for (y in 2003:2022) {
     )
     sim_tests <- rbind(sim_tests, sim_test) # save in array
 }
-cat("compared each year to native \n")
+cat("compared each year to following \n")
 
 # save niche sim and eq results
 eq_sim <- cbind(eq_tests, sim_tests)
