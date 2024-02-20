@@ -19,8 +19,14 @@
 
 \begin{figure}[!h]
     \centering
-    \includegraphics[width = 0.8\linewidth]{"../../R/figures/as-eu-pca.png"}
+    \includegraphics[width = 0.7\linewidth]{"../../R/figures/as-eu-pca.png"}
     \caption{\label{fig:as_eu_niche_pca} Component contributions for the PCA used to conduct the niche analyses comparing the total native and invaded niches. For detail on the bioclim variables, see (Supplementary Table \ref{tab:bioclim})}
+\end{figure}
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width = 0.7\linewidth]{"../../R/figures/eu-years-pca.png"}
+    \caption{\label{fig:eu_years_pca} Component contributions for the PCA used to conduct the niche analyses comparing each year of the invaded niche to its  following year. For detail on the bioclim variables, see (Supplementary Table \ref{tab:bioclim})}
 \end{figure}
 
 \begin{table}[!h]
@@ -28,8 +34,10 @@
     \caption{\label{tab:bioclim} Explanation of the bioclim variables (from CHELSA 2.x technical specifications).}
     \begin{tabular}{l l}
         \textbf{variable} & \textbf{explanation}
-        \csvreader[head to column names]{CHELSA-bioclim-expl.csv}{}{
+        \csvreader[head to column names]{tab-CHELSA-bioclim-expl.csv}{}{
         \\ \shortname & \longname
         }
     \end{tabular}
 \end{table}
+
+\section{Species distribution models}

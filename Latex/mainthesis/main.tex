@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
 \usepackage[abbreviate = true, doi = true, style = nature, giveninits = true, sorting = none, backend = biber]{biblatex}
-\usepackage[lmargin = 4cm, rmargin = 4cm, tmargin = 2.5cm, bmargin = 2.5cm]{geometry}
+\usepackage[lmargin = 3.5cm, rmargin = 3.5cm, tmargin = 2.5cm, bmargin = 2.5cm]{geometry}
 \usepackage[onehalfspacing]{setspace}
 \usepackage{graphicx}
 \usepackage{hyperref}
@@ -12,6 +12,8 @@
 \usepackage{soul} % for command \hl
 \usepackage{pdfpages} % to insert pdf docs
 \usepackage{csvsimple} % to import .csv files as tables
+\usepackage{caption} 
+\captionsetup[table]{skip=10pt} % more space between table and caption
 
 \AtBeginBibliography{\small}
 \addbibresource{main_sources.bib}
@@ -137,7 +139,7 @@ The aggregating behaviour of \gls{harm}, mostly as a strategy for overwintering,
 In general, \gls{harm} can be concluded to be a species with high impact as an invader, and thus of interest for active research questions.
 
 %existing SDMs for H. axyridis
-There have been several publications which model and predict the distribution of \gls{harm}, constrained to certain geographical ranges (i.e. Spain \autocite{ameixa2019harmSDMSpain}, Chile \autocite{alaniz2018harmSDMChile}) or even on global scales \autocite{bidinger2012harmSDMglobalMaxent, poutsma2008harmSDMglobalClimex}.
+There have been several publications which modelled and predicted the distribution of \gls{harm}, constrained to certain geographical ranges (i.e. Spain \autocite{ameixa2019harmSDMSpain}, Chile \autocite{alaniz2018harmSDMChile}) or even on global scales \autocite{bidinger2012harmSDMglobalMaxent, poutsma2008harmSDMglobalClimex}.
 There has not yet been any model iteration in form of a time series, which is what this thesis aims to add as new insight.
 Another goal of this thesis is to look into the limitations of models built early in the invasion process of a species.
 By iterating over the years of the invasion, model performance can be evaluated with consideration to the current state of invasion.
@@ -234,8 +236,50 @@ When comparing the total native and invaded niches (so all years included), the 
 A niche similarity test produced a p value of $p = 0.32$, leading to an accepted null hypothesis meaning the two niches are not more similar than random (Supplementary Fig. \ref{fig:as_eu_eq_sim}).
 Conducting a niche equivalency test, the result was $p = 0.01$ implying highly significant differences between the two niches (Supplementary Fig. \ref{fig:as_eu_eq_sim}).
 
-Looking at the niche only in the invaded range, one can visualize the shift and expansion throughout the years.
+Looking at the niche only in the invaded range, one can visualize the shift and expansion throughout the years (Fig. \ref{fig:eu_niche_ys}).
 
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width = \linewidth]{"../../R/figures/eu-niche-ys.png"}
+    \caption{\label{fig:eu_niche_ys} The progression of the invaded niche of \gls{harm}, shown along the first two axes of a PCA using all bioclim variables (Supplementary Fig. \ref{fig:eu_years_pca}). Niches of the years (from left to right) 2002, 2012 and 2021 compared to the niche of their following years respectively. Green shows the first year, red shows the year after and blue indicates overlap. Dashed and solid lines indicate 50\% and 100\% of the potentially available environment (from background). Grey shading shows the density distribution of the second year.}
+
+\end{figure}
+
+In addition to a visualization, it makes sense to compute the niche dynamic indices \autocite{guisan2014nichedyn}, as well as the niche overlap (Schoener's D) for each year in order to characterize the niche shift further (Fig. \ref{fig:eu_niche_dyn}).
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width = 0.9\linewidth]{"../../R/figures/eu-niche-dyn.png"}
+    \caption{\label{fig:eu_niche_dyn} Niche dynamic indices and overlap (Schoener's D) computed from comparing each year of the invaded niche of \gls{harm} to the following year.}
+\end{figure}
+
+The results show that in the first five years of the time series, the invaded niche is still expanding, while afterwards it becomes almost completely stable.
+Once stability is reached, \gls{harm} seems to just fill out the rest of the acquired niche, as shown by an increase in niche overlap.
+
+\subsection{SDMs, ensemble and time series}
+Variable selection using VIFs resulted in 13 variables, which were used for modelling (Tab. \ref{tab:var_vifs}).
+
+\begin{table}[!h]
+    \centering
+    \caption{\label{tab:var_vifs} Final 13 variables resulting from variable selection with VIFs.}
+    \centerline{
+    \begin{tabular}{l| r*{13}{ c}}
+        \csvreader[no head, column count = 14, late after line = \\]{tab-var-vifs.csv}{}{\csvlinetotablerow}
+    \end{tabular}
+    }
+\end{table}
+
+After computing all of the mentioned models and creating a TPR weighted ensemble, one can examine the development over time in more detail (Fig. \ref{fig:modelling_res}).
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width = 0.9\linewidth]{"../../R/figures/modelling-res.png"}
+    \caption{\label{fig:modelling_res} SDM predictive performance over time. Subfigure A shows the performance of models created with invasive data up to the year in question in predicting the following year. Subfigure B shows the performance of models created with all the native data in predicting the year in question.}
+\end{figure}
+
+The difference in performance between the invaded and native range models is apparent, with the invaded range models achieving a higher TPR on average.
+Surprisingly, the invasive data models already perform very well in the first years and continue to do so for all further years.
+It is notable, that the GLM almost always performs the best out of all native models.
 
 
 \section{Discussion} \label{sec:discussion}

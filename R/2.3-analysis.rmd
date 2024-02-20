@@ -13,6 +13,7 @@ library(sf)
 library(factoextra)
 library(magick)
 library(png)
+library(grid)
 library(gridExtra)
 source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 ```
@@ -20,6 +21,10 @@ source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 ```{r}
 # used colour hex codes:
 c("#00ba38", "#f8766d", "#3f80f1")
+ftheme <- theme(
+    legend.title = element_text(size = 15), legend.key.size = unit(1, "cm"),
+    legend.text = element_text(size = 14), axis.title = element_text(size = 14)
+)
 ```
 
 ```{r, plot presence yearly count 2002-2022}
@@ -46,7 +51,8 @@ p <- ggplot(data, aes(x = Year, y = Freq, fill = Area)) +
     scale_color_manual(values = c("#00ba38", "#f8766d")) +
     scale_x_discrete(breaks = seq(2002, 2022, by = 4)) +
     labs(x = "Year", y = "Number of Observations") +
-    theme_pubr()
+    theme_pubr() +
+    ftheme
 ggsave(p, width = 8, height = 5, filename = "R/figures/pres-per-year-log.png")
 ```
 
@@ -142,18 +148,164 @@ subexts <- readRDS("R/data/plotting/axyridis_abs_gen_subexts.rds")
 for (i in seq_len(nrow(subexts))) {
     p2 <- p2 + geom_spatvector(data = vect(ext(subexts[i, ]), crs = crs(lc_ref)), colour = "#3f80f1", fill = NA, linetype = "solid", linewidth = 0.5)
 }
-p <- ggarrange(p1, p2, ncol = 1, labels = c("A", "B"))
+p <- ggarrange(p1, p2, ncol = 1, labels = c("A", "B"), font.label = list(size = 20))
 ggsave(p, width = 6, height = 7, bg = "white", filename = "R/figures/ext-subdiv.png")
 ```
 
-```{r, combine some niche year plots}
-years = c("20022003", "20062007", "20102011", "20142015", "20181019", "20212022")
-p = list()
-for (i in 1:6) {
-    p[[i]] <- readPNG(paste0("eu_", years[i], "_niche.png"))
+```{r, combine some niche year plots into one figure}
+years <- c("20022003", "20122013", "20212022")
+p <- list()
+for (i in seq_len(length(years))) {
+    p[[i]] <- image_read(paste0("R/plots/niche_comp/single_ys/eu_", years[i], "_niche.png"))
 }
-layout(matrix(1:12,nr=4,byr=T))
-for (j in 1:12) plot(p[[j]])
+
+img <- image_append(c(p[[1]], p[[2]]))
+img <- image_append(c(img, p[[3]]))
+image_write(img, path = "R/figures/eu-niche-ys.png", format = "png")
+```
+
+```{r, plot of eu niche dynamic indices over time}
+# get niche dynamic results + overlap per year
+dyn <- as.data.frame(readRDS("R/data/modelling/niche_y_dynamic.rds"))
+ol <- readRDS("R/data/modelling/niche_y_overlap.rds")
+colnames(ol) <- "overlap"
+years <- 2002:2020
+dyn <- cbind(years, head(dyn, length(years)), head(ol, length(years)))
+# convert to long format
+long_dyn <- data.frame()
+for (i in 1:4) {
+    di <- dyn[, c(1, i + 1)]
+    di$index <- colnames(dyn)[i + 1]
+    colnames(di)[2] <- "value"
+    long_dyn <- rbind(long_dyn, di)
+}
+long_dyn$index <- factor(long_dyn$index, levels = colnames(dyn)[2:5]) # fix order
+
+p <- ggplot(data = long_dyn, aes(x = years, y = value, color = index, shape = index)) +
+    geom_point() +
+    geom_line() +
+    scale_color_manual(values = c("#f8766d", "#619cff", "#00ba38", "black")) +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    theme_pubr() +
+    ftheme
+
+ggsave(p, width = 8, height = 5, filename = "R/figures/eu-niche-dyn.png")
+```
+
+```{r, create variable table with VIFs}
+vifs <- readRDS("R/data/modelling/var_select_vifs.rds")
+
+vars <- data.frame(matrix(ncol = nrow(vifs), nrow = 0))
+vars <- rbind(vars, round(vifs[, 1], digits = 2))
+colnames(vars) <- as.list(gsub(".*s\\((.+)\\)*.", "\\1", rownames(vifs))) # no s()
+Name <- "VIF"
+vars <- cbind(Name, vars)
+
+# write to .csv for table
+write.csv(vars, file = "Latex/mainthesis/tab-var-vifs.csv", row.names = FALSE, quote = FALSE)
+```
+
+```{r, plot sdm performance over time}
+years <- 2002:2020
+
+# get tpr for each year
+tpr_fy <- data.frame(year = years) # initialize tpr dataframe
+for (y in years) {
+    eval <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds")) # read eval
+    for (m in 1:5) { # get tpr for each model
+        # fy tpr df
+        ev <- eval[1, ]
+        tpr_fy[y - 2001, m + 1] <- ev[[m]]$sensitivity
+        colnames(tpr_fy)[m + 1] <- ev[[m]]$model
+    }
+}
+# save tpr results
+mod_tpr_res <- cbind(tpr_fy)
+saveRDS(mod_tpr_res, file = "R/data/modelling/mod_tpr_res.rds")
+
+# convert to long format
+long_fy <- data.frame()
+for (m in 1:5) {
+    # fy tpr
+    tpr_m <- tpr_fy[, c(1, m + 1)]
+    tpr_m$model <- colnames(tpr_m)[2]
+    colnames(tpr_m)[2] <- "tpr"
+    long_fy <- rbind(long_fy, tpr_m)
+}
+
+# get tpr for each year with native model
+rnt <- readRDS("R/data/modelling/eval_mods/eval_mod_native.rds")
+# get tpr for each year
+tpr_nt <- data.frame(year = years) # initialize tpr dataframe
+for (y in years) {
+    eval <- rnt[paste(y), ] # read eval
+    for (m in 1:5) { # get tpr for each model
+        tpr_nt[y - 2001, m + 1] <- eval[[m]]$sensitivity
+        colnames(tpr_nt)[m + 1] <- eval[[m]]$model
+    }
+}
+# save tpr results for native
+saveRDS(tpr_nt, file = "R/data/modelling/mod_tpr_res_nat.rds")
+
+# convert to long format
+long_nt <- data.frame()
+for (m in 1:5) {
+    # fy tpr
+    tpr_m <- tpr_nt[, c(1, m + 1)]
+    tpr_m$model <- colnames(tpr_m)[2]
+    colnames(tpr_m)[2] <- "tpr"
+    long_nt <- rbind(long_nt, tpr_m)
+}
+
+p1 <- ggplot(data = long_fy, aes(x = year, y = tpr, color = model, shape = model)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    theme_pubr() +
+    ftheme
+
+p2 <- ggplot(data = long_nt, aes(x = year, y = tpr, color = model, shape = model)) +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
+    theme_pubr() +
+    ftheme
+
+p <- ggarrange(p1, p2, nrow = 2, common.legend = TRUE, labels = "AUTO", font.label = list(size = 20))
+ggsave(p, width = 8, height = 8, bg = "white", filename = "R/figures/modelling-res.png")
+```
+
+```{r, correlation model performance with pcount or niche dyn}
+tpr_res <- readRDS("R/data/modelling/mod_tpr_res.rds")
+dyn <- readRDS("R/data/modelling/niche_y_dynamic.rds")
+nvar <- as.data.frame(dyn)$stability
+nvar <- nvar[1:19]
+
+# get list of total pa points up to year in EU
+pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
+eu <- subset(pa, Area == "eu")
+pcount <- c()
+for (i in 2002:2022) {
+    pcount[i - 2001] <- nrow(subset(eu, Year <= i))
+}
+# pcount for years used
+pcount <- head(pcount, length(nvar))
+
+# compute pearson correlation for each model
+cor_res <- c()
+for (i in 2:6) {
+    tpr_mod <- tpr_res[, i]
+    c_ol <- cor.test(tpr_mod, nvar, method = "pearson")
+    c_pc <- cor.test(tpr_mod, pcount, method = "pearson")
+    c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
+    cor_res <- cbind(cor_res, c_res_mod)
+}
+cor_res <- round(cor_res, digits = 3)
+rownames(cor_res) <- NULL
+colnames(cor_res) <- colnames(tss_res)[2:6]
+cor_res <- cbind(Model = c("Correlation niche stability", "p-value", "Correlation data count", "p-value"), cor_res)
+
+write.csv(cor_res, file = "Latex/mainthesis/tab-mod-cor-res.csv", row.names = FALSE, quote = FALSE)
 ```
 
 ```{r, tss of native on training data}
@@ -345,8 +497,8 @@ for (y in 2002:2020) {
     eval <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds"))
     ens_res <- eval[1, 5][[1]] # look at ensemble results
     cmx <- cmx(th_data, threshold = ens_res$threshold, which.model = 5)
-    eval = 
-    tss <- ens_res$sensitivity + ens_res$specificity - 1
+    eval <-
+        tss <- ens_res$sensitivity + ens_res$specificity - 1
     n <- nrow(th_data) # for relative amount
     res_y <- c(y, cmat[1, 1] / n, cmat[1, 2] / n, cmat[2, 1] / n, cmat[2, 2] / n, ens_res$sensitivity, ens_res$specificity, tss)
     res <- rbind(res, res_y)
@@ -409,7 +561,7 @@ ggexport(p, width = 800, height = 600, filename = fname)
 tss_res <- readRDS("R/data/modelling/mod_tss_res.rds")
 dyn <- readRDS("R/data/modelling/niche_y_dynamic.rds")
 overlaps <- as.data.frame(dyn)$stability
-overlaps = overlaps[1:19]
+overlaps <- overlaps[1:19]
 
 # get list of total pa points up to year in EU
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
