@@ -205,6 +205,27 @@ vars <- cbind(Name, vars)
 write.csv(vars, file = "Latex/mainthesis/tab-var-vifs.csv", row.names = FALSE, quote = FALSE)
 ```
 
+```{r, landcover PCA contribution table}
+lc_pca <- readRDS("R/data/modelling/var_select_lc_pca_res.rds")
+lc_contrib <- lc_pca$var$contrib
+lc_contrib <- format(signif(lc_contrib, digits = 3), scientific = TRUE)
+lc_contrib <- cbind(lcc = gsub("lc_", "", rownames(lc_contrib)), e = "", lc_contrib)
+colnames(lc_contrib) <- c("Class", "", "{lc}{1}", "{lc}{2}", "{lc}{3}", "{lc}{4}", "{lc}{5}", "{lc}{6}")
+# curly braces for center alignment in table (workaround)
+
+write.csv(lc_contrib, file = "Latex/mainthesis/tab-lc-contrib.csv", row.names = FALSE, quote = FALSE)
+```
+
+```{r, Cop lcc explanation table}
+lccs <- read.csv(file = "R/plots/Cop_LCCS_legend.csv", header = TRUE)
+
+lccs$name <- gsub("_", " ", lccs$name)
+lccs$colour <- NULL
+colnames(lccs) <- c("\\textbf{Class}", "\\textbf{Explanation}") # error workaround
+
+write.csv(lccs, file = "Latex/mainthesis/tab-Cop-lcc.csv", row.names = FALSE, quote = FALSE)
+```
+
 ```{r, plot sdm performance over time}
 years <- 2002:2020
 
@@ -275,6 +296,30 @@ p <- ggarrange(p1, p2, nrow = 2, common.legend = TRUE, labels = "AUTO", font.lab
 ggsave(p, width = 8, height = 8, bg = "white", filename = "R/figures/modelling-res.png")
 ```
 
+```{r, table with model thresholds used}
+ths <- data.frame()
+for (y in 2002:2020) {
+    th_y <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds"))
+    for (i in 1:5) {
+        ths[y - 2001, i] <- th_y[1, ][[i]]$threshold
+    }
+}
+ths <- rbind("-", ths, "-") # add years 2002 and 2022
+
+th_nat <- readRDS("R/data/modelling/eval_mods/eval_mod_native.rds")
+for (y in 2002:2022) {
+    for (i in 1:5) {
+        ths[y - 2001, i + 5] <- th_nat[y - 2001, ][[i]]$threshold
+    }
+}
+
+ths <- cbind(2002:2022, ths)
+colnames(ths) <- c("Year", "glm inv", "gam inv", "brt inv", "max inv", "ens inv", "glm nat", "gam nat", "brt nat", "max nat", "ens nat")
+colnames(ths) <- paste0("\\textbf{", colnames(ths), "}") # workaround for bol first line
+
+write.csv(ths, file = "Latex/mainthesis/tab-mod-ths.csv", row.names = FALSE, quote = FALSE)
+```
+
 ```{r, correlation model performance with pcount or niche dyn}
 tpr_res <- readRDS("R/data/modelling/mod_tpr_res.rds")
 dyn <- readRDS("R/data/modelling/niche_y_dynamic.rds")
@@ -302,241 +347,28 @@ for (i in 2:6) {
 }
 cor_res <- round(cor_res, digits = 3)
 rownames(cor_res) <- NULL
-colnames(cor_res) <- colnames(tss_res)[2:6]
-cor_res <- cbind(Model = c("Correlation niche stability", "p-value", "Correlation data count", "p-value"), cor_res)
+colnames(cor_res) <- colnames(tpr_res)[2:6]
+cor_res <- cbind(Model = c("Corr. niche stability", "p-value", "Corr. data count", "p-value"), cor_res)
 
 write.csv(cor_res, file = "Latex/mainthesis/tab-mod-cor-res.csv", row.names = FALSE, quote = FALSE)
 ```
 
-```{r, tss of native on training data}
-rnt <- readRDS("R/data/modelling/eval_mods/eval_mod_native.rds")
-# get tss for trained
-eval <- rnt["trained", ]
-
-# if entry NA (no ensemble possible) compute tss = 0
-if (any(is.na(eval))) {
-    na <- which(is.na(eval))
-    eval[[na]]$sensitivity <- 0.5
-    eval[[na]]$specificity <- 0.5
-    eval[[na]]$model <- "ens"
-}
-tss_t <- data.frame(data = "trained")
-for (m in 1:5) { # get tss for each model
-    # tss df
-    tss_t[1, m + 1] <- eval[[m]]$sensitivity + eval[[m]]$specificity - 1
-    colnames(tss_t)[m + 1] <- eval[[m]]$model
-}
-print(tss_t)
-```
-
-```{r, plot all modelling results}
-years <- 2002:2020
-
-# get tss for each year
-tss_fy <- data.frame(year = years) # initialize tss dataframe
-tss_22 <- tss_fy
-tss_t <- tss_fy
-for (y in years) {
-    eval <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds")) # read eval
-    # if entry NA (no ensemble possible) compute tss = 0
-    if (any(is.na(eval))) {
-        na <- which(is.na(eval))
-        eval[[na]]$sensitivity <- 0.5
-        eval[[na]]$specificity <- 0.5
-        eval[[na]]$model <- "ens"
-    }
-    for (m in 1:5) { # get tss for each model
-        # fy tss df
-        ev <- eval[1, ]
-        tss_fy[y - 2001, m + 1] <- ev[[m]]$sensitivity #+ ev[[m]]$specificity - 1
-        colnames(tss_fy)[m + 1] <- ev[[m]]$model
-        # 2022 tss df
-        ev <- eval[2, ]
-        tss_22[y - 2001, m + 1] <- ev[[m]]$sensitivity #+ ev[[m]]$specificity - 1
-        colnames(tss_22)[m + 1] <- ev[[m]]$model
-        # trained tss df
-        ev <- eval[3, ]
-        tss_t[y - 2001, m + 1] <- ev[[m]]$sensitivity #+ ev[[m]]$specificity - 1
-        colnames(tss_t)[m + 1] <- ev[[m]]$model
-    }
-}
-# save tss results
-mod_tss_res <- cbind(tss_fy, tss_22, tss_t)
-saveRDS(mod_tss_res, file = "R/data/modelling/mod_tss_res.rds")
-
-# convert to long format
-long_fy <- data.frame()
-long_22 <- data.frame()
-long_t <- data.frame()
-for (m in 1:5) {
-    # fy tss
-    tss_m <- tss_fy[, c(1, m + 1)]
-    tss_m$model <- colnames(tss_m)[2]
-    colnames(tss_m)[2] <- "tss"
-    long_fy <- rbind(long_fy, tss_m)
-    # 2022 tss
-    tss_m <- tss_22[, c(1, m + 1)]
-    tss_m$model <- colnames(tss_m)[2]
-    colnames(tss_m)[2] <- "tss"
-    long_22 <- rbind(long_22, tss_m)
-    # trained tss
-    tss_m <- tss_t[, c(1, m + 1)]
-    tss_m$model <- colnames(tss_m)[2]
-    colnames(tss_m)[2] <- "tss"
-    long_t <- rbind(long_t, tss_m)
-}
-
-# get tss for each year with native model
-rnt <- readRDS("R/data/modelling/eval_mods/eval_mod_native.rds")
-# get tss for each year
-tss_nt <- data.frame(year = years) # initialize tss dataframe
-for (y in years) {
-    eval <- rnt[paste(y), ] # read eval
-    # if entry NA (no ensemble possible) compute tss = 0
-    if (any(is.na(eval))) {
-        na <- which(is.na(eval))
-        eval[[na]]$sensitivity <- 0.5
-        eval[[na]]$specificity <- 0.5
-        eval[[na]]$model <- "ens"
-    }
-    for (m in 1:5) { # get tss for each model
-        # fy tss df
-        tss_nt[y - 2001, m + 1] <- eval[[m]]$sensitivity #+ eval[[m]]$specificity - 1
-        colnames(tss_nt)[m + 1] <- eval[[m]]$model
-    }
-}
-# save tss results for native
-saveRDS(tss_nt, file = "R/data/modelling/mod_tss_res_nat.rds")
-
-# convert to long format
-long_nt <- data.frame()
-for (m in 1:5) {
-    # fy tss
-    tss_m <- tss_nt[, c(1, m + 1)]
-    tss_m$model <- colnames(tss_m)[2]
-    colnames(tss_m)[2] <- "tss"
-    long_nt <- rbind(long_nt, tss_m)
-}
-
-# get total pa points up to year in eu
-pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
-pa <- subset(pa, Year >= 2002)
-eu <- subset(pa, Area == "eu")
-pa_count <- data.frame()
-for (i in tss_fy$year) {
-    pa_y <- c(i, nrow(subset(eu, Year <= i)))
-    pa_count <- rbind(pa_count, pa_y)
-}
-colnames(pa_count) <- c("year", "pa_count")
-
-# get niche dynamic results + overlap per year
-dyn <- as.data.frame(readRDS("R/data/modelling/niche_y_dynamic.rds"))
-ol <- readRDS("R/data/modelling/niche_y_overlap.rds")
-colnames(ol) <- "overlap"
-dyn <- cbind(years, head(dyn, length(years)), head(ol, length(years)))
-# convert to long format
-long_dyn <- data.frame()
-for (i in 1:4) {
-    di <- dyn[, c(1, i + 1)]
-    di$index <- colnames(dyn)[i + 1]
-    colnames(di)[2] <- "value"
-    long_dyn <- rbind(long_dyn, di)
-}
-long_dyn$index <- factor(long_dyn$index, levels = colnames(dyn)[2:5]) # fix order
-
-# plot
-p1 <- ggplot(data = pa_count, aes(x = years, y = pa_count)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years))) +
-    ggtitle("Total pa-data count up to year in EU") +
-    theme_pubr()
-p2 <- ggplot(data = long_dyn, aes(x = years, y = value, color = index, shape = index)) +
-    geom_point() +
-    geom_line() +
-    scale_color_manual(values = c("#f8766d", "#619cff", "#00ba38", "black")) +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("niche dynamic indices for invasive niche (year compared to previous)") +
-    theme_pubr()
-p3 <- ggplot(data = long_nt, aes(x = year, y = tss, color = model, shape = model)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting the following year (native data model)") +
-    theme_pubr()
-p4 <- ggplot(data = long_t, aes(x = year, y = tss, color = model, shape = model)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting the trained dataset") +
-    theme_pubr()
-p5 <- ggplot(data = long_fy, aes(x = year, y = tss, color = model, shape = model)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting year (invasive data model)") +
-    theme_pubr()
-p6 <- ggplot(data = long_22, aes(x = year, y = tss, color = model, shape = model)) +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
-    ggtitle("tss for predicting 2022 (invasive data model)") +
-    theme_pubr()
-
-p <- ggarrange(p1, p2, p3, p4, p5, p6, nrow = 2, ncol = 3, labels = "AUTO")
-ggsave(p, width = 15, height = 6, bg = "white", filename = "R/figures/modelling-res.png")
-```
-
-```{r, plot detailed model results for all years}
-library(PresenceAbsence)
-
-# print confusion matrix for 2005, 2010, 2015, 2020 ensemble predicting fy
-res <- data.frame()
-for (y in 2002:2020) {
-    th_data <- readRDS(paste0("R/data/modelling/th_data_mods/th_data_m", y, "_", y + 1, ".rds"))
-    eval <- readRDS(paste0("R/data/modelling/eval_mods/eval_mod_", y, ".rds"))
-    ens_res <- eval[1, 5][[1]] # look at ensemble results
-    cmx <- cmx(th_data, threshold = ens_res$threshold, which.model = 5)
-    eval <-
-        tss <- ens_res$sensitivity + ens_res$specificity - 1
-    n <- nrow(th_data) # for relative amount
-    res_y <- c(y, cmat[1, 1] / n, cmat[1, 2] / n, cmat[2, 1] / n, cmat[2, 2] / n, ens_res$sensitivity, ens_res$specificity, tss)
-    res <- rbind(res, res_y)
-}
-colnames(res) <- c("year", "tpos", "fpos", "fneg", "tneg", "sens", "spec", "tss")
-
-res_long <- data.frame()
-for (i in seq_len(ncol(res) - 1)) {
-    rlong <- res[, c(1, i + 1)]
-    rlong$measure <- colnames(res)[i + 1]
-    colnames(rlong)[2] <- "value"
-    res_long <- rbind(res_long, rlong)
-}
-
-p <- ggplot(data = res_long, aes(x = year, y = value, colour = measure, shape = measure)) +
-    geom_point() +
-    geom_line() +
-    theme_pubr()
-ggsave(p, filename = "R/plots/model_performance_detail.png")
-```
-
-```{r, plot ens prediction suitability viridis}
-y <- 2020 # year cutoff for model data
-y_pred <- 2022 # year to predict for
-th_data <- readRDS(paste0("R/data/modelling/th_data_mods/th_data_m", y, "_", y_pred, ".rds"))
-
+```{r, suitability prediction of 2022 nat vs 2020 mod}
+## predict 2020 model
+th_data <- readRDS("R/data/modelling/th_data_mods/th_data_m2020_2022.rds")
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
 pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-po <- subset(pa, Area == "eu" & Year == y_pred & Presence == "present")
-pa <- subset(pa, Area == "eu" & Year == y_pred & Presence == "absent")
+po <- subset(pa, Area == "eu" & Year == 2022 & Presence == "present")
+pa <- subset(pa, Area == "eu" & Year == 2022 & Presence == "absent")
 lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
-pa_ext <- subset(pa_ext, Area == "eu" & Year == y_pred & Presence == "absent")
+pa_ext <- subset(pa_ext, Area == "eu" & Year == 2022 & Presence == "absent")
 th_data <- subset(th_data, pres == 0)
 ext_join <- data.frame(Lon = pa_ext$Lon, Lat = pa_ext$Lat, Prob_ens = th_data$ens)
 
 pa_m <- left_join(pa, ext_join)
 pa_m <- slice_head(pa_m, n = round(nrow(pa_m) / 3))
 pa_m <- pa_m[complete.cases(pa_m), ]
+pa_m <- pa_m[order(pa_m$Prob_ens), ]
 pa_v <- vect(pa_m, geom = c("Lon", "Lat"), crs = crs(lc_ref))
 po_v <- vect(po, geom = c("Lon", "Lat"), crs = crs(lc_ref))
 
@@ -546,190 +378,39 @@ countries <- st_transform(countries, crs = crs(lc_ref))
 countries <- vect(countries)
 
 # plot with suitability value
-p <- ggplot(crop(countries, ext(lc_ref))) +
+p1 <- ggplot(crop(countries, ext(lc_ref))) +
     geom_spatvector(colour = "black", fill = "white") +
     geom_spatvector(data = pa_v, aes(color = Prob_ens)) +
     scale_color_viridis() +
-    # geom_spatvector(data = po_v) +
-    labs(color = "suitability") +
-    ggtitle(paste0(y, " ens prediction for ", y_pred, " suitability values"))
-fname <- paste0("R/plots/ens_20suitability22.png")
-ggexport(p, width = 800, height = 600, filename = fname)
-```
+    geom_spatvector(data = po_v, shape = 1) +
+    labs(color = "suitability")+
+    theme_pubr()
 
-```{r, test correlation tss ol and pc}
-tss_res <- readRDS("R/data/modelling/mod_tss_res.rds")
-dyn <- readRDS("R/data/modelling/niche_y_dynamic.rds")
-overlaps <- as.data.frame(dyn)$stability
-overlaps <- overlaps[1:19]
-
-# get list of total pa points up to year in EU
+## predict native model
+th_data <- readRDS("R/data/modelling/th_data_mods/th_data_nt_2022.rds")
 pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
-eu <- subset(pa, Area == "eu")
-pcount <- c()
-for (i in 2002:2022) {
-    pcount[i - 2001] <- nrow(subset(eu, Year <= i))
-}
-# pcount for years used
-pcount <- head(pcount, length(overlaps))
+pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
+po <- subset(pa, Area == "eu" & Year == 2022 & Presence == "present")
+pa <- subset(pa, Area == "eu" & Year == 2022 & Presence == "absent")
+lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
+pa_ext <- subset(pa_ext, Area == "eu" & Year == 2022 & Presence == "absent")
+th_data <- subset(th_data, pres == 0)
+ext_join <- data.frame(Lon = pa_ext$Lon, Lat = pa_ext$Lat, Prob_ens = th_data$ens)
 
-# compute pearson correlation for tss_fy
-cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
-for (i in 2:6) {
-    tss_mod <- tss_res[, i]
-    c_ol <- cor.test(overlaps, tss_mod, method = "pearson")
-    # plot(tss_mod, overlaps, main = colnames(tss_res)[i])
-    c_pc <- cor.test(pcount, tss_mod, method = "pearson")
-    # plot(tss_mod, pcount,  main = colnames(tss_res)[i])
-    c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
-    cor_res <- cbind(cor_res, c_res_mod)
-}
-colnames(cor_res) <- colnames(tss_res)[2:6]
-# correlate pcount and ol
-cor_pc_ol <- data.frame(row.names = c("02-20", "02-07", "08-20"))
-c_pc_ol <- cor.test(pcount, overlaps, method = "pearson")
-res_pc_ol <- c(c_pc_ol$estimate, c_pc_ol$p.value)
-cor_pc_ol <- rbind(cor_pc_ol, res_pc_ol)
-colnames(cor_pc_ol) <- c("corr.", "p value")
-p1 <- ggtexttable(signif(cor_res, digits = 4))
+pa_m <- left_join(pa, ext_join)
+pa_m <- slice_head(pa_m, n = round(nrow(pa_m) / 3))
+pa_m <- pa_m[complete.cases(pa_m), ]
+pa_m <- pa_m[order(pa_m$Prob_ens), ]
+pa_v <- vect(pa_m, geom = c("Lon", "Lat"), crs = crs(lc_ref))
+po_v <- vect(po, geom = c("Lon", "Lat"), crs = crs(lc_ref))
 
-# compute again but only until 2007
-overlaps2 <- head(overlaps, 6)
-pcount2 <- head(pcount, 6)
-cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
-for (i in 2:6) {
-    tss_mod <- tss_res[seq_along(overlaps) + 1, i]
-    tss_mod2 <- head(tss_mod, 6)
-    c_ol <- cor.test(overlaps2, tss_mod2, method = "pearson")
-    # plot(tss_mod, overlaps, main = colnames(tss_res)[i])
-    c_pc <- cor.test(pcount2, tss_mod2, method = "pearson")
-    # plot(tss_mod, pcount,  main = colnames(tss_res)[i])
-    c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
-    cor_res <- cbind(cor_res, c_res_mod)
-}
-colnames(cor_res) <- colnames(tss_res)[2:6]
-# correlate pcount and ol
-c_pc_ol <- cor.test(pcount2, overlaps2, method = "pearson")
-res_pc_ol <- c(c_pc_ol$estimate, c_pc_ol$p.value)
-cor_pc_ol <- rbind(cor_pc_ol, res_pc_ol)
-colnames(cor_pc_ol) <- c("corr.", "p value")
-p2 <- ggtexttable(signif(cor_res, digits = 4))
-
-# compute again but only starting from 2008
-overlaps2 <- tail(overlaps, -6)
-pcount2 <- tail(pcount, -6)
-cor_res <- data.frame(row.names = c("ol_c", "ol_p", "pc_c", "pc_p"))
-for (i in 2:6) {
-    tss_mod <- tss_res[seq_along(overlaps) + 1, i]
-    tss_mod2 <- tail(tss_mod, -6)
-    c_ol <- cor.test(overlaps2, tss_mod2, method = "pearson")
-    # plot(tss_mod, overlaps, main = colnames(tss_res)[i])
-    c_pc <- cor.test(pcount2, tss_mod2, method = "pearson")
-    # plot(tss_mod, pcount,  main = colnames(tss_res)[i])
-    c_res_mod <- c(c_ol$estimate, c_ol$p.value, c_pc$estimate, c_pc$p.value)
-    cor_res <- cbind(cor_res, c_res_mod)
-}
-colnames(cor_res) <- colnames(tss_res)[2:6]
-# correlate pcount and ol
-c_pc_ol <- cor.test(pcount2, overlaps2, method = "pearson")
-res_pc_ol <- c(c_pc_ol$estimate, c_pc_ol$p.value)
-cor_pc_ol <- rbind(cor_pc_ol, res_pc_ol)
-colnames(cor_pc_ol) <- c("pc to ol corr.", "p value")
-rownames(cor_pc_ol) <- c("02-20", "02-07", "08-20")
-p3 <- ggtexttable(signif(cor_res, digits = 4))
-p4 <- ggtexttable(signif(cor_pc_ol, digits = 4))
-p <- ggarrange(p1, p2, p3, p4, nrow = 4, ncol = 1, labels = c("02-20", "02-07", "08-20")) + bgcolor("white")
-ggsave(p, width = 5, height = 8, filename = "R/plots/cor_ol-pc_res.png")
-```
-
-```{r, create niche gif for invaded range}
-# list file names and read in
-imgs <- list.files("R/plots/niche_comp/single_ys/", full.names = TRUE)
-img_list <- lapply(imgs, image_read)
-img_joined <- image_join(img_list)
-img_animated <- image_animate(img_joined, fps = 2)
-
-# save gif
-image_write(
-    image = img_animated,
-    path = "R/plots/niche_comp/eu_yearstoprev_niche.gif"
-)
-```
-
-
-
-```{r, correlation tests using regression}
-dyn <- as.data.frame(readRDS("R/data/modelling/niche_y_dynamic.rds"))
-ol <- readRDS("R/data/modelling/niche_y_overlap.rds")
-tss_res <- readRDS("R/data/modelling/mod_tss_res.rds")
-
-# get list of total pa points up to year in EU
-pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
-eu <- subset(pa, Area == "eu")
-pcount <- c()
-for (i in 2002:2022) {
-    pcount[i - 2001] <- nrow(subset(eu, Year <= i))
-}
-
-tss_ens <- tss_res[seq_along(ol), 6]
-data <- data.frame(tss_ens, pcount, ol, dyn)
-data <- head(data, 19) # due to NA after 2019
-
-# fit glm
-glm <- glm(tss_ens ~ ., data = data, family = gaussian)
-summary(glm)
-
-glm <- glm(tss_ens ~ pcount, data = data, family = gaussian)
-summary(glm)
-
-glm <- glm(tss_ens ~ stability, data = data, family = gaussian)
-summary(glm)
-```
-
-```{r, plot var select pca results}
-lc_pca <- readRDS("R/data/modelling/var_select_lc_pca_res.rds")
-# plot pca results
-# png(width = 1800, height = 600, filename = "R/plots/var_select_lc_pca.png")
-p1 <- fviz_pca(lc_pca)
-p2 <- fviz_screeplot(lc_pca)
-# p3 <- ggplot(pa_ext, aes(x = lccs_class)) +
-#    geom_histogram() +
-#    scale_x_continuous(breaks = sort(unique(pa_ext$lccs_class)))
-ggarrange(p1, p2, nrow = 1)
-# dev.off()
-```
-
-```{r, plot niche eq and sim results for a year}
-y <- 2003 # starts with 2003, max 2022 (05)
-eq_test <- readRDS("R/data/modelling/niche_y_eq_sim.rds")[y - 2002, 2]
-sim_test <- readRDS("R/data/modelling/niche_y_eq_sim.rds")[y - 2002, 3]
-
-# fname <- paste0("R/plots/niche_comp/single_ys/eu_", y - 1, y, "_eq-sim.png")
-# png(width = 1200, height = 600, filename = fname)
-par(mfrow = c(1, 2))
-# plot eq_test
-ecospat.plot.overlap.test(eq_test, "D", paste("Equivalency", y - 1, "/", y))
-# plot sim_test
-ecospat.plot.overlap.test(sim_test, "D", paste("Similarity", y - 1, "/", y))
-# dev.off()
-```
-
-```{r, compute mean lc heterogeneity}
-pa_vals <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
-pa_vals <- subset(pa_vals, Area == "eu" & Presence == "present")
-
-
-sh_ent <- function(row) {
-    return(-sum(row * log(row), na.rm = TRUE)) # which log to use (values larger than one)
-}
-het_mean_ys <- c()
-for (y in unique(pa_vals$Year)) { # unique(pa_vals$Year)
-    rlc_y <- select(subset(pa_vals, Year == y), starts_with("lc"))
-    lc_het <- apply(rlc_y, 1, sh_ent)
-    het_mean <- mean(lc_het)
-    het_mean_ys <- c(het_mean_ys, het_mean)
-}
-print(het_mean_ys)
-print(-log(1 / ncol(rlc_y))) # max value for heterogeneity
-print(het_mean_ys / (-log(1 / ncol(rlc_y)))) # heterogeneity as value relative to max
+p2 <- ggplot(crop(countries, ext(lc_ref))) +
+    geom_spatvector(colour = "black", fill = "white") +
+    geom_spatvector(data = pa_v, aes(color = Prob_ens)) +
+    scale_color_viridis() +
+    geom_sf(data = po_v, shape = 1) +
+    labs(color = "suitability") + 
+    theme_pubr()
+p <- ggarrange(p1, p2, nrow = 1, common.legend = TRUE, legend = "right", labels = "AUTO", font.label = list(size = 20))
+ggsave(p, width = 10, height = 4, bg = "white", filename = "R/figures/2022-mod-pred.png")
 ```

@@ -387,7 +387,7 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
     colnames(pr_data) <- colnames(m_data)[colnames(m_data) != "pres"]
 
     png(width = 3000, height = 600 * ncol(pr_data), filename = png_name)
-    par(mfrow = c(ncol(pr_data), 5), cex = 1.5)
+    par(mfrow = c(ncol(pr_data), 5), cex = 2)
     for (v in colnames(pr_data)) {
         # plot data distribution histograms
         x <- m_data[[v]] * sc["sd", v] + sc["mean", v] # rescaled for plot

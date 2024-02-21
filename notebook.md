@@ -381,3 +381,7 @@ A section reporting the results of niche analysis was started, additionally some
 
 ### 20/02/24
 Writing the results of niche analysis was mostly finished and the part reporting SDM modelling was started.
+
+### 21/02/24
+A lot of tables and figures were added, especially to the appendix.
+The results section now contains all results that are going to be shown.

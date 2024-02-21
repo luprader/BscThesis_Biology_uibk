@@ -1,0 +1,39 @@
+\textbf{Class},\textbf{Explanation}
+0,no data
+10,cropland rainfed
+11,cropland rainfed herbaceous cover
+12,cropland rainfed tree or shrub cover
+20,cropland irrigated
+30,mosaic cropland
+40,mosaic natural vegetation
+50,tree broadleaved evergreen closed to open
+60,tree broadleaved deciduous closed to open
+61,tree broadleaved deciduous closed
+62,tree broadleaved deciduous open
+70,tree needleleaved evergreen closed to open
+71,tree needleleaved evergreen closed
+72,tree needleleaved evergreen open
+80,tree needleleaved deciduous closed to open
+81,tree needleleaved deciduous closed
+82,tree needleleaved deciduous open
+90,tree mixed
+100,mosaic tree and shrub
+110,mosaic herbaceous
+120,shrubland
+121,shrubland evergreen
+122,shrubland deciduous
+130,grassland
+140,lichens and mosses
+150,sparse vegetation
+151,sparse tree
+152,sparse shrub
+153,sparse herbaceous
+160,tree cover flooded fresh or brakish water
+170,tree cover flooded saline water
+180,shrub or herbaceous cover flooded
+190,urban
+200,bare areas
+201,bare areas consolidated
+202,bare areas unconsolidated
+210,water
+220,snow and ice

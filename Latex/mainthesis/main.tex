@@ -12,6 +12,8 @@
 \usepackage{soul} % for command \hl
 \usepackage{pdfpages} % to insert pdf docs
 \usepackage{csvsimple} % to import .csv files as tables
+\usepackage{siunitx}
+\usepackage{tikz}
 \usepackage{caption} 
 \captionsetup[table]{skip=10pt} % more space between table and caption
 
@@ -196,17 +198,17 @@ PCA axes were included in the model until a cut-off of 80\% of explained varianc
 Variance inflation factors were computed for this GAM and the variable with the highest VIF was dropped until none of the remaining variables had a VIF greater than 10.
 
 \subsection{Analysis} \label{ssec:analysis}
-All SDM models of each year were evaluated for their accuracy on predicting the occurrences of the following year and the final year of 2022 using the Sensitivity or True Positive Rate (TPR).
+All SDM models of each year were evaluated for their accuracy on predicting the occurrences of the following year using the Sensitivity or True Positive Rate (TPR).
 The TPR values were used to create a TPR-weighted ensemble of all model predictions, which was again evaluated for its accuracy.
+The thresholds used to compute TPR were computed using the library \texttt{PresenceAbsence} while maximizing (sens + spec) / 2. This thresholding was chosen since just maximizing TPR can be achieved trivially by setting the threshold as low as possible, creating a model which predicts everything as suitable (used thresholds in Supplementary Tab. \ref{tab:mod_ths}).
 For each year, the occupied niche was computed by running a PCA analysis on the bioclim variables.
 The niche was then visualized by plotting a dynamic occurrence density grid for the first two PCA axes \autocite{broennimann2012niche}.
-The overlap between each year for Europe and the respective following year was computed, as well as a niche similarity and niche equivalency test.
+The overlap between each year for Europe and the respective following year was computed, as well as the niche dynamic indices "stability", "expansion" and "unfilling" \autocite{guisan2014nichedyn}.
 Niche overlap for the total EU data was also visualized in comparison to the total native niche.
 All mentioned niche analyses were conducted using the library \texttt{ecospat} \autocite{dicola2017ecospat}.
-The development of TPR over time was tested for correlation with the amount of training data and the niche overlap for a given year, using the Pearson correlation test.
+The development of TPR over time was tested for correlation with the amount of training data and the niche stability for a given year, using the Pearson correlation test.
 
 \newpage
-
 \section{Results} \label{sec:results}
 The analyses mentioned above resulted in findings which shed light on the niche dynamics and predictability of \gls{harm}.
 
@@ -261,15 +263,15 @@ Variable selection using VIFs resulted in 13 variables, which were used for mode
 
 \begin{table}[!h]
     \centering
-    \caption{\label{tab:var_vifs} Final 13 variables resulting from variable selection with VIFs.}
+    \caption{\label{tab:var_vifs} Final 13 variables resulting from variable selection with VIFs, PCA contribution table for all land cover variables in (Supplementary Tab. \ref{tab:lc_contrib}).}
     \centerline{
-    \begin{tabular}{l| r*{13}{ c}}
-        \csvreader[no head, column count = 14, late after line = \\]{tab-var-vifs.csv}{}{\csvlinetotablerow}
-    \end{tabular}
+        \begin{tabular}{l| r*{13}{ c}}
+            \csvreader[no head, column count = 14, late after line = \\]{tab-var-vifs.csv}{}{\csvlinetotablerow}
+        \end{tabular}
     }
 \end{table}
 
-After computing all of the mentioned models and creating a TPR weighted ensemble, one can examine the development over time in more detail (Fig. \ref{fig:modelling_res}).
+After computing all of the mentioned models (response curves in appendix \ref{sec:response_curves}) and creating a TPR weighted ensemble, one can examine the development over time in more detail (Fig. \ref{fig:modelling_res}).
 
 \begin{figure}[!h]
     \centering
@@ -281,7 +283,29 @@ The difference in performance between the invaded and native range models is app
 Surprisingly, the invasive data models already perform very well in the first years and continue to do so for all further years.
 It is notable, that the GLM almost always performs the best out of all native models.
 
+Trying to correlate the performance of each model individually to the trend in data amount or the niche stability value lead to statistically insignificant results for all models (Tab. \ref{tab:mod_cor_res}).
 
+\begin{table}[!h]
+    \centering
+    \caption{\label{tab:mod_cor_res} Results when correlating model TPR to either niche stability or amount of data.}
+    \begin{tabular}{>{\bfseries}l r*{5}{ c}}
+        \csvreader[no head, column count = 6, late after line = \\]{tab-mod-cor-res.csv}{}{\csvlinetotablerow}
+    \end{tabular}
+\end{table}
+
+In the end, one can look at the model predictions for the year 2022 and compare them to the observed presences of that year (Fig. \ref{fig:mod_pred}).
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width = \linewidth]{"../../R/figures/2022-mod-pred.png"}
+    \caption{\label{fig:mod_pred} Predictions of the invaded (A) and native data (B) ensemble models for the suitability of \gls{harm} in 2022. Suitability shown as colour, black circles indicating presences observed in 2022.}
+\end{figure}
+
+\newpage
+The ensemble from the invaded range proves to be more accurate in predicting the presences of 2022, although being rather conservative in its predictions. The native ensemble predicts a much wider range in comparison, reaching much further to the east.
+
+
+\newpage
 \section{Discussion} \label{sec:discussion}
 
 \section{Conclusion} \label{sec:conclusion}
