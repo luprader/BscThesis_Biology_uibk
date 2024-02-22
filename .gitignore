@@ -6,8 +6,6 @@
 /R/data/*
 # single niche plots
 /R/plots/niche_comp/single_ys/*
-# modelling response curves
-/R/plots/response_curves/*
 # parameter testing plots
 /R/abs_gen_tests/*
 

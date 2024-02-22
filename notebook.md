@@ -385,3 +385,6 @@ Writing the results of niche analysis was mostly finished and the part reporting
 ### 21/02/24
 A lot of tables and figures were added, especially to the appendix.
 The results section now contains all results that are going to be shown.
+
+### 22/02/24
+First versions of discussion, conclusion, abstract and so on were finished, concluding the first draft of the complete thesis.

@@ -71,7 +71,14 @@ Innsbruck, \findate					\hfill Signature
 \newpage
 \thispagestyle{empty}
 \begin{abstract}
-    Lorem ipsum
+    \noindent In invasive ecology, a lot of research is aimed at predicting the potential impact that a species could have outside its native range.
+    Species Distribution Models (SDMs) have been applied in this context already, but with still ongoing discussion of their actual viability given the dynamic aspect of niches in the process of invasion.
+    To further insight into the applicability of SDMs for predicting invasive species, a SDM ensemble time series modelling the European niche of \textit{Harmonia axyridis} over the time period 2002-2020 was created.
+    In addition, niche dynamic analyses were conducted, computing the niche stability and expansion over time among other parameters.
+    It was shown that SDMs trained on data only from the invaded range provide consistently high TPR (True Positive Rate), and this in the context of an almost completely stable niche over the whole time period.
+    Models with data only from the invaded range, as well as models using native data only are consistent with previous work predicting the range of \textit{H. axyridis}. \\
+
+    \noindent Keywords: Species Distribution Model, invasive species, ensemble model, time series, niche dynamic analysis, ecospat
 \end{abstract}
 
 \newpage
@@ -171,11 +178,11 @@ This resulted in a total of 124.746 presence points over all years and areas.
 To prepare the data for modelling, pseudoabsences were generated for each year, randomly sampling the area and resampling points in the water or with no data.
 
 To correct for sampling bias in the data, the European and native extents were split into sub extents in order to add additional absences to denser sampled regions.
-For this, an algorithm was written which splits a given extent in half and continues to do so with the created sub-extents until the amount of points in the extents is at most some chosen number.
+For this, an algorithm was written which splits a given extent in half and continues to do so with the created subextents until the amount of points in the extents is at most some chosen number.
 For the first part of absence generation completely random absences are drawn from the original extent in order to ensure at least some coverage of the whole study area.
 In the second step, additional absences are generated for each subextent separately and in relation to the amount of presences inside the respective subextent.
 This results in more absences in regions with more presences as well (Fig. \ref{fig:ext_subdiv} A).
-The subdivision of the dataset was carried out using all presences in Europe over all years and setting the threshold to be $\leq$ 30\%, leading to sub-extents converging around the United Kingdom and the Netherlands, which seem to have been sampled very intensely (Fig. \ref{fig:ext_subdiv} B).
+The subdivision of the dataset was carried out using all presences in Europe over all years and setting the threshold to be $\leq$ 30\%, leading to subextents converging around the United Kingdom and the Netherlands, which seem to have been sampled very intensely (Fig. \ref{fig:ext_subdiv} B).
 For the first and second step of absence generation, absences equal to and twice the amount of presences were generated respectively, resulting in three absences per presence in total.
 
 \begin{figure}[!h]
@@ -281,7 +288,10 @@ After computing all of the mentioned models (response curves in appendix \ref{se
 
 The difference in performance between the invaded and native range models is apparent, with the invaded range models achieving a higher TPR on average.
 Surprisingly, the invasive data models already perform very well in the first years and continue to do so for all further years.
+The native models vary more in their predictive performance, starting off with a TPR similar to that of the invaded range models, then becoming quite chaotic in performance in the years between 2008 and 2015.
+After 2015, performance improves again, reaching levels close, but still below the initial performance and that of the final invaded range models.
 It is notable, that the GLM almost always performs the best out of all native models.
+The model ensemble performed at least better than 50 \% of models used to build the ensemble for almost all years.
 
 Trying to correlate the performance of each model individually to the trend in data amount or the niche stability value lead to statistically insignificant results for all models (Tab. \ref{tab:mod_cor_res}).
 
@@ -301,17 +311,39 @@ In the end, one can look at the model predictions for the year 2022 and compare 
     \caption{\label{fig:mod_pred} Predictions of the invaded (A) and native data (B) ensemble models for the suitability of \gls{harm} in 2022. Suitability shown as colour, black circles indicating presences observed in 2022.}
 \end{figure}
 
-\newpage
 The ensemble from the invaded range proves to be more accurate in predicting the presences of 2022, although being rather conservative in its predictions. The native ensemble predicts a much wider range in comparison, reaching much further to the east.
 
 
 \newpage
 \section{Discussion} \label{sec:discussion}
+Using a time series of a well monitored species, it was possible to probe into the change in SDM performance over time.
+It was shown, that all used SDMs consistently performed very well in predicting \gls{harm} presences of the following year, when trained only on data from the invaded range in Europe.
 
+The better performance of the invaded range models in comparison to the native models is supported by the results of niche analysis, showing that the native and invaded niche differ significantly from each other.
+It has already been shown, that the genetic strains of \gls{harm} present in Europe have been strongly influenced by American control strains \autocite{lombaert2010harmoniabridgehead}, so a model using American data might also prove insightful.
+
+The consistent performance of all invaded range models might be in part due to the rather consistent niche stability, though also in years with significant niche expansion (early years) the models are able to perform well.
+This could also imply that SDMs are able to perform well in environments without total niche conservatism, but the data shown in this thesis is not sufficient to make this claim.
+The lack of impact of data amount on model performance is unsurprising, since all models had a very sufficient amount of data points (\> 15 \autocite{stoa2019SDMdata}).
+The native, as well as the invaded range ensemble predict ranges very similar to a study from 2012 \autocite{bidinger2012harmSDMglobalMaxent}, which speaks for the modelling process of this thesis.
+Agreement between predictions from 2012 and models created with more recent data also supports the result of niche conservatism over this time period.
+
+The use of TPR as a measure for model performance is not ideal, but was chosen instead of TSS due to better interpretability in the context of an invasive species.
+For future work, it would be better to look into different evaluation metrics, as there have been numerous proposed in other works.
+It might also be interesting to look into the period of niche expansion of \gls{harm} in more detail, for example with a monthly resolution, since data might be sufficient.
+
+\newpage
 \section{Conclusion} \label{sec:conclusion}
+The results of this thesis show that SDMs can be a strong tool in predicting the potential niche of an invasive species, also with not completely static niches.
+Ensembles proved to be a good way to combine different model predictions, resulting in predictions consistent with previous studies.
+Using additional niche analyses provides valuable context to interpret model performance and gives additional insight into the establishment process of \gls{harm}.
+It has been shown, that the process used in this thesis can generate new insight into the dynamics and relations at play when dealing with invasive species and predicting their potential impact, with more interesting areas to research further.
+
 
 \section{Acknowledgements} \label{sec:acknowledgements}
-
+This thesis would not have been possible in this form without the huge amount of freedom given by my supervisor Lauren Talluto.
+I was able to just try out my ideas on my own accord, which is something I value highly.
+I also want to thank all my friends and relatives, who just listened to me rambling about how cool (or sometimes nerve-wracking) my progress was, even if they only understood half of it.
 
 \newpage
 \printbibliography[]
