@@ -182,7 +182,7 @@ for (i in 1:4) {
 long_dyn$index <- factor(long_dyn$index, levels = colnames(dyn)[2:5]) # fix order
 
 p <- ggplot(data = long_dyn, aes(x = years, y = value, color = index, shape = index)) +
-    geom_point() +
+    geom_point(size = 2.5) +
     geom_line() +
     scale_color_manual(values = c("#f8766d", "#619cff", "#00ba38", "black")) +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
@@ -279,14 +279,14 @@ for (m in 1:5) {
 }
 
 p1 <- ggplot(data = long_fy, aes(x = year, y = tpr, color = model, shape = model)) +
-    geom_point() +
+    geom_point(size = 2.5) +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     theme_pubr() +
     ftheme
 
 p2 <- ggplot(data = long_nt, aes(x = year, y = tpr, color = model, shape = model)) +
-    geom_point() +
+    geom_point(size = 2.5) +
     geom_line() +
     coord_cartesian(xlim = c(2002, max(years)), ylim = c(0, 1)) +
     theme_pubr() +
