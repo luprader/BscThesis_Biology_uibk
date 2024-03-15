@@ -90,7 +90,7 @@ Innsbruck, \findate					\hfill Signature
 \section{Introduction} \label{sec:introduction}
 % Invasion Theory
 Invasive species are of special interest in ecological research due to their impact on native ecosystems.
-Main goals in this area are to find out which species have potential to become invasive, what habitat will be susceptible to invasion by those species, how fast the species will invade the new area and what impact its invasion will have on the native ecosystem \autocite{shigesada1997invasions}.
+Main goals in this area are to find out which species have potential to become invasive, what habitat will be susceptible to invasion by those species, how fast the species will invade the new area and what impact its invasion will have on the native ecosystem \autocite{shigesada1997invasions}.\todo{Since you are not constrained for space, I would suggest an author-year citation style, instead of numeric; it's just a little easier for the reader}
 To this end, many theories have been created to describe invasion processes.
 The invasion of a species can  generally be described with four stages \autocite{blackburn2011invasionstages}:
 \begin{enumerate} % just have keywords in a sentence instead of enumeration?
@@ -100,7 +100,7 @@ The invasion of a species can  generally be described with four stages \autocite
     \item Spread: Sustaining establishment and dispersing to new environments
 \end{enumerate}
 Depending on the current stage there can be significant differences in behaviour and impact of a species.
-The impacts of invasive alien species can be numerous, ranging from food web changes to reductions in habitat and species richness, hydrology and nutrient cycle changes, enhanced invasion of other species and mass extinctions \autocite{simberloff2013invasiveimpacts}.
+The impacts of invasive alien species can be numerous, ranging from food web changes to reductions in habitat and species richness, hydrology and nutrient cycle changes, enhanced invasion of other species and mass extinctions \todo{I'm not aware of any mass extinctions caused by biological invasions, and it seems like quite a drastic impact... perhaps just 'extinction' is enough?} \autocite{simberloff2013invasiveimpacts}.
 For example intraguild predation, the predation of species using similar resources, can create completely new stable states of an ecological system \autocite{polis1989theoryIGP}.
 Fully understanding the dynamics at play during the invasion process would open more possibilities to actively influence the invasion of threatening species.
 For this, creating models which are able to predict the invasion is one current focus of research.
@@ -114,7 +114,7 @@ In general, SDMs are made with the (ideal) assumption that the species is in env
 If these models are now used to predict new, unsampled areas, there actually is no measure to assess their accuracy, since no data is presently available for that area \autocite{araujo2006sdmchallenges}.
 This means that when trying to predict areas which are potentially outside the calibration range, sufficient validation data is lacking, implying strong uncertainty about the predictive performance of a given model \autocite{araujo2006sdmchallenges}.
 This issue of model transferability is an ongoing area of research in the SDM community.
-There is also no guarantee that the biotic interactions sampled in the study area will reflect the final interactions in the new area \autocite{elith2009sdmtheory}.
+There is also no guarantee that the biotic interactions sampled in the study area will reflect the final interactions in the new area \autocite{elith2009sdmtheory}. \todo{this is a very good point that could use some elaboration. we tend to think of biotic interactions as (mostly) reducing the potential occupiable niche space, so different BI in invaded range potentially leads to a larger potential climate space. This is essentially the enemy release hypothesis, it would be worth looking this up}
 All of these issues apply especially to the prediction of invasive species, since there might be limited data in the invaded range, the species is often not currently at equilibrium and interactions with native species are completely new \autocite{mainali2015sdmprojecting}.
 Despite all these challenges, SDMs have been used numerous times to provide insight into the invasive potential and the invasion dynamics of alien species \autocite{zimmermann2010sdmtrends}.
 One way of gaining more insight into the invasion process is to create models with data from different time periods during the invasion \autocite{briscoe2019palmerisdm}.
@@ -158,11 +158,11 @@ In the end, a better understanding of the invasion process of \gls{harm} in Euro
 
 \newpage
 \section{Materials and Methods} \label{sec:materialsandmethods}
-This section elaborates on the Methods used to conduct this research.
+This section elaborates on the Methods used to conduct this research.\todo{delete}
 
 \subsection{Datasets} \label{ssec:datasets}
 For occurrence data, all global occurrences of \gls{harm} were downloaded from the GBIF database \autocite{GBIFaxyridisdataset}.
-All traditional 19 bioclim variables were obtained from the CHELSA V2.1 climatologies dataset \autocite{karger2017CHELSApaper, CHELSAbioclimdataset}, using the 1981-2010 time frame for all years from 2002 to 2010 as well as the MPI-ESM 1.2 ssp370 scenario 2011-2040 for all years from 2011 to 2022.
+All traditional 19 bioclim variables \todo{better at least summarise what these are} were obtained from the CHELSA V2.1 climatologies dataset \autocite{karger2017CHELSApaper, CHELSAbioclimdataset}, using the 1981-2010 time frame for all years from 2002 to 2010 as well as the MPI-ESM 1.2 ssp370 scenario 2011-2040 for all years from 2011 to 2022.
 As additional information, land cover data was used from the Copernicus Land cover Classification dataset \autocite{COPlandcoverdataset}  with yearly resolution for 2002 up to 2020.
 
 \subsection{Data preparation} \label{ssec:datapreparation}
@@ -171,18 +171,18 @@ All bioclim and land cover layers were resampled to a matching resolution of 30 
 The presence-only points from GBIF were checked for missing values for latitude, longitude, year or coordinate uncertainty and then subset to the afore mentioned spatial extents.
 No occurrences after 2022 were used, also no points with a coordinate uncertainty larger than 1 km.
 In Europe, the initial cut off year for presences was 1991, since this is the year of invasion according to the EASIN website.
-Afterwards, using the library \texttt{CoordinateCleaner}, all remaining data points were again checked for common errors or biases in the respective subset  (tests used: "capitals", "centroids", "duplicates", "equal", "institutions", "outliers", "seas", "zeros").
+Afterwards, using the library \texttt{CoordinateCleaner} \todo{use citation("CoordinateCleaner") to get a bibtex entry, it's a good idea to properly cite this)}, all remaining data points were again checked for common errors or biases in the respective subset  (tests used: "capitals", "centroids", "duplicates", "equal", "institutions", "outliers", "seas", "zeros"). \todo{It would be useful to have a small summary of what these tests do}
 In addition, all occurrences were checked for their land cover class values in their respective year, removing points in the water or with no data.
 In the end, remaining data points prior to 2002 were deemed insignificant and removed from the dataset.
 This resulted in a total of 124.746 presence points over all years and areas.
-To prepare the data for modelling, pseudoabsences were generated for each year, randomly sampling the area and resampling points in the water or with no data.
+To prepare the data for modelling, pseudoabsences were generated for each year, randomly sampling the area and resampling \todo{discarding and re-sampling?} points in the water or with no data.
 
 To correct for sampling bias in the data, the European and native extents were split into sub extents in order to add additional absences to denser sampled regions.
-For this, an algorithm was written which splits a given extent in half and continues to do so with the created subextents until the amount of points in the extents is at most some chosen number.
+For this, an algorithm was written which splits a given extent in half and continues to do so with the created subextents until the amount of points in the extents is at most some chosen number. \todo{you might check and cite this: https://esajournals.onlinelibrary.wiley.com/doi/full/10.1890/07-2153.1}
 For the first part of absence generation completely random absences are drawn from the original extent in order to ensure at least some coverage of the whole study area.
 In the second step, additional absences are generated for each subextent separately and in relation to the amount of presences inside the respective subextent.
 This results in more absences in regions with more presences as well (Fig. \ref{fig:ext_subdiv} A).
-The subdivision of the dataset was carried out using all presences in Europe over all years and setting the threshold to be $\leq$ 30\%, leading to subextents converging around the United Kingdom and the Netherlands, which seem to have been sampled very intensely (Fig. \ref{fig:ext_subdiv} B).
+The subdivision of the dataset was carried out using all presences in Europe over all years and setting the threshold to be $\leq$ 30\%, leading to subextents converging around the United Kingdom and the Netherlands, which seem to have been sampled very intensely (Fig. \ref{fig:ext_subdiv} B). \todo{I think it is important to note here that this is very unlikely to be the "usual" kind of bias seen in SDMs (where we get more presences where there are more people). Rather, this bias likely showcases an expanding species with one more more fronts of invasion}
 For the first and second step of absence generation, absences equal to and twice the amount of presences were generated respectively, resulting in three absences per presence in total.
 
 \begin{figure}[!h]
@@ -192,22 +192,25 @@ For the first and second step of absence generation, absences equal to and twice
 \end{figure}
 
 \subsection{Model building} \label{ssec:modelbuilding}
+\todo{This is the most potentially confusing aspect of your work, and so it is worth repeating yourself a bit to make sure everyone is on board. For example: In order to evaluate how the progression of H axyridis invasion influenced the predictive ability of SDMs, I built models iteratively for each of the study years (2001-2010). For each year, I compared the following models: ...}
 For each year, the following Models were computed: General Linear (GLM) \autocite{guisan2002glm-gam}, General Additive (GAM) \autocite{guisan2002glm-gam}, Boosted Regression Trees (BRT) \autocite{elith2008brt} and Maximum Entropy (MAXENT) \autocite{phillips2017maxnet}.
 A model for a specific year always included all points from past years as well.
-The iterative models that were built only use data points from Europe, though there was one model created only with native occurrences and predicted for each year in Europe.
-For all used occurrence points after 2020, the land cover data of 2020 was used as a substitute.
+The iterative models that were built only use data points from Europe, though there was one model created only with native occurrences and predicted for each year in Europe. \todo{Explain this more clearly, and also why you did this}
+For all used occurrence points after 2020, the land cover data of 2020 was used as a substitute \todo{for what?}.
+\todo{I miss here a description of how you generated ensemble models}
 
 Variance inflation factors were used to select the variables used for model building.
 For this, a GAM was computed only using Europe data from 2002, using all bioclim and land cover variables.
 For land cover variables, a PCA was computed on the relative area of all land cover classes in an 18 km radius around 5000 random data points in Europe, subsequently projecting the occurrence data onto the resulting axes.
 The 18 km radius was chosen, since it is the average flight distance determined for \gls{harm} \autocite{jeffries2013flightharmonia}.
 PCA axes were included in the model until a cut-off of 80\% of explained variance was reached.
-Variance inflation factors were computed for this GAM and the variable with the highest VIF was dropped until none of the remaining variables had a VIF greater than 10.
+Variance inflation factors were computed for this GAM and the variable with the highest VIF was dropped until none of the remaining variables had a VIF greater than 10. \todo{It's a good idea to cite this if you can find a paper that originated this rule of thumb}
 
 \subsection{Analysis} \label{ssec:analysis}
 All SDM models of each year were evaluated for their accuracy on predicting the occurrences of the following year using the Sensitivity or True Positive Rate (TPR).
 The TPR values were used to create a TPR-weighted ensemble of all model predictions, which was again evaluated for its accuracy.
-The thresholds used to compute TPR were computed using the library \texttt{PresenceAbsence} while maximizing (sens + spec) / 2. This thresholding was chosen since just maximizing TPR can be achieved trivially by setting the threshold as low as possible, creating a model which predicts everything as suitable (used thresholds in Supplementary Tab. \ref{tab:mod_ths}).
+The thresholds used to compute TPR were computed using the library \texttt{PresenceAbsence} \todo{cite} while maximizing (sens + spec) / 2. \todo{This is equivalent to TSS, which is widely used, so you should cite it. https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/j.1365-2664.2006.01214.x}
+This thresholding was chosen since just maximizing TPR can be achieved trivially by setting the threshold as low as possible, creating a model which predicts everything as suitable (used thresholds in Supplementary Tab. \ref{tab:mod_ths}).
 For each year, the occupied niche was computed by running a PCA analysis on the bioclim variables.
 The niche was then visualized by plotting a dynamic occurrence density grid for the first two PCA axes \autocite{broennimann2012niche}.
 The overlap between each year for Europe and the respective following year was computed, as well as the niche dynamic indices "stability", "expansion" and "unfilling" \autocite{guisan2014nichedyn}.
@@ -230,7 +233,7 @@ Taking the amount of presence points in Europe and the native range, one can plo
 
 The resulting figure shows that the amount of data available in the invaded range greatly surpasses the amount in the native range.
 With at least 100 presences for any year, the European dataset is definitely sufficient to create SDMs for each year separately, more so if data from previous years is also used.
-The exponential increase in observations over time also suggests rapid population growth.
+The exponential increase in observations over time also suggests rapid population growth. \todo{In fact, it suggests the opposite to me! I expect the population to be stable in the native range, but the number of obs is increasing at the same rate as in europe. This implies that the growth is simply due to the growth in size of ecological databases!}
 The lack of presence points in early years in the native range was the reason why it was decided to only create one SDM with the native data of all years combined, since it is more likely to provide a complete evaluation of the native niche.
 
 \subsection{Niche dynamic analysis} \label{ssec:niche_dyn_analysis}
@@ -312,10 +315,12 @@ In the end, one can look at the model predictions for the year 2022 and compare 
 \end{figure}
 
 The ensemble from the invaded range proves to be more accurate in predicting the presences of 2022, although being rather conservative in its predictions. The native ensemble predicts a much wider range in comparison, reaching much further to the east.
+\todo{Suggest you reduce the size of the dots, or add transparency, so that the colour is more visible. Also suggest a vertical orientation so that each panel can be wider.}
 
 
 \newpage
 \section{Discussion} \label{sec:discussion}
+\todo{A major missing piece here: I would like to see a bit more discussion of your results in the biological context. What do your models teach us about the bug, how does that fit into the context of what is known about their invasion. What is the outlook for future invasion? Are these models useful for predicting invasion, which is what you started with? Right now you focus rather heavily on the nuts and bolts of the modelling process, but a big part of your audience will be interested in knowing what is going to happen with this bug!}
 Using a time series of a well monitored species, it was possible to probe into the change in SDM performance over time.
 It was shown, that all used SDMs consistently performed very well in predicting \gls{harm} presences of the following year, when trained only on data from the invaded range in Europe.
 
@@ -324,6 +329,7 @@ It has already been shown, that the genetic strains of \gls{harm} present in Eur
 
 The consistent performance of all invaded range models might be in part due to the rather consistent niche stability, though also in years with significant niche expansion (early years) the models are able to perform well.
 This could also imply that SDMs are able to perform well in environments without total niche conservatism, but the data shown in this thesis is not sufficient to make this claim.
+\todo{It would be great to see (appendix?) a time series of projected range maps to emphasize this point; so figure 7A, but using year individually}
 The lack of impact of data amount on model performance is unsurprising, since all models had a very sufficient amount of data points (\> 15 \autocite{stoa2019SDMdata}).
 The native, as well as the invaded range ensemble predict ranges very similar to a study from 2012 \autocite{bidinger2012harmSDMglobalMaxent}, which speaks for the modelling process of this thesis.
 Agreement between predictions from 2012 and models created with more recent data also supports the result of niche conservatism over this time period.
