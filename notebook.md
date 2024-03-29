@@ -388,3 +388,6 @@ The results section now contains all results that are going to be shown.
 
 ### 22/02/24
 First versions of discussion, conclusion, abstract and so on were finished, concluding the first draft of the complete thesis.
+
+### 28/03/24
+Supervisor feedback was incorporated, mainly improving the methods and discussion chapter, as well as adding a plot showing the predictions of each yearly model in the appendix.

@@ -76,6 +76,15 @@
     }
 \end{table}
 
+\clearpage
+\section{Model predictions}
+\begin{figure}[!h]
+    \caption{\label{fig:all_mod_preds} Predictions of each invaded range ensemble model for the year 2022, points in black showing the occurrences of the respective year, so i.e. in 2003 model it shows the occurrences of 2003, but the suitability prediction for 2022.}
+    \centerline{
+        \includegraphics[width = 0.85\paperwidth, height = 0.65\paperheight]{"../../R/figures/2003to2021-mod-pred.png"}
+    }
+\end{figure}
+
 \section{Model response curves} \label{sec:response_curves}
 
 \begin{figure}[!ht]
@@ -86,10 +95,10 @@
 \end{figure}
 
 \foreach \y in {2002,...,2020}{
-    \begin{figure}[!ht]
-        \caption*{\y \ model response curves}
-        \centerline{
-            \includegraphics[width = 0.9\paperwidth, height = 0.83\paperheight]{"../../R/plots/response_curves/\y_mod_resp.png"}
-        }
-    \end{figure}
-}
+        \begin{figure}[!ht]
+            \caption*{\y \ model response curves}
+            \centerline{
+                \includegraphics[width = 0.9\paperwidth, height = 0.83\paperheight]{"../../R/plots/response_curves/\y_mod_resp.png"}
+            }
+        \end{figure}
+    }

@@ -382,7 +382,7 @@ p1 <- ggplot(crop(countries, ext(lc_ref))) +
     geom_spatvector(colour = "black", fill = "white") +
     geom_spatvector(data = pa_v, aes(color = Prob_ens)) +
     scale_color_viridis() +
-    geom_spatvector(data = po_v, shape = 1, alpha = 0.1) +
+    geom_spatvector(data = po_v, size = 0.1) +
     labs(color = "suitability") +
     theme_pubr()
 
@@ -408,7 +408,7 @@ p2 <- ggplot(crop(countries, ext(lc_ref))) +
     geom_spatvector(colour = "black", fill = "white") +
     geom_spatvector(data = pa_v, aes(color = Prob_ens)) +
     scale_color_viridis() +
-    geom_sf(data = po_v, shape = 1, alpha = 0.1) +
+    geom_sf(data = po_v, size = 0.1) +
     labs(color = "suitability") +
     theme_pubr()
 p <- ggarrange(p1, p2, nrow = 2, common.legend = TRUE, legend = "top", labels = "AUTO", font.label = list(size = 20))
@@ -418,18 +418,18 @@ ggsave(p, width = 6, height = 8, bg = "white", filename = "R/figures/2022-mod-pr
 ```{r, time series of prediction plots}
 lp_prediction_plot <- function(year) {
     # get data
-    th_data <- readRDS(paste0("R/data/modelling/th_data_mods/th_data_m", year - 1, "_", year, ".rds"))
+    th_data <- readRDS(paste0("R/data/modelling/th_data_mods/th_data_m", year, "_2022.rds"))
     pa <- readRDS("R/data/occurrence_data/axyridis_pa.rds")
     pa_ext <- readRDS("R/data/occurrence_data/axyridis_pa_vals_extracted.rds")
     po <- subset(pa, Area == "eu" & Year == year & Presence == "present")
-    pa <- subset(pa, Area == "eu" & Year == year & Presence == "absent")
+    pa <- subset(pa, Area == "eu" & Year == 2022 & Presence == "absent")
     lc_ref <- rast("R/data/cropped_rasters/Cop_LC_2002_eu.tif")
-    pa_ext <- subset(pa_ext, Area == "eu" & Year == year & Presence == "absent")
+    pa_ext <- subset(pa_ext, Area == "eu" & Year == 2022 & Presence == "absent")
     th_data <- subset(th_data, pres == 0)
     ext_join <- data.frame(Lon = pa_ext$Lon, Lat = pa_ext$Lat, Prob_ens = th_data$ens)
 
     pa_m <- left_join(pa, ext_join)
-    #pa_m <- slice_head(pa_m, n = round(nrow(pa_m) / 3))
+    pa_m <- slice_head(pa_m, n = round(nrow(pa_m) / 3))
     pa_m <- pa_m[complete.cases(pa_m), ]
     pa_m <- pa_m[order(pa_m$Prob_ens), ]
     pa_v <- vect(pa_m, geom = c("Lon", "Lat"), crs = crs(lc_ref))
@@ -445,18 +445,17 @@ lp_prediction_plot <- function(year) {
         geom_spatvector(colour = "black", fill = "white") +
         geom_spatvector(data = pa_v, aes(color = Prob_ens)) +
         scale_color_viridis() +
-        geom_spatvector(data = po_v, shape = 1, alpha = 0.1) +
+        geom_spatvector(data = po_v, size = 0.1) +
         labs(color = "suitability") +
-        ggtitle(paste0("Prediction for", year)) +
+        ggtitle(paste0(year, " model prediction for 2022")) +
         theme_pubr()
     return(p)
 }
 
 plot_list <- list()
-theme_update(plot.title = element_text(hjust = 0.5))
-for (year in 2003:2021) {
+for (year in 2002:2020) {
     p <- lp_prediction_plot(year)
-    plot_list[[year-2002]] <- p
+    plot_list[[year-2001]] <- p
 }
 
 plot <- ggarrange(plotlist = plot_list, nrow = 5, ncol = 4, common.legend = TRUE, legend = "top")
