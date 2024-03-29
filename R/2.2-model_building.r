@@ -16,7 +16,7 @@ set.seed(4326) # consistent randomness
 # load modelling data
 pa <- readRDS("R/data/modelling/pa_mod_vars.rds")
 
-# model with native data
+# build and evaluate model with native data
 pa_mod <- subset(pa, Area == "as")
 
 # select model variables from df
@@ -49,7 +49,7 @@ m_brt <- gbm(f,
 f <- maxnet.formula(data_sc$pres, select(data_sc, !pres), classes = "lqh")
 m_max <- maxnet(data_sc$pres, select(data_sc, !pres), formula = f)
 
-# evaluate native models for all years
+# evaluate native model for all years
 pname <- "R/plots/response_curves/native_mod_resp.png"
 rnt <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, 2002:2022, sc, pname)
 saveRDS(rnt, file = "R/data/modelling/eval_mods/eval_mod_native.rds")
@@ -57,7 +57,7 @@ rm(list = ls()[!ls() %in% c("tot_time", "years", "y", "lp_eval_mods")]) # memory
 gc()
 cat("native model built and evaluated, starting yearly iteration \n")
 
-# build and evaluate models built iteratively
+# build and evaluate eu models built iteratively
 # prepare for parallelization
 years <- 2002:2020 # for iteration of foreach
 cl <- makeCluster(detectCores() - 2)
