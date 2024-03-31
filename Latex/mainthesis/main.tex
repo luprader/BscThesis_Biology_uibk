@@ -39,7 +39,7 @@
 \thispagestyle{empty}
 I, Lukas Prader, agree that my bachelor's thesis ("Studying SDM performance throughout a time series: A case study using the invasive species \textit{Harmonia axyridis}"), mainly supervised by Dr. Lauren Talluto, will be digitally archived in a repository of Leopold Franzens University Innsbruck and made available for further academic use. \\
 
-Innsbruck, \findate					\hfill Signature
+Innsbruck, \findate					\hfill Signature \includegraphics[height = 10mm]{"signature.png"}
 
 %title page
 \newpage
@@ -112,7 +112,7 @@ Species Distribution Models (SDMs), are being applied to predict the further dev
 These types of models have been shown to generate substantial insight into the ecological requirements of species and, as niche models, can be used to predict the potential habitat of a species \autocite{araujo2006sdmchallenges}.
 There has been considerable debate on the capabilities and limitations of SDMs, especially when used for prediction outside the data domain.
 In general, SDMs are made with the (ideal) assumption that the species is in environmental equilibrium \autocite{elith2009sdmtheory}, implying that its ecological niche is not currently changing.
-If these models are now used to predict new, unsampled areas, there actually is no measure to assess their accuracy, since no data is presently available for that area \autocite{araujo2006sdmchallenges}.
+If these models are now used to predict new, unsampled regions, there actually is no measure to assess their accuracy, since no data is presently available for that area \autocite{araujo2006sdmchallenges}.
 This means that when trying to predict areas which are potentially outside the calibration range, sufficient validation data is lacking, implying strong uncertainty about the predictive performance of a given model \autocite{araujo2006sdmchallenges}.
 This issue of model transferability is an ongoing area of research in the SDM community.
 There is also no guarantee that the biotic interactions sampled in the study area will reflect the final interactions in the new area \autocite{elith2009sdmtheory}.
@@ -165,15 +165,16 @@ For occurrence data, all global occurrences of \gls{harm} were downloaded from t
 All traditional 19 bioclim variables, which mostly concern mean temperature, precipitation and different kinds of their variation (see Supplementary Table \ref{tab:bioclim} for full breakdown), were obtained from the CHELSA V2.1 climatologies dataset \autocite{karger2017CHELSApaper, CHELSAbioclimdataset}.
 The 1981-2010 time frame was used for all years from 2002 to 2010, the MPI-ESM 1.2 ssp370 scenario 2011-2040 for all years from 2011 to 2022.
 As additional information, land cover data was used from the Copernicus Land cover Classification dataset \autocite{COPlandcoverdataset}  with yearly resolution for 2002 up to 2020.
+For all used occurrence points after 2020, the land cover data of 2020 was used, since at the time of this thesis data for 2021 and 2022 was not yet available.
 
 \subsection{Data preparation} \label{ssec:datapreparation}
 All bioclim and land cover layers were resampled to a matching resolution of 30 arc seconds and cropped to two spatial extents, Europe and the presumed native range referencing (Orlova-Bienkowskaja, Ukrainsky \& Brown, 2015) \autocite{orlova2015harmonia}.
 
-The presence-only points from GBIF were checked for missing values for latitude, longitude, year or coordinate uncertainty and then subset to the afore mentioned spatial extents.
+The presence-only points from GBIF were checked for missing values for latitude, longitude, year or coordinate uncertainty and then subsetted to the afore mentioned spatial extents.
 No occurrences after 2022 were used, also no points with a coordinate uncertainty larger than 1 km.
-In Europe, the initial cut off year for presences was 1991, since this is the year of invasion according to the EASIN website.
+In Europe, the initial cut off year for presences was 1991, since this is the year of invasion according to the EASIN website \autocite{EASINintroharm}.
 Afterwards, using the library \texttt{CoordinateCleaner} \autocite{zizka2019coordinatecleaner}, all remaining data points were again checked for common errors or biases in the respective subset.
-The tests used check for occurrences too close to country capitals("capitals"), country centroids("centroids"), duplicates or points with equal absolute coordinates in both dimensions("duplicates", "equal"), as well as points close to biological institutions("institutions"), geographical outliers("outliers"), points located in oceans("seas") and points with equal longitude and latitude or close/equal to the point (0,0)("zeros").
+The tests used check for occurrences too close to country capitals ("capitals"), country centroids ("centroids"), duplicates or points with equal absolute coordinates in both dimensions ("duplicates", "equal"), as well as points close to biological institutions ("institutions"), geographical outliers ("outliers"), points located in oceans ("seas") and points with equal longitude and latitude or close/equal to the point (0,0) ("zeros").
 In addition, all occurrences were checked for their land cover class values in their respective year, removing points in the water or with no data.
 In the end, remaining data points prior to 2002 were deemed insignificant and removed from the dataset.
 This resulted in a total of 124.746 presence points over all years and areas.
@@ -191,7 +192,7 @@ For the first and second step of absence generation, absences equal to and twice
 \begin{figure}[!h]
     \centering
     \includegraphics[width = 0.8\linewidth]{"../../R/figures/ext-subdiv.png"}
-    \caption{\label{fig:ext_subdiv} Visualization of the subdivision algorithm and absence generation. Subfigure A shows an example of 30 generated presences (green), subdivided with a threshold of $\leq$ 10 points per subextent. The generated absences are shown in black, with circles indicating the first 30 completely random absences, and asterisks indicating absences generated relative to the amount of presences in a subextent. Subfigure B shows the calculated subextents for the total presences of the dataset, with presences (green) and absences (grey) for 2008 plotted as an example.}
+    \caption{\label{fig:ext_subdiv} Visualisation of the subdivision algorithm and absence generation. Subfigure A shows an example of 30 generated presences (green), subdivided with a threshold of $\leq$ 10 points per subextent. The generated absences are shown in black, with circles indicating the first 30 completely random absences, and asterisks indicating absences generated relative to the amount of presences in a subextent. Subfigure B shows the calculated subextents for the total presences of the dataset, with presences (green) and absences (grey) for 2008 plotted as an example.}
 \end{figure}
 
 \subsection{Model building} \label{ssec:modelbuilding}
@@ -200,7 +201,6 @@ In order to evaluate the impact of the invasion process on SDM predictive perfor
 A model for a specific year always included all points from past years as well.
 The iterative models that were built only use data points from Europe, though there was one model created only with native occurrences and predicted for each year in Europe.
 This is to compare performance between models with and without potential influences of a niche shift through the process of invasion.
-For all used occurrence points after 2020, the land cover data of 2020 was used, since at the time of this thesis data for 2021 and 2022 was not yet available.
 The four built models were then used to create a TPR (sensitivity) weighted ensemble (see \ref{ssec:analysis}) for each year and the native models respectively.
 
 Variance inflation factors were used to select the variables used for model building.
@@ -212,7 +212,7 @@ Variance inflation factors were computed for this GAM and the variable with the 
 
 \subsection{Analysis} \label{ssec:analysis}
 All SDM models of each year were evaluated for their accuracy on predicting the occurrences of the following year using the Sensitivity or True Positive Rate (TPR).
-The TPR values were used to create a TPR-weighted ensemble of all model predictions, which was again evaluated for its accuracy.
+The TPR values were used to create a TPR-weighted ensemble (weighted sum) of all model predictions, which was again evaluated for its accuracy.
 The thresholds used to compute TPR were computed using the library \texttt{PresenceAbsence} \autocite{freeman2008presenceabsence} while maximizing (sens + spec) / 2, which is equivalent to TSS \autocite{allouche2006TSS}.
 This thresholding was chosen since just maximizing TPR can be achieved trivially by setting the threshold as low as possible, creating a model which predicts everything as suitable (used thresholds in Supplementary Tab. \ref{tab:mod_ths}).
 For each year, the occupied niche was computed by running a PCA analysis on the bioclim variables.
@@ -227,7 +227,7 @@ The development of TPR over time was tested for correlation with the amount of t
 The analyses mentioned above resulted in findings which shed light on the niche dynamics and predictability of \gls{harm}.
 
 \subsection{Temporal change of data availability} \label{ssec:temp_data_change}
-Taking the amount of presence points in Europe and the native range, one can plot the amount of presences available for each year respectively (Fig. \ref{fig:pres_per_year_log}).
+Taking the amount of presence points in Europe and the native range (Asia), one can plot the amount of presences available for each year respectively (Fig. \ref{fig:pres_per_year_log}).
 
 \begin{figure}[!h]
     \centering
@@ -261,7 +261,7 @@ Looking at the niche only in the invaded range, one can visualize the shift and 
 
 \end{figure}
 
-In addition to a visualization, it makes sense to compute the niche dynamic indices \autocite{guisan2014nichedyn}, as well as the niche overlap (Schoener's D) for each year in order to characterize the niche shift further (Fig. \ref{fig:eu_niche_dyn}).
+In addition to a visualisation, it makes sense to compute the niche dynamic indices \autocite{guisan2014nichedyn}, as well as the niche overlap (Schoener's D) for each year in order to characterize the niche shift further (Fig. \ref{fig:eu_niche_dyn}).
 
 \begin{figure}[!h]
     \centering
@@ -285,7 +285,7 @@ Variable selection using VIFs resulted in 13 variables, which were used for mode
     }
 \end{table}
 
-After computing all of the mentioned models (response curves in appendix \ref{sec:response_curves}) and creating a TPR weighted ensemble, one can examine the development over time in more detail (Fig. \ref{fig:modelling_res}).
+After computing all of the models mentioned (response curves in appendix \ref{sec:response_curves}) and creating a TPR weighted ensemble, one can examine the development over time in more detail (Fig. \ref{fig:modelling_res}).
 
 \begin{figure}[!h]
     \centering
@@ -296,7 +296,7 @@ After computing all of the mentioned models (response curves in appendix \ref{se
 The difference in performance between the invaded and native range models is apparent, with the invaded range models achieving a higher TPR on average.
 Surprisingly, the invasive data models already perform very well in the first years and continue to do so for all further years.
 The native models vary more in their predictive performance, starting off with a TPR similar to that of the invaded range models, then becoming quite chaotic in performance in the years between 2008 and 2015.
-After 2015, performance improves again, reaching levels close, but still below the initial performance and that of the final invaded range models.
+After 2015, performance improves again, reaching levels close to, but still below the initial performance and that of the final invaded range models.
 It is notable, that the GLM almost always performs the best out of all native models.
 The model ensemble performed at least better than 50 \% of models used to build the ensemble for almost all years.
 
@@ -329,27 +329,28 @@ It was shown that all used SDMs consistently performed very well in predicting \
 The better performance of the invaded range models in comparison to the native models is supported by the results of niche analysis, showing that the native and invaded niche differ significantly from each other.
 It has already been shown that the genetic strains of \gls{harm} present in Europe have been strongly influenced by American control strains \autocite{lombaert2010harmoniabridgehead}, so a model using American data might also prove insightful.
 
-The consistent performance of all invaded range models might be in part due to the rather consistent niche stability, though also in years with significant niche expansion (early years) the models are able to perform well (also see Supplementary Fig. \ref{fig:all_mod_preds} for a yearly visualization of model spatial predictions).
+The consistent performance of all invaded range models might be explained in part by the rather consistent niche stability, though also in years with significant niche expansion (early years) the models are able to perform well (also see Supplementary Fig. \ref{fig:all_mod_preds} for a yearly visualisation of model spatial predictions).
 This could also imply that SDMs are able to perform well in environments without total niche conservatism, but the data shown in this thesis is not sufficient to make this claim.
 The lack of impact of data amount on model performance is unsurprising, since all models had a very sufficient amount of data points ($>$ 15, \autocite{stoa2019SDMdata}).
 The native, as well as the invaded range ensemble predict ranges very similar to a study from 2012 \autocite{bidinger2012harmSDMglobalMaxent}, which speaks for the modelling process of this thesis.
 Agreement between predictions from 2012 and models created with more recent data also supports the result of niche conservatism over this time period.
 
 The use of TPR as a measure for model performance is not ideal, but was chosen instead of TSS due to better interpretability in the context of an invasive species.
-For future work, it would be better to look into different evaluation metrics, as there have been numerous proposed in other works.
-It might also be interesting to look into the period of niche expansion of \gls{harm} in more detail, for example with a monthly resolution, since data might be sufficient.
+For future work, it would be better to look into different evaluation metrics, as there have been numerous proposed and used in other works, i.e. \autocite{konowalik2021SDMmetrics}.
+It might also be interesting to look into the period of niche expansion of \gls{harm} in more detail, for example with a monthly resolution, since data might be sufficient.  
 
-In the specific case of \gls{harm}, SDMs can definitely be used to model the current potential niche in Europe, aided by the very stable invaded niche over the past few years and the very good performance of SDMs as shown in this case study.
-It would surely be more useful to also take dispersal into account in future models, since with a now seemingly stable niche, the dominating limitations of further spread will be strongly related to its dispersal ability.
+In the specific case of \gls{harm}, SDMs can definitely be used to model the current potential niche in Europe, implied by the very good performance of SDMs as shown in this case study.
+The niche analysis results suggest that \gls{harm} has reached the invasion stage of "Spread" for quite some time already, having established a stable, occupiable niche in Europe.
+Due to this, it would be more useful to also take dispersal into account in future models, since the dominating limitations of further spread will be strongly related to its dispersal ability.
 While currently, \gls{harm} is not listed as a "Species of Union Concern" by the EU \autocite{EU2020speciesofunionconcern}, new research still keeps showing negative impacts on native environments, especially on native ladybird species \autocite{brown2022harmimpactigp}.
 This opens possibilities for SDMs to support future endeavours to quantify the impact of \gls{harm} on native species, by enhancing sampling strategies and potential spatial correlations of impact severity.
 
 \section{Conclusion} \label{sec:conclusion}
-The results of this thesis show that SDMs can be a strong tool in predicting the potential niche of an invasive species, also with not completely static niches.
+The results of this thesis show that SDMs can be a strong tool in predicting the potential niche of an invasive species, even for cases of not completely static niches.
 Ensembles proved to be a good way to combine different model predictions, resulting in predictions consistent with previous studies.
 Using additional niche analyses provides valuable context to interpret model performance and gives additional insight into the establishment process of \gls{harm}.
 It has been shown that the process used in this thesis can generate new insight into the dynamics and relations at play when dealing with invasive species and predicting their potential impact, with more interesting areas to research further.
-Also in the specific case of \gls{harm}, this thesis shows possible future potential for SDM application in research concerning the future impact of this invasive species.
+In the specific case of \gls{harm}, this thesis shows possible future potential for SDM application in research concerning the future impact of this invasive species.
 
 
 \section{Acknowledgements} \label{sec:acknowledgements}

@@ -391,3 +391,6 @@ First versions of discussion, conclusion, abstract and so on were finished, conc
 
 ### 28/03/24
 Supervisor feedback was incorporated, mainly improving the methods and discussion chapter, as well as adding a plot showing the predictions of each yearly model in the appendix.
+
+### 31/03/24
+Some small formulations and citations were changed/added.
