@@ -21,8 +21,9 @@ bio_tot <- select(pa, starts_with("bio")) # only use bioclim vars
 # pca calibrated on all datapoints
 pca_tot <- dudi.pca(bio_tot, scannf = FALSE, nf = 2)
 # plot pca axis contribution
-fname <- "R/figures/as-eu-pca.png"
+fname <- "R/figures/as_eu_pca.png"
 png(width = 600, height = 600, filename = fname)
+par(cex = 1.2)
 ecospat.plot.contrib(contrib = pca_tot$co, eigen = pca_tot$eig)
 dev.off()
 # pca scores for the whole area
@@ -52,16 +53,18 @@ ol <- round(ecospat.niche.overlap(grid_as, grid_eu, cor = TRUE)$D, digits = 3)
 di <- round(ecospat.niche.dyn.index(grid_as, grid_eu)$dynamic.index.w, digits = 3)
 
 # plot niche overlap
-fname <- "R/figures/as-eu-tot-niche.png"
+fname <- "R/plots/niche_comp/as_eu_tot_niche.png"
 png(width = 600, height = 600, filename = fname)
+par(cex = 2, mar = c(3, 3, 1, 0), mgp = c(1.5, 0.5, par()$mgp[3]))
 ecospat.plot.niche.dyn(grid_as, grid_eu,
     quant = 0.5,
     col.unf = "#00ba38", col.exp = "#f8766d", col.stab = "#3f80f1",
     interest = 2, name.axis1 = "PC1",
     name.axis2 = "PC2"
 )
+legend("topright", c("native (Asia)", "invaded (Europe)", "overlap"), fill = c("#00ba38", "#f8766d", "#3f80f1"), cex = 2)
 dev.off()
- 
+
 fname <- "R/figures/as-eu-tot-eq-sim.png"
 png(width = 1200, height = 600, filename = fname)
 par(mfrow = c(1, 2))
@@ -96,42 +99,37 @@ pca_eu <- dudi.pca(bio_eu, scannf = FALSE, nf = 2)
 # plot pca axis contribution
 fname <- "R/figures/eu-years-pca.png"
 png(width = 600, height = 600, filename = fname)
+par(cex = 1.2)
 ecospat.plot.contrib(contrib = pca_eu$co, eigen = pca_eu$eig)
 dev.off()
 # pca scores for the whole area
 scores_eu_tot <- pca_eu$li
 
 # values for starting year
-pa_eu_y2 <- subset(pa_eu, Year == 2002)
 po_eu_y2 <- subset(po_eu, Year == 2002)
 scores_po_eu_y2 <- suprow(pca_eu, select(po_eu_y2, starts_with("bio")))$li
-scores_pa_eu_y2 <- suprow(pca_eu, select(pa_eu_y2, starts_with("bio")))$li
 grid_eu_y2 <- ecospat.grid.clim.dyn(
     glob = scores_eu_tot,
-    glob1 = scores_pa_eu_y2, sp = scores_po_eu_y2, R = 100, th.sp = 0
+    glob1 = scores_eu_tot, sp = scores_po_eu_y2, R = 100, th.sp = 0
 )
 
-# calculate overlap between total native and each EU year
+# calculate overlap between EU years
 eq_tests <- c()
 sim_tests <- c()
 overlap <- c()
 dynamic <- c()
-for (y in 2003:2022) {
+for (y in c(2003, 2013, 2022)) {
     # take subsets for both years
-    pa_eu_y1 <- pa_eu_y2
     po_eu_y1 <- po_eu_y2
-    pa_eu_y2 <- subset(pa_eu, Year == y)
     po_eu_y2 <- subset(po_eu, Year == y)
     # pca scores for each year
     scores_po_eu_y1 <- scores_po_eu_y2
-    scores_pa_eu_y1 <- scores_pa_eu_y2
     scores_po_eu_y2 <- suprow(pca_eu, select(po_eu_y2, starts_with("bio")))$li
-    scores_pa_eu_y2 <- suprow(pca_eu, select(pa_eu_y2, starts_with("bio")))$li
     # grids for both years
     grid_eu_y1 <- grid_eu_y2
     grid_eu_y2 <- ecospat.grid.clim.dyn(
         glob = scores_eu_tot,
-        glob1 = scores_pa_eu_y2, sp = scores_po_eu_y2, R = 100, th.sp = 0
+        glob1 = scores_eu_tot, sp = scores_po_eu_y2, R = 100, th.sp = 0
     )
     # overlap and niche dynamic
     ol <- round(ecospat.niche.overlap(grid_eu_y1, grid_eu_y2, cor = TRUE)$D, digits = 3)
@@ -149,12 +147,14 @@ for (y in 2003:2022) {
 
     fname <- paste0("R/plots/niche_comp/single_ys/eu_", y - 1, y, "_niche.png")
     png(width = 600, height = 600, filename = fname)
+    par(cex = 2, mar = c(3, 3, 1, 0), mgp = c(1.5, 0.5, par()$mgp[3]))
     ecospat.plot.niche.dyn(grid_eu_y1, grid_eu_y2,
         quant = 0.5,
         col.unf = "#00ba38", col.exp = "#f8766d", col.stab = col_stab,
         interest = 2, name.axis1 = "PC1",
         name.axis2 = "PC2"
     )
+    legend("topright", c(y-1, y, "overlap"), fill = c("#00ba38", "#f8766d", "#3f80f1"), cex = 2)
     dev.off()
 
     # niche equivalency test

@@ -2,7 +2,7 @@
 ### Author: Lukas Prader
 
 ## Overview: 
-This repository holds the code and files for my bachelor thesis written in the summer of SS23 under supervision of Matthew Talluto.
+This repository holds the code and files for my bachelor thesis written under supervision of Lauren Talluto.
 
 ## !!important!!
 The code can not be run from the repository itself, since the data required is quite large. 

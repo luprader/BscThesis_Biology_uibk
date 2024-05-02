@@ -152,6 +152,18 @@ p <- ggarrange(p1, p2, ncol = 1, labels = c("A", "B"), font.label = list(size = 
 ggsave(p, width = 6, height = 7, bg = "white", filename = "R/figures/ext-subdiv.png")
 ```
 
+```{r, combine native niche plot and pca axis}
+filepath = "R/plots/niche_comp/as_eu_tot_niche.png"
+p1 <- image_read(filepath)
+p1 <- image_annotate(p1, "A", color = "black", size = 40, , font = "Helvetica-Bold")
+filepath = "R/plots/niche_comp/as_eu_pca.png"
+p2 <- image_read(filepath)
+p2 <- image_annotate(p2, "B", color = "black", size = 40, , font = "Helvetica-Bold")
+
+img <- image_append(c(p1, p2))
+image_write(img, path = "R/figures/as-eu-tot-niche-w-pca.png", format = "png")
+```
+
 ```{r, combine some niche year plots into one figure}
 years <- c("20022003", "20122013", "20212022")
 p <- list()
@@ -198,8 +210,8 @@ vifs <- readRDS("R/data/modelling/var_select_vifs.rds")
 vars <- data.frame(matrix(ncol = nrow(vifs), nrow = 0))
 vars <- rbind(vars, round(vifs[, 1], digits = 2))
 colnames(vars) <- as.list(gsub(".*s\\((.+)\\)*.", "\\1", rownames(vifs))) # no s()
-Name <- "VIF"
-vars <- cbind(Name, vars)
+name <- "VIF"
+vars <- cbind(name, vars)
 
 # write to .csv for table
 write.csv(vars, file = "Latex/mainthesis/tab-var-vifs.csv", row.names = FALSE, quote = FALSE)
@@ -210,6 +222,8 @@ lc_pca <- readRDS("R/data/modelling/var_select_lc_pca_res.rds")
 lc_contrib <- lc_pca$var$contrib
 lc_contrib <- format(signif(lc_contrib, digits = 3), scientific = TRUE)
 lc_contrib <- cbind(lcc = gsub("lc_", "", rownames(lc_contrib)), e = "", lc_contrib)
+lc_var_percent <- c("\\% var", "", round(lc_pca$eig[1:(ncol(lc_contrib)-2), 2], digits = 2))
+lc_contrib <- rbind(lc_contrib, lc_var_percent)
 colnames(lc_contrib) <- c("Class", "", "{lc}{1}", "{lc}{2}", "{lc}{3}", "{lc}{4}", "{lc}{5}", "{lc}{6}")
 # curly braces for center alignment in table (workaround)
 

@@ -1,12 +1,12 @@
 \newpage
 \appendix
 
-\section{Visualisation of cleaned vs raw dataset}
+\section{Visualization of cleaned vs raw dataset}
 
 \begin{figure}[!h]
     \centering
     \includegraphics[width = 0.8\linewidth]{"../../R/figures/raw-vs-cleaned-glob.png"}
-    \caption{\label{fig:raw_vs_cleaned_glob} Visualisation of the cleaned dataset for \gls{harm} in comparison to the total raw dataset. The red and green boxes show the used extents for Europe and the native range respectively, red and green points show the cleaned presence points in their respective extents, while blue points show all points of the raw dataset.}
+    \caption{\label{fig:raw_vs_cleaned_glob} Visualization of the cleaned dataset for \gls{harm} in comparison to the total raw dataset. The red and green boxes show the used extents for Europe and the native range respectively, red and green points show the cleaned presence points in their respective extents, while blue points show all points of the raw dataset.}
 \end{figure}
 
 
@@ -21,14 +21,8 @@
 
 \begin{figure}[!h]
     \centering
-    \includegraphics[width = 0.68\linewidth]{"../../R/figures/as-eu-pca.png"}
-    \caption{\label{fig:as_eu_niche_pca} Component contributions for the PCA used to conduct the niche analyses comparing the total native and invaded niches. For detail on the bioclim variables, see (Supplementary Tab. \ref{tab:bioclim}).}
-\end{figure}
-
-\begin{figure}[!h]
-    \centering
     \includegraphics[width = 0.68\linewidth]{"../../R/figures/eu-years-pca.png"}
-    \caption{\label{fig:eu_years_pca} Component contributions for the PCA used to conduct the niche analyses comparing each year of the invaded niche to its  following year. For detail on the bioclim variables, see (Supplementary Tab. \ref{tab:bioclim}).}
+    \caption{\label{fig:eu_years_pca} Component contributions for the PCA used to conduct the niche analyses comparing each year of the invaded niche to its  following year. For detail on the bioclim variables, see (Supplementary Table \ref{tab:bioclim}).}
 \end{figure}
 
 \clearpage
@@ -49,7 +43,7 @@
 
 \begin{table}[!h]
     \centering
-    \caption{\label{tab:lc_contrib} Table showing PCA contributions for each Copernicus land cover class, Copernicus land cover class explanation in (Supplementary Tab. \ref{tab:Cop_lcc}).}
+    \caption{\label{tab:lc_contrib} Table showing PCA contributions for each Copernicus land cover class, Copernicus land cover class explanation in (Supplementary Table \ref{tab:Cop_lcc}). The last row shows the percent of total variance explained by the respective PCA axis.}
     \centerline{
         \begin{tabular}{r r*{7}{S[table-format = 1.2e2, table-align-text-pre = false, table-space-text-pre = lc]}}
             \csvreader[no head, column count = 8, late after line = \\]{tab-lc-contrib.csv}{}{\csvlinetotablerow}
