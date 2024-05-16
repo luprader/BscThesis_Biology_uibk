@@ -88,5 +88,10 @@ axyridis_fin <- rbind(axyridis_fin, lc_clean)
 
 cat(length(axyridis_clean$Year) - length(axyridis_fin$Year), "points removed with lc", "\n")
 cat(length(axyridis_fin$Year), "cleaned points remaining in total", "\n")
+# initialize destination directory if necessary
+dest <- "R/data/occurrence_data"
+if (!file.exists(dest)) {
+    dir.create(dest, recursive = TRUE)
+}
 saveRDS(axyridis_fin, file = "R/data/occurrence_data/axyridis_clean.rds")
 print(Sys.time() - s_time)

@@ -51,6 +51,11 @@ colnames(lc_pca_dims) <- paste0("lc", seq_len(ncol(lc_pca_dims)))
 # calculate pca with cutoff for saving
 lc_pca <- PCA(lc, ncp = cutoff, scale.unit = FALSE, graph = FALSE)
 # save lc pca results
+# initialize destination directory if necessary
+dest <- "R/data/modelling"
+if (!file.exists(dest)) {
+    dir.create(dest, recursive = TRUE)
+}
 saveRDS(lc_pca, file = "R/data/modelling/var_select_lc_pca_res.rds")
 
 # project lc for used pa data

@@ -21,6 +21,11 @@ bio_tot <- select(pa, starts_with("bio")) # only use bioclim vars
 # pca calibrated on all datapoints
 pca_tot <- dudi.pca(bio_tot, scannf = FALSE, nf = 2)
 # plot pca axis contribution
+# initialize destination directory if necessary
+dest <- "R/figures"
+if (!file.exists(dest)) {
+    dir.create(dest, recursive = TRUE)
+}
 fname <- "R/figures/as_eu_pca.png"
 png(width = 600, height = 600, filename = fname)
 par(cex = 1.2)
@@ -53,6 +58,11 @@ ol <- round(ecospat.niche.overlap(grid_as, grid_eu, cor = TRUE)$D, digits = 3)
 di <- round(ecospat.niche.dyn.index(grid_as, grid_eu)$dynamic.index.w, digits = 3)
 
 # plot niche overlap
+# initialize destination directory if necessary
+dest <- "R/plots/niche_comp/single_ys"
+if (!file.exists(dest)) {
+    dir.create(dest, recursive = TRUE)
+}
 fname <- "R/plots/niche_comp/as_eu_tot_niche.png"
 png(width = 600, height = 600, filename = fname)
 par(cex = 2, mar = c(3, 3, 1, 0), mgp = c(1.5, 0.5, par()$mgp[3]))
@@ -118,7 +128,7 @@ eq_tests <- c()
 sim_tests <- c()
 overlap <- c()
 dynamic <- c()
-for (y in c(2003, 2013, 2022)) {
+for (y in 2003:2022) {
     # take subsets for both years
     po_eu_y1 <- po_eu_y2
     po_eu_y2 <- subset(po_eu, Year == y)

@@ -50,6 +50,16 @@ f <- maxnet.formula(data_sc$pres, select(data_sc, !pres), classes = "lqh")
 m_max <- maxnet(data_sc$pres, select(data_sc, !pres), formula = f)
 
 # evaluate native model for all years
+# initialize destination directory if necessary
+dest <- "R/plots/response_curves"
+if (!file.exists(dest)) {
+    dir.create(dest, recursive = TRUE)
+}
+# initialize destination directory if necessary
+dest <- "R/data/modelling/eval_mods"
+if (!file.exists(dest)) {
+    dir.create(dest, recursive = TRUE)
+}
 pname <- "R/plots/response_curves/native_mod_resp.png"
 rnt <- lp_eval_mods(m_glm, m_gam, m_brt, m_max, pa, 2002:2022, sc, pname)
 saveRDS(rnt, file = "R/data/modelling/eval_mods/eval_mod_native.rds")

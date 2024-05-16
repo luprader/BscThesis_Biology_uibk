@@ -19,6 +19,10 @@ source("R/0.0-functions.r", encoding = "UTF-8") # self written functions used
 ```
 
 ```{r}
+tot_time <- Sys.time()
+```
+
+```{r}
 # used colour hex codes:
 c("#00ba38", "#f8766d", "#3f80f1")
 ftheme <- theme(
@@ -474,4 +478,9 @@ for (year in 2002:2020) {
 
 plot <- ggarrange(plotlist = plot_list, nrow = 5, ncol = 4, common.legend = TRUE, legend = "top")
 ggsave(plot, width = 16, height = 20, bg = "white", filename = "R/figures/2003to2021-mod-pred.png")
+```
+
+```{r}
+td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
+cat("building and model evaluation finished:", td, "secs", "\n")
 ```

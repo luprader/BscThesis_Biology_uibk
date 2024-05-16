@@ -386,49 +386,55 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
     pr_data <- data.frame(matrix(0, nrow = 100, ncol = ncol(m_data) - 1))
     colnames(pr_data) <- colnames(m_data)[colnames(m_data) != "pres"]
 
-    png(width = 3000, height = 600 * ncol(pr_data), filename = png_name)
-    par(mfrow = c(ncol(pr_data), 5), cex = 2)
+    # Set up the plot area
+    png(width = 400 * round(ncol(pr_data) / 2), height = 600 * round(ncol(pr_data) / 2), filename = png_name)
+    par(
+        mfrow = c(ceiling(ncol(pr_data) / 2), 4),
+        cex = 2.1, mar = c(3, 3, 1, 1), mgp = c(1.5, 0.5, par()$mgp[3])
+    )
+
     for (v in colnames(pr_data)) {
         # plot data distribution histograms
         x <- m_data[[v]] * sc["sd", v] + sc["mean", v] # rescaled for plot
         b <- seq(min(x), max(x), length.out = 20) # breaks
-        hist(subset(x, m_data$pres == 0),
+
+        y <- hist(subset(x, m_data$pres == 0),
             breaks = b, main = "training data distribution", xlab = v,
             xlim = range(b), col = "grey"
         )
         hist(subset(x, m_data$pres == 1),
-            breaks = b, main = "training data distribution", xlab = v,
+            breaks = b, xlab = v,
             xlim = range(b), col = "grey35", add = TRUE
         )
-        legend("topright", c("absent", "present"), fill = c("grey", "grey35"))
+        legend("topright", c("absent", "present"), fill = c("grey", "grey35"), cex = 1)
 
         # plot model response curves
         pr_data[[v]] <- seq(min(m_data[[v]]), max(m_data[[v]]), length.out = nrow(pr_data))
         x <- pr_data[[v]] * sc["sd", v] + sc["mean", v] # rescaled for plot
-        # glm response
+
+        # line colors
+        colors <- c("#00B0F6FF", "#00BF7DFF", "#F8766DFF", "#E76BF3FF") # from ggpubr default palette
+
         p <- predict(m_glm, newdata = pr_data, type = "response")
         plot(x, p,
-            type = "l", ylim = c(0, 1), xlim = range(x),
-            xlab = v, ylab = "suitability", main = "glm response curve"
+            type = "l", ylim = c(0, 1), xlim = range(x), col = colors[1],
+            xlab = v, ylab = "suitability", main = "response curves", lwd = 3
         )
+
         # gam response
         p <- predict(m_gam, newdata = pr_data, type = "response")
-        plot(x, p,
-            type = "l", ylim = c(0, 1), xlim = range(x),
-            xlab = v, ylab = "suitability", main = "gam response curve"
-        )
+        lines(x, p, col = colors[2], lty = 2, lwd = 3)
+
         # brt response
         p <- predict(m_brt, newdata = pr_data, type = "response")
-        plot(x, p,
-            type = "l", ylim = c(0, 1), xlim = range(x),
-            xlab = v, ylab = "suitability", main = "brt response curve"
-        )
+        lines(x, p, col = colors[3], lty = 3, lwd = 3)
+
         # maxent response
         p <- predict(m_max, newdata = pr_data, type = "logistic")
-        plot(x, p,
-            type = "l", ylim = c(0, 1), xlim = range(x),
-            xlab = v, ylab = "suitability", main = "maxent response curve"
-        )
+        lines(x, p, col = colors[4], lty = "dotdash", lwd = 3)
+
+        legend("topright", c("glm", "gam", "brt", "max"), fill = colors, cex = 1, ncol = 2)
+
         pr_data[[v]] <- 0 # set variable constant again
     }
     dev.off()
@@ -467,7 +473,6 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
     th <- optimal.thresholds(th_data, which.model = 5, opt.methods = 3)
     ma[[5]] <- presence.absence.accuracy(th_data, which.model = 5, th[1, 2])
     res_t <- ma
-    print(res_t)
 
     ## evaluate model accuracies against European data of ys
     res_y <- c() # initialize results vector
@@ -510,6 +515,11 @@ lp_eval_mods <- function(m_glm, m_gam, m_brt, m_max, data, ys, sc, png_name) {
         res_y <- rbind(res_y, ma)
 
         # save th_data for re examination
+        # initialize destination directory if necessary
+        dest <- "R/data/modelling/th_data_mods"
+        if (!file.exists(dest)) {
+            dir.create(dest, recursive = TRUE)
+        }
         if (grepl( "native", png_name, fixed = TRUE)) {
             fname <- paste0("R/data/modelling/th_data_mods/th_data_nt_", y, ".rds")
         } else {

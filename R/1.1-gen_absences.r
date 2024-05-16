@@ -164,6 +164,11 @@ pa <- rbind(po, ao)
 
 # save complete pa data
 saveRDS(pa, file = "R/data/occurrence_data/axyridis_pa.rds")
+# initialize destination directory if necessary
+dest <- "R/data/plotting"
+if (!file.exists(dest)) {
+    dir.create(dest, recursive = TRUE)
+}
 saveRDS(subexts, file = "R/data/plotting/axyridis_abs_gen_subexts.rds")
 td <- difftime(Sys.time(), tot_time, units = "secs")[[1]]
 cat("\n", "absence generation completed", td, "secs", "\n")

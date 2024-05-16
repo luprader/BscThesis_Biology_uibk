@@ -29,6 +29,12 @@ as_box <- st_as_sf(as_box, crs = 4326)
 # load gobal LCC .nc files and crop them to native and europe extent
 filenames <- list.files(path = "R/data/Cop_LC_raw", full.names = TRUE)
 stime_tot <- Sys.time()
+
+# initialize destination directory if necessary
+dest <- "R/data/cropped_rasters"
+if (!file.exists(dest)) {
+    dir.create(dest, recursive = TRUE)
+}
 for (f in filenames) {
     stime_f <- Sys.time()
     layer <- rast(f, "lccs_class") # load file
@@ -36,7 +42,6 @@ for (f in filenames) {
     # create new filenames
     fn <- strsplit(f, "[-]")
     y <- fn[[1]][8] # extract year of land cover layer
-    dest <- "R/data/cropped_rasters" # destination directory
     n_eu <- paste("Cop_LC_", y, "_eu.tif", sep = "") # eu filename
     n_as <- paste("Cop_LC_", y, "_as.tif", sep = "") # as filename
 
