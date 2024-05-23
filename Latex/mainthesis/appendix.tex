@@ -1,6 +1,7 @@
 \newpage
 \appendix
 
+\newgeometry{lmargin = 3cm, rmargin = 3cm, tmargin=2cm, bmargin=2cm}
 \section{Visualization of cleaned vs raw dataset}
 
 \begin{figure}[!h]
@@ -75,11 +76,13 @@
 \begin{figure}[!h]
     \caption{\label{fig:all_mod_preds} Predictions of each invaded range ensemble model for the year 2022, points in black showing the occurrences of the respective year, so i.e. in 2003 model it shows the occurrences of 2003, but the suitability prediction for 2022.}
     \centerline{
-        \includegraphics[width = 0.85\paperwidth, height = 0.62\paperheight]{"../../R/figures/2003to2021-mod-pred.png"}
+        \includegraphics[width = 0.85\paperwidth, height = 0.6\paperheight]{"../../R/figures/2003to2021-mod-pred.png"}
     }
 \end{figure}
 
 \section{Model response curves} \label{sec:response_curves}
+
+Prediction plots of all model variables, showing histograms of the training data for each separate variable (absences and presences separated) in comparison to the suitabilities in the data range, predicted by the calculated models, plotted as response curves.
 
 \begin{figure}[!ht]
     \caption*{Native model response curves}
@@ -87,6 +90,8 @@
         \includegraphics[width = 0.9\paperwidth, height = 0.83\paperheight]{"../../R/plots/response_curves/native_mod_resp.png"}
     }
 \end{figure}
+
+
 
 \foreach \y in {2002,...,2020}{
         \begin{figure}[!ht]
