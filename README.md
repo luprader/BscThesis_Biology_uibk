@@ -1,4 +1,4 @@
-# BscBio_LP23
+# BscThesis_Biology_uibk
 ### Author: Lukas Prader
 
 ## Overview: 
