@@ -394,3 +394,6 @@ Supervisor feedback was incorporated, mainly improving the methods and discussio
 
 ### 31/03/24
 Some small formulations and citations were changed/added.
+
+### 24/05/24
+The thesis was handed in after a final meeting.
